@@ -1,9 +1,7 @@
 #pragma once
 
-#include "raylib-cpp.hpp"
 #include "misc/utils.hpp"
-
-#define wmac WorldMachine
+#include "core/blocks.hpp"
 
 namespace wmac {
 
@@ -14,7 +12,7 @@ class Core {
         const u32 HEIGHT = 600;
 
         const f32 SENSITIVITY = 0.1f;
-        const f32 SPEED = 0.1f;
+        const f32 SPEED = 5.0f;
 
         Camera3D camera {
             .position = { 10.0f, 1.0f, 10.0f },
@@ -23,6 +21,8 @@ class Core {
             .fovy = 60.0f,
             .projection = CAMERA_PERSPECTIVE
         };
+
+        Texture2D texture;
         
     public:
         void run();
@@ -31,7 +31,8 @@ class Core {
         void init();
         void update();
             vec3 getMovementDelta();
-        void draw();
+        void draw3D();
+        void drawUI();
         void deinit();
 
 };

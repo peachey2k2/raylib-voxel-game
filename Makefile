@@ -57,8 +57,8 @@ endif
 # Lists phony targets for Makefile
 .PHONY: all setup submodules execute clean
 
-# Default target, compiles, executes and cleans
-all: $(target) execute clean
+# Default target to build the program
+all: $(target)
 
 # Compile then execute the program
 run: $(target) execute

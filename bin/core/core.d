@@ -1,6 +1,6 @@
-bin/core/core.o: src/core/core.cpp src/core/./core.hpp lib/raylib-cpp.hpp \
- lib/./raylib-cpp/AudioDevice.hpp lib/./raylib-cpp/./raylib.hpp \
- lib/./raylib-cpp/./raylib-cpp-utils.hpp \
+bin/core/core.o: src/core/core.cpp src/core/./core.hpp src/misc/utils.hpp \
+ lib/raylib-cpp.hpp lib/./raylib-cpp/AudioDevice.hpp \
+ lib/./raylib-cpp/./raylib.hpp lib/./raylib-cpp/./raylib-cpp-utils.hpp \
  lib/./raylib-cpp/./RaylibException.hpp lib/./raylib-cpp/././raylib.hpp \
  lib/./raylib-cpp/AudioStream.hpp \
  lib/./raylib-cpp/AutomationEventList.hpp \
@@ -33,8 +33,10 @@ bin/core/core.o: src/core/core.cpp src/core/./core.hpp lib/raylib-cpp.hpp \
  lib/./raylib-cpp/TextureUnmanaged.hpp lib/./raylib-cpp/Touch.hpp \
  lib/./raylib-cpp/Vector2.hpp lib/./raylib-cpp/Vector3.hpp \
  lib/./raylib-cpp/Vector4.hpp lib/./raylib-cpp/VrStereoConfig.hpp \
- lib/./raylib-cpp/Wave.hpp lib/./raylib-cpp/Window.hpp src/misc/utils.hpp
+ lib/./raylib-cpp/Wave.hpp lib/./raylib-cpp/Window.hpp \
+ src/core/blocks.hpp
 src/core/./core.hpp:
+src/misc/utils.hpp:
 lib/raylib-cpp.hpp:
 lib/./raylib-cpp/AudioDevice.hpp:
 lib/./raylib-cpp/./raylib.hpp:
@@ -101,4 +103,4 @@ lib/./raylib-cpp/Vector4.hpp:
 lib/./raylib-cpp/VrStereoConfig.hpp:
 lib/./raylib-cpp/Wave.hpp:
 lib/./raylib-cpp/Window.hpp:
-src/misc/utils.hpp:
+src/core/blocks.hpp:
