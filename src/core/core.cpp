@@ -24,6 +24,7 @@ void Core::init() {
     InitWindow(WIDTH, HEIGHT, TITLE);
     DisableCursor();
     blocks::createAtlas();
+    blocks::addDefaultBlocks();
     
     #if FPS > 0
     // SetTargetFPS(60);
@@ -60,3 +61,4 @@ void Core::drawUI() {
 void Core::deinit() {
     CloseWindow();
 }
+

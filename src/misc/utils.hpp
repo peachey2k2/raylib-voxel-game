@@ -8,6 +8,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <functional>
 
 #define wmac WorldMachine
 
@@ -193,6 +195,10 @@ constexpr vec2i operator/(const vec2i& a, const i32& b) {
     return { a.x / b, a.y / b };
 }
 
+constexpr bool operator==(const vec2i& a, const vec2i& b) {
+    return (a.x == b.x) && (a.y == b.y);
+}
+
 constexpr vec3i operator+(const vec3i& a, const vec3i& b) {
     return { a.x + b.x, a.y + b.y, a.z + b.z };
 }
@@ -207,6 +213,10 @@ constexpr vec3i operator*(const vec3i& a, const i32& b) {
 
 constexpr vec3i operator/(const vec3i& a, const i32& b) {
     return { a.x / b, a.y / b, a.z / b };
+}
+
+constexpr bool operator==(const vec3i& a, const vec3i& b) {
+    return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
 }
 
 constexpr vec4i operator+(const vec4i& a, const vec4i& b) {
@@ -225,8 +235,24 @@ constexpr vec4i operator/(const vec4i& a, const i32& b) {
     return { a.x / b, a.y / b, a.z / b, a.w / b };
 }
 
+constexpr bool operator==(const vec4i& a, const vec4i& b) {
+    return (a.x == b.x) && (a.y == b.y) && (a.z == b.z) && (a.w == b.w);
+}
+
 
 
 };
+
+namespace std { 
+    // hash function for vec3i, necessary for unordered_map
+    template<> struct hash<wmac::vec3i> {
+        size_t operator()(const wmac::vec3i& vec) const noexcept {
+            size_t h1 = std::hash<int>{}(vec.x);
+            size_t h2 = std::hash<int>{}(vec.y);
+            size_t h3 = std::hash<int>{}(vec.z);
+            return h1 ^ (h2 << 1) ^ (h3 << 2);
+        }
+    };
+}
 
 
