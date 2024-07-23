@@ -2,6 +2,9 @@
 
 #include "misc/utils.hpp"
 #include "core/blocks.hpp"
+#include "core/render.hpp"
+#include "core/ticks.hpp"
+#include "core/world.hpp"
 
 namespace wmac {
 

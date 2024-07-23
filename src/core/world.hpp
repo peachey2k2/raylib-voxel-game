@@ -2,7 +2,7 @@
 
 #include "misc/utils.hpp"
 
-namespace wmac::world {
+namespace wmac {
 
 // takes up 2 bytes
 typedef struct ChunkPos {
@@ -41,13 +41,21 @@ typedef struct ChunkPos {
 // takes up 16*16*16*8 = 32KB
 typedef u64 Chunk[16*16*16];
 
+};
+
+namespace wmac::world {
+
 #ifdef WORLD_CPP
 
-std::unordered_map<vec3i, Chunk> chunks;
+std::unordered_map<vec3i, Chunk*> chunks;
 
 #endif
 
-vec3i getChunkPos(vec3i p_pos);
+void init();
+void addChunk(vec3i p_pos, Chunk *p_chunk);
+std::unordered_map<vec3i, Chunk*> getChunks();
+
+vec3i getChunkLoc(vec3i p_pos);
 ChunkPos getPosInChunk(vec3i p_pos);
 void changeBlock(vec3i p_pos, u64 p_id);
 

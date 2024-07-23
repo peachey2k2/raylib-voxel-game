@@ -16,7 +16,8 @@ target := $(buildDir)/$(executable)
 sources := $(call rwildcard,src/,*.cpp)
 objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
-compileFlags := -std=c++17 -I./include -I./src -I./lib
+compileFlags := -std=c++20 -I./include -I./src -I./lib
+warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
 linkFlags = -L lib/$(platform) -l raylib
 
 # Check for Windows
@@ -93,7 +94,7 @@ $(target): $(objects)
 # Compile objects to the build directory
 $(buildDir)/%.o: src/%.cpp Makefile
 	$(MKDIR) $(call platformpth, $(@D))
-	$(CXX) -MMD -MP -c $(compileFlags) $< -o $@ $(CXXFLAGS)
+	$(CXX) -MMD -MP -c $(compileFlags) $(warnings) $< -o $@ $(CXXFLAGS)
 
 # Run the executable
 execute:

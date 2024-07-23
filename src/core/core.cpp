@@ -2,7 +2,7 @@
 
 using namespace wmac;
 
-#define FPS 60
+#define FPS 0
 
 void Core::run() {
     init();
@@ -23,21 +23,23 @@ void Core::init() {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WIDTH, HEIGHT, TITLE);
     DisableCursor();
-    blocks::createAtlas();
+    render::initAtlas();
     blocks::addDefaultBlocks();
     
     #if FPS > 0
-    // SetTargetFPS(60);
-    texture = LoadTexture("texture.png");
-    blocks::init();
+    SetTargetFPS(FPS);
     #endif
+    texture = LoadTexture("texture.png");
+    render::initMesh();
+    world::init();
 }
 
 void Core::update() {
-    vec2 mouseDelta = GetMouseDelta();
     vec3 movementDelta = getMovementDelta();
-    UpdateCameraPro(&camera, movementDelta, VEC3(mouseDelta, 0.0f) * SENSITIVITY, 0.0f);
-    blocks::update();
+    vec3 rotationDelta = VEC3(GetMouseDelta(), 0.0f) * SENSITIVITY;
+    UpdateCameraPro(&camera, movementDelta, rotationDelta, 0.0f);
+    // render::update();
+    ticks::check();
 }
 
 vec3 Core::getMovementDelta() {
@@ -51,7 +53,7 @@ vec3 Core::getMovementDelta() {
 
 void Core::draw3D() {
     DrawGrid(10, 1.0f);
-    blocks::draw();
+    render::draw();
 }
 
 void Core::drawUI() {
