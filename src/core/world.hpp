@@ -45,15 +45,15 @@ typedef u64 Chunk[16*16*16];
 
 namespace wmac::world {
 
+inline std::unordered_map<vec3i, Chunk*> chunks;
+
 #ifdef WORLD_CPP
 
-std::unordered_map<vec3i, Chunk*> chunks;
 
 #endif
 
 void init();
 void addChunk(vec3i p_pos, Chunk *p_chunk);
-std::unordered_map<vec3i, Chunk*> getChunks();
 
 vec3i getChunkLoc(vec3i p_pos);
 ChunkPos getPosInChunk(vec3i p_pos);

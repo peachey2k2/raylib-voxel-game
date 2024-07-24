@@ -9,7 +9,7 @@ const i32 TILE_SIZE = 32;
 const i32 TILE_PER_ROW = 16;
 
 void initAtlas() {
-    atlasImage = GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, BLANK);
+    atlasImage = GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, WHITE);
 }
 
 void initMesh() {
@@ -53,16 +53,16 @@ void update() {
     vertices.clear();
     texcoords.clear();
     indices.clear();
-    for (auto& [pos, chunk] : world::getChunks()) {
+    for (auto& [pos, chunk] : world::chunks) {
         for (int i = 0; i < 16*16*16; i++) {
             u64& blockId = (*chunk)[i];
             if (blockId == 0) continue;
             vec3 posInChunk = {
                 (i % 16),
-                (i / 256),
                 (i % 256) / 16,
+                (i / 256),
             };
-            say(posInChunk.x, posInChunk.y, posInChunk.z, blockId);
+            say(posInChunk.x, posInChunk.y, posInChunk.z, blockId, pos.x, pos.y, pos.z);
             vertices.insert(vertices.end(), {
                 pos.x + posInChunk.x - 0.5f, pos.y + posInChunk.y + 0.5f, pos.z + posInChunk.z - 0.5f,
                 pos.x + posInChunk.x + 0.5f, pos.y + posInChunk.y + 0.5f, pos.z + posInChunk.z - 0.5f,
@@ -85,15 +85,16 @@ void update() {
         }
     }
 
-    // mesh.vertexCount = scast<i32>(vertices.size() / 3);
-    // mesh.triangleCount = scast<i32>(indices.size() / 3);
-    mesh = {
-        .vertexCount = scast<i32>(vertices.size() / 3),
-        .triangleCount = scast<i32>(indices.size() / 3),
-        .vertices = vertices.data(),
-        .texcoords = texcoords.data(),
-        .indices = indices.data(),
-    };
+    mesh.vertexCount = scast<i32>(vertices.size() / 3);
+    mesh.triangleCount = scast<i32>(indices.size() / 3);
+    // mesh = {
+    //     .vertexCount = scast<i32>(vertices.size() / 3),
+    //     .triangleCount = scast<i32>(indices.size() / 3),
+    //     .vertices = vertices.data(),
+    //     .texcoords = texcoords.data(),
+    //     .indices = indices.data(),
+    // };
+    // say("Updating mesh");
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, vertices.data(), scast<i32>(vertices.size() * sizeof(f32)), 0);
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, texcoords.data(), scast<i32>(texcoords.size() * sizeof(f32)), 0);
     UpdateMeshBuffer(mesh, 6, indices.data(), scast<i32>(indices.size() * sizeof(u16)), 0);

@@ -2,21 +2,17 @@
 #include "core/world.hpp"
 
 namespace wmac::world {
+    Chunk chunk = {};
 
 void init() {
     say("Initializing world");
     chunks.clear();
-    Chunk chunk = {};
     chunk[0] = 1;
     addChunk(vec3i{0, 0, 0}, &chunk);
 }
 
 void addChunk(vec3i p_pos, Chunk *p_chunk) {
     chunks[p_pos] = p_chunk;
-}
-
-std::unordered_map<vec3i, Chunk*> getChunks() {
-    return chunks;
 }
 
 vec3i getChunkLoc(vec3i p_pos) {
@@ -29,7 +25,7 @@ vec3i getChunkLoc(vec3i p_pos) {
 
 ChunkPos getPosInChunk(vec3i p_pos) {
     return {
-        scast<u16>((p_pos.x & 0x0F)) |
+        scast<u16>((p_pos.x & 0x0F) << 0) |
         scast<u16>((p_pos.y & 0x0F) << 4) |
         scast<u16>((p_pos.z & 0x0F) << 8)
     };
