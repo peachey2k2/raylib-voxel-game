@@ -87,14 +87,7 @@ void update() {
 
     mesh.vertexCount = scast<i32>(vertices.size() / 3);
     mesh.triangleCount = scast<i32>(indices.size() / 3);
-    // mesh = {
-    //     .vertexCount = scast<i32>(vertices.size() / 3),
-    //     .triangleCount = scast<i32>(indices.size() / 3),
-    //     .vertices = vertices.data(),
-    //     .texcoords = texcoords.data(),
-    //     .indices = indices.data(),
-    // };
-    // say("Updating mesh");
+
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, vertices.data(), scast<i32>(vertices.size() * sizeof(f32)), 0);
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, texcoords.data(), scast<i32>(texcoords.size() * sizeof(f32)), 0);
     UpdateMeshBuffer(mesh, 6, indices.data(), scast<i32>(indices.size() * sizeof(u16)), 0);
