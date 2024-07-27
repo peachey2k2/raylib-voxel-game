@@ -53,6 +53,7 @@ void update() {
     vertices.clear();
     texcoords.clear();
     indices.clear();
+    u16 a = 0, b;
     for (auto& [pos, chunk] : world::chunks) {
         for (int i = 0; i < 16*16*16; i++) {
             u64& blockId = (*chunk)[i];
@@ -75,12 +76,13 @@ void update() {
                 1.0f/TILE_PER_ROW, 1.0f/TILE_PER_ROW,
                 0.0f, 1.0f/TILE_PER_ROW,
             });
-            u16 a, b = scast<u16>(vertices.size() - 4);
+            b = a;
+            say(a, b);
             indices.insert(indices.end(), {
                 // a, a+1, a+2, // end my suffering
                 // a+2, a+3, a,
-                a, a++, a++,
-                a, a++, b,
+                a, ++a, ++a,
+                a++, a++, b,
             });
         }
     }
