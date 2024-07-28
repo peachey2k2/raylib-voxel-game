@@ -22,26 +22,26 @@ void initMesh() {
     ticks::addCallback(update);
 
     /* hardcoded block */
-    vertices = {
-        -0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-    };
-    indices = {
-        0, 1, 2,
-        2, 3, 0,
-    };
-    texcoords = {
-        0.0f, 0.0f,
-        1.0f/TILE_PER_ROW, 0.0f,
-        1.0f/TILE_PER_ROW, 1.0f/TILE_PER_ROW,
-        0.0f, 1.0f/TILE_PER_ROW,
-    };
+    // vertices = {
+    //     -0.5f, 0.5f, -0.5f,
+    //     0.5f, 0.5f, -0.5f,
+    //     0.5f, -0.5f, -0.5f,
+    //     -0.5f, -0.5f, -0.5f,
+    // };
+    // indices = {
+    //     0, 1, 2,
+    //     2, 3, 0,
+    // };
+    // texcoords = {
+    //     0.0f, 0.0f,
+    //     1.0f/TILE_PER_ROW, 0.0f,
+    //     1.0f/TILE_PER_ROW, 1.0f/TILE_PER_ROW,
+    //     0.0f, 1.0f/TILE_PER_ROW,
+    // };
 
     mesh = {
-        .vertexCount = scast<i32>(vertices.size() / 3),
-        .triangleCount = scast<i32>(indices.size() / 3),
+        .vertexCount = scast<i32>(8*1000),
+        .triangleCount = scast<i32>(12*1000),
         .vertices = vertices.data(),
         .texcoords = texcoords.data(),
         .indices = indices.data(),
@@ -63,7 +63,6 @@ void update() {
                 (i % 256) / 16,
                 (i / 256),
             };
-            say(posInChunk.x, posInChunk.y, posInChunk.z, blockId, pos.x, pos.y, pos.z);
             vertices.insert(vertices.end(), {
                 pos.x + posInChunk.x - 0.5f, pos.y + posInChunk.y + 0.5f, pos.z + posInChunk.z - 0.5f,
                 pos.x + posInChunk.x + 0.5f, pos.y + posInChunk.y + 0.5f, pos.z + posInChunk.z - 0.5f,
@@ -77,13 +76,15 @@ void update() {
                 0.0f, 1.0f/TILE_PER_ROW,
             });
             b = a;
-            say(a, b);
             indices.insert(indices.end(), {
                 // a, a+1, a+2, // end my suffering
                 // a+2, a+3, a,
                 a, ++a, ++a,
                 a++, a++, b,
             });
+            say("Block at ", posInChunk.x, posInChunk.y, posInChunk.z);
+            say("vertices:", vertices[vertices.size()-12], vertices[vertices.size()-11], vertices[vertices.size()-10], vertices[vertices.size()-9], vertices[vertices.size()-8], vertices[vertices.size()-7], vertices[vertices.size()-6], vertices[vertices.size()-5], vertices[vertices.size()-4], vertices[vertices.size()-3], vertices[vertices.size()-2], vertices[vertices.size()-1]);
+            say("indices:", indices[indices.size()-6], indices[indices.size()-5], indices[indices.size()-4], indices[indices.size()-3], indices[indices.size()-2], indices[indices.size()-1]);
         }
     }
 
@@ -92,7 +93,7 @@ void update() {
 
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, vertices.data(), scast<i32>(vertices.size() * sizeof(f32)), 0);
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, texcoords.data(), scast<i32>(texcoords.size() * sizeof(f32)), 0);
-    UpdateMeshBuffer(mesh, 6, indices.data(), scast<i32>(indices.size() * sizeof(u16)), 0);
+    UpdateMeshBuffer(mesh, 6 /* indices location */ , indices.data(), scast<i32>(indices.size() * sizeof(u16)), 0);
 }
 
 void draw() {

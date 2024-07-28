@@ -8,6 +8,7 @@ void init() {
     say("Initializing world");
     chunks.clear();
     chunk[0] = 1;
+    chunk[1] = 1;
     addChunk(vec3i{0, 0, 0}, &chunk);
 }
 
