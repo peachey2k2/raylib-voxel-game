@@ -21,23 +21,23 @@ void initMesh() {
     SetMaterialTexture(&material, MATERIAL_MAP_ALBEDO, atlas);
     ticks::addCallback(update);
 
-    /* hardcoded block */
-    // vertices = {
-    //     -0.5f, 0.5f, -0.5f,
-    //     0.5f, 0.5f, -0.5f,
-    //     0.5f, -0.5f, -0.5f,
-    //     -0.5f, -0.5f, -0.5f,
-    // };
-    // indices = {
-    //     0, 1, 2,
-    //     2, 3, 0,
-    // };
-    // texcoords = {
-    //     0.0f, 0.0f,
-    //     1.0f/TILE_PER_ROW, 0.0f,
-    //     1.0f/TILE_PER_ROW, 1.0f/TILE_PER_ROW,
-    //     0.0f, 1.0f/TILE_PER_ROW,
-    // };
+    /* hardcoded block, "necessary" to hack raylib */
+    vertices = {
+        -0.5f, 0.5f, -0.5f,
+        0.5f, 0.5f, -0.5f,
+        0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+    };
+    indices = {
+        0, 1, 2,
+        2, 3, 0,
+    };
+    texcoords = {
+        0.0f, 0.0f,
+        1.0f/TILE_PER_ROW, 0.0f,
+        1.0f/TILE_PER_ROW, 1.0f/TILE_PER_ROW,
+        0.0f, 1.0f/TILE_PER_ROW,
+    };
 
     mesh = {
         .vertexCount = scast<i32>(8*1000),
@@ -46,6 +46,12 @@ void initMesh() {
         .texcoords = texcoords.data(),
         .indices = indices.data(),
     };
+    // indices[0] = 0;
+    // indices[1] = 0;
+    // indices[2] = 0;
+    // vertices[0] = 0.0f;
+    // vertices[1] = 0.0f;
+    // vertices[2] = 0.0f;
     UploadMesh(&mesh, true);
 }
 
@@ -90,6 +96,7 @@ void update() {
 
     mesh.vertexCount = scast<i32>(vertices.size() / 3);
     mesh.triangleCount = scast<i32>(indices.size() / 3);
+    say(mesh.vertexCount, mesh.triangleCount);
 
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, vertices.data(), scast<i32>(vertices.size() * sizeof(f32)), 0);
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, texcoords.data(), scast<i32>(texcoords.size() * sizeof(f32)), 0);

@@ -20,6 +20,11 @@ void Core::run() {
 }
 
 void Core::init() {
+    const std::string dir = GetWorkingDirectory();
+    if (dir.ends_with("/bin")) {
+        ChangeDirectory("../");
+    };
+    
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WIDTH, HEIGHT, TITLE);
     DisableCursor();

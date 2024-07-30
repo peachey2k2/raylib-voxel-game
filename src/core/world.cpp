@@ -9,6 +9,9 @@ void init() {
     chunks.clear();
     chunk[0] = 1;
     chunk[1] = 1;
+    chunk[2] = 1;
+    chunk[3] = 1;
+    chunk[4] = 1;
     addChunk(vec3i{0, 0, 0}, &chunk);
 }
 
