@@ -7,6 +7,7 @@ namespace wmac::render {
 
 extern const i32 TILE_SIZE;
 extern const i32 TILE_PER_ROW;
+extern const std::pair<vec3i, std::array<vec3, 4>> DIRECTIONS[6];
 
 #ifdef RENDER_CPP
 
@@ -23,8 +24,6 @@ i32 shaderParam;
 std::vector<f32> vertices;
 std::vector<f32> texcoords;
 std::vector<u16> indices;
-
-const extern mat4 transforms[6];
 
 #endif
 
