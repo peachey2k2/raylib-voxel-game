@@ -1,6 +1,8 @@
 #define WORLD_CPP
 #include "core/world.hpp"
 
+#include "core/render.hpp"
+
 namespace wmac::world {
     Chunk chunk = {};
 
@@ -13,6 +15,9 @@ void init() {
     chunk[3] = 1;
     chunk[4] = 1;
     addChunk(vec3i{0, 0, 0}, &chunk);
+    addChunk(vec3i{0, 1, 0}, &chunk);
+    render::activateChunk(vec3i{0, 0, 0}, chunk);
+    render::activateChunk(vec3i{0, 1, 0}, chunk);
 }
 
 void addChunk(vec3i p_pos, Chunk *p_chunk) {
