@@ -33,7 +33,6 @@ typedef struct ChunkPos {
 // } BlockMany;
 
 // typedef struct Chunk {
-//     // vec3i position;
 //     std::vector<BlockFew> few;
 //     std::vector<BlockMany> many;
 // } Chunk;

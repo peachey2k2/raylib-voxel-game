@@ -35,10 +35,8 @@ std::vector<u16> indices;
 
 #endif
 
-
 void initAtlas();
 void initMesh();
-void update();
 void draw();
 void addTextureToAtlas(InitBlockInfo& p_block);
 

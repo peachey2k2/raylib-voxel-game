@@ -43,7 +43,6 @@ void Core::update() {
     vec3 movementDelta = getMovementDelta();
     vec3 rotationDelta = VEC3(GetMouseDelta(), 0.0f) * SENSITIVITY;
     UpdateCameraPro(&camera, movementDelta, rotationDelta, 0.0f);
-    // render::update();
     ticks::check();
 }
 
