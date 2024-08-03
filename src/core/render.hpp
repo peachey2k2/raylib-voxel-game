@@ -17,7 +17,7 @@ typedef struct RenderChunk {
 
 #ifdef RENDER_CPP
 
-Mesh mesh;
+Shader shader;
 Material material;
 
 std::unordered_map<vec3i, RenderChunk> renderChunks;
@@ -25,9 +25,6 @@ std::unordered_map<vec3i, RenderChunk> renderChunks;
 Image atlasImage;
 Texture2D atlas;
 u32 atlasIndex = 0;
-
-Shader shader;
-i32 shaderParam;
 
 std::vector<f32> vertices;
 std::vector<f32> texcoords;
@@ -42,6 +39,7 @@ void addTextureToAtlas(InitBlockInfo& p_block);
 
 void activateChunk(vec3i p_pos, Chunk& p_chunk);
 void updateChunk(vec3i p_pos);
+u16 populateMesh(vec3i p_pos);
 void deactivateChunk(vec3i p_pos);
 
 };

@@ -23,7 +23,7 @@ void initAtlas() {
 
 void initMesh() {
     Shader shader = LoadShader("shaders/block.vert", "shaders/block.frag");
-    shaderParam = GetShaderLocation(shader, "side");
+    // shaderParam = GetShaderLocation(shader, "side");
     atlas = LoadTextureFromImage(atlasImage);
     material = LoadMaterialDefault();
     material.shader = shader;
@@ -31,7 +31,6 @@ void initMesh() {
 }
 
 void draw() {
-    // DrawMesh(mesh, material, MatrixIdentity());
     for (auto& [chunkPos, renderChunk] : renderChunks) {
         DrawMesh(renderChunk.mesh, material, MatrixIdentity());
     }
@@ -75,96 +74,28 @@ void activateChunk(vec3i p_pos, Chunk& p_chunk) {
         }
     };
 
-    u16 count = 0;
-    vec3 offset = {
-        p_pos.x * 16,
-        p_pos.y * 16,
-        p_pos.z * 16,
-    };
+    u16 count = populateMesh(p_pos);
 
-    auto& chunk = *(renderChunks[p_pos].chunk);
     auto& mesh = renderChunks[p_pos].mesh;
-
-    u8 cullMask[16][16][16];
-    for (int x = 0; x < 16; x++) {
-        for (int y = 0; y < 16; y++) {
-            for (int z = 0; z < 16; z++) {
-                cullMask[x][y][z] = (chunk[16*16*z + 16*y + x] != 0);
-            }
-        }
-    }
-
-    for (int i = 0; i < 16*16*16; i++) {
-        u64& blockId = chunk[i];
-        if (blockId == 0) continue;
-        vec3i posInChunk = {
-            /*;)*/ (i & 0x0F),
-            ((i >> 4) & 0x0F),
-            ((i >> 8) & 0x0F),
-        };
-        vec3 pos = {
-            posInChunk.x + offset.x,
-            posInChunk.y + offset.y,
-            posInChunk.z + offset.z,
-        };
-        for (auto& [direction, vertArr] : DIRECTIONS) {
-            vec3i checkPos = {
-                posInChunk.x + direction.x,
-                posInChunk.y + direction.y,
-                posInChunk.z + direction.z,
-            };
-
-            if (
-                !(checkPos.x & 0x10) && // check if the block is in the same chunk
-                !(checkPos.y & 0x10) && // if it goes out of bounds, checkPos will
-                !(checkPos.z & 0x10) && // either be -1 or 16, which this catches
-                cullMask[checkPos.x][checkPos.y][checkPos.z]
-            ) continue;
-
-            mesh.vertices[12*count + 0] = pos.x + vertArr[0].x;
-            mesh.vertices[12*count + 1] = pos.y + vertArr[0].y;
-            mesh.vertices[12*count + 2] = pos.z + vertArr[0].z;
-
-            mesh.vertices[12*count + 3] = pos.x + vertArr[1].x;
-            mesh.vertices[12*count + 4] = pos.y + vertArr[1].y;
-            mesh.vertices[12*count + 5] = pos.z + vertArr[1].z;
-
-            mesh.vertices[12*count + 6] = pos.x + vertArr[2].x;
-            mesh.vertices[12*count + 7] = pos.y + vertArr[2].y;
-            mesh.vertices[12*count + 8] = pos.z + vertArr[2].z;
-
-            mesh.vertices[12*count + 9] = pos.x + vertArr[3].x;
-            mesh.vertices[12*count + 10] = pos.y + vertArr[3].y;
-            mesh.vertices[12*count + 11] = pos.z + vertArr[3].z;
-            
-            mesh.texcoords[8*count + 0] = 0.0f;
-            mesh.texcoords[8*count + 1] = 0.0f;
-            mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
-            mesh.texcoords[8*count + 3] = 0.0f;
-            mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
-            mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
-            mesh.texcoords[8*count + 6] = 0.0f;
-            mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
-
-            mesh.indices[6*count + 0] = 4*count + 0;
-            mesh.indices[6*count + 1] = 4*count + 1;
-            mesh.indices[6*count + 2] = 4*count + 2;
-            mesh.indices[6*count + 3] = 4*count + 2;
-            mesh.indices[6*count + 4] = 4*count + 3;
-            mesh.indices[6*count + 5] = 4*count + 0;
-
-            count++;
-        }
-    }
 
     UploadMesh(&mesh, true);
 
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, mesh.texcoords, 8*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
-};
+    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 4*count * sizeof(u16), 0);
+}
 
 void updateChunk(vec3i p_pos) {
+    u16 count = populateMesh(p_pos);
+
+    auto& mesh = renderChunks[p_pos].mesh;
+
+    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
+    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, mesh.texcoords, 8*count * sizeof(f32), 0);
+    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 4*count * sizeof(u16), 0);
+}
+
+u16 populateMesh(vec3i p_pos) {
     u16 count = 0;
     vec3 offset = {
         p_pos.x * 16,
@@ -246,10 +177,7 @@ void updateChunk(vec3i p_pos) {
             count++;
         }
     }
-
-    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, mesh.texcoords, 8*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 4*count * sizeof(u16), 0);
+    return count;
 }
 
 void deactivateChunk(vec3i p_pos) {
