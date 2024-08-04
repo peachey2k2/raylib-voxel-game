@@ -2,6 +2,7 @@
 #include "core/world.hpp"
 
 #include "core/render.hpp"
+#include <math.h>
 
 namespace wmac::world {
     Chunk chunk = {};
@@ -9,15 +10,17 @@ namespace wmac::world {
 void init() {
     say("Initializing world");
     chunks.clear();
-    chunk[0] = 1;
-    chunk[1] = 1;
-    chunk[2] = 1;
-    chunk[3] = 1;
-    chunk[4] = 1;
+    for (i32 x = 0; x < 16; x++) {
+        for (i32 y = 0; y < 16; y++) {
+            for (i32 z = 0; z < 16; z++) {
+                if (pow(x-8, 2) + pow(y-8, 2) + pow(z-8, 2) < 64) {
+                    chunk[x + y*16 + z*16*16] = 1;
+                }
+            }
+        }
+    }
     addChunk(vec3i{0, 0, 0}, &chunk);
-    addChunk(vec3i{0, 1, 0}, &chunk);
     render::activateChunk(vec3i{0, 0, 0}, chunk);
-    render::activateChunk(vec3i{0, 1, 0}, chunk);
 }
 
 void addChunk(vec3i p_pos, Chunk *p_chunk) {
