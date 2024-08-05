@@ -18,7 +18,7 @@ objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 compileFlags := -std=c++20 -I./include -I./src -I./lib
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
-linkFlags = -L lib/$(platform) -l raylib
+linkFlags = -L lib/$(platform) -l raylib -l noise
 
 # Check for Windows
 ifeq ($(OS), Windows_NT)

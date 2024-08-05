@@ -5,26 +5,43 @@
 #include <math.h>
 
 namespace wmac::world {
-    Chunk chunk = {};
 
 void init() {
     say("Initializing world");
+    noiseMap = new noise::module::Perlin();
     chunks.clear();
-    for (i32 x = 0; x < 16; x++) {
-        for (i32 y = 0; y < 16; y++) {
-            for (i32 z = 0; z < 16; z++) {
-                if (pow(x-8, 2) + pow(y-8, 2) + pow(z-8, 2) < 64) {
-                    chunk[x + y*16 + z*16*16] = 1;
-                }
-            }
+    for (i32 x = 0; x < 10; x++) {
+        for (i32 z = 0; z < 10; z++) {
+            generateChunk(vec3i{x, 0, z});
+            render::activateChunk(vec3i{x, 0, z});
         }
     }
-    addChunk(vec3i{0, 0, 0}, &chunk);
-    render::activateChunk(vec3i{0, 0, 0}, chunk);
+    // generateChunk(vec3i{0, 0, 0});
+    // render::activateChunk(vec3i{0, 0, 0});
+}
+
+void deinit() {
+    delete noiseMap;
+    for (auto& [pos, chunk] : chunks) {
+        delete chunk;
+    }
 }
 
 void addChunk(vec3i p_pos, Chunk *p_chunk) {
     chunks[p_pos] = p_chunk;
+}
+
+void generateChunk(vec3i p_pos) {
+    Chunk* chunk = rcast<Chunk*>(new Chunk());
+    for (i32 x = 0; x < 16; x++) {
+        for (i32 z = 0; z < 16; z++) {
+            i32 height = scast<i32>(noiseMap->GetValue(x/16.0 + p_pos.x, 0, z/16.0 + p_pos.z) * 14) + 1;
+            for (i32 y = 0; y < height; y++) {
+                (*chunk)[x + y*16 + z*16*16] = 1;
+            }
+        }
+    }
+    addChunk(p_pos, chunk);
 }
 
 vec3i getChunkLoc(vec3i p_pos) {

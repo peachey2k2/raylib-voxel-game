@@ -1,6 +1,7 @@
 #pragma once
 
 #include "misc/utils.hpp"
+#include <noise/noise.h>
 
 namespace wmac {
 
@@ -48,11 +49,15 @@ inline std::unordered_map<vec3i, Chunk*> chunks;
 
 #ifdef WORLD_CPP
 
+noise::module::Perlin* noiseMap = nullptr;
 
 #endif
 
 void init();
+void deinit();
 void addChunk(vec3i p_pos, Chunk *p_chunk);
+
+void generateChunk(vec3i p_pos);
 
 vec3i getChunkLoc(vec3i p_pos);
 ChunkPos getPosInChunk(vec3i p_pos);

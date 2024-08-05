@@ -65,6 +65,7 @@ void Core::drawUI() {
 }
 
 void Core::deinit() {
+    world::deinit();
     CloseWindow();
 }
 

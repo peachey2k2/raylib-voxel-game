@@ -37,7 +37,7 @@ void initMesh();
 void draw();
 void addTextureToAtlas(InitBlockInfo& p_block);
 
-void activateChunk(vec3i p_pos, Chunk& p_chunk);
+void activateChunk(vec3i p_pos);
 void updateChunk(vec3i p_pos);
 u16 populateMesh(vec3i p_pos);
 void deactivateChunk(vec3i p_pos);

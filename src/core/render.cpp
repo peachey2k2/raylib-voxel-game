@@ -62,9 +62,10 @@ void addTextureToAtlas(InitBlockInfo& p_block) {
 
 }
 
-void activateChunk(vec3i p_pos, Chunk& p_chunk) {
-    renderChunks[p_pos] = {
-        .chunk = &p_chunk,
+void activateChunk(vec3i p_pos) {
+    Chunk& chunk = *(world::chunks[p_pos]);
+        renderChunks[p_pos] = {
+        .chunk = &chunk,
         .mesh = {
             .vertexCount = 8 * 16*16*16,
             .triangleCount = 12 * 16*16*16,
@@ -82,7 +83,7 @@ void activateChunk(vec3i p_pos, Chunk& p_chunk) {
 
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, mesh.texcoords, 8*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 4*count * sizeof(u16), 0);
+    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
 }
 
 void updateChunk(vec3i p_pos) {
@@ -92,7 +93,7 @@ void updateChunk(vec3i p_pos) {
 
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
     UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_TEXCOORD01, mesh.texcoords, 8*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 4*count * sizeof(u16), 0);
+    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
 }
 
 u16 populateMesh(vec3i p_pos) {
@@ -105,6 +106,8 @@ u16 populateMesh(vec3i p_pos) {
 
     auto& chunk = *(renderChunks[p_pos].chunk);
     auto& mesh = renderChunks[p_pos].mesh;
+
+    say(chunk[16*16*16-1]);
 
     u8 cullMask[16][16][16];
     for (int x = 0; x < 16; x++) {
@@ -128,6 +131,7 @@ u16 populateMesh(vec3i p_pos) {
             posInChunk.y + offset.y,
             posInChunk.z + offset.z,
         };
+
         for (auto& [direction, vertArr] : DIRECTIONS) {
             vec3i checkPos = {
                 posInChunk.x + direction.x,
