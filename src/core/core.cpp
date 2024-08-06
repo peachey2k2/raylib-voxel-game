@@ -9,7 +9,7 @@ void Core::run() {
     while (!WindowShouldClose()) {
         update();
         BeginDrawing(); {
-        ClearBackground(BLACK);
+        ClearBackground(BLUE);
             BeginMode3D(camera); {
                 draw3D();
             } EndMode3D();
@@ -52,15 +52,15 @@ vec3 Core::getMovementDelta() {
         (float)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
         (float)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
     };
-    return movementDelta * (IsKeyDown(KEY_LEFT_CONTROL) ? 2.0f : 1.0f) * SPEED * GetFrameTime();;
+    return movementDelta * (IsKeyDown(KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * GetFrameTime();;
 }
 
 void Core::draw3D() {
-    DrawGrid(10, 1.0f);
     render::draw();
 }
 
 void Core::drawUI() {
+    DrawRectangle(0, 0, 120, 40, BLACK);
     DrawFPS(10, 10);
 }
 

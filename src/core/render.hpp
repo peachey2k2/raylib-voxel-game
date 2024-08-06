@@ -32,6 +32,8 @@ std::vector<u16> indices;
 
 #endif
 
+extern i64 accum;
+
 void initAtlas();
 void initMesh();
 void draw();

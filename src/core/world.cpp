@@ -11,13 +11,15 @@ void init() {
     noiseMap = new noise::module::Perlin();
     chunks.clear();
     for (i32 x = 0; x < 10; x++) {
-        for (i32 z = 0; z < 10; z++) {
-            generateChunk(vec3i{x, 0, z});
-            render::activateChunk(vec3i{x, 0, z});
+        for (i32 y = 0; y < 10; y++) {
+            for (i32 z = 0; z < 10; z++) {
+                generateChunk(vec3i{x, y, z});
+                render::activateChunk(vec3i{x, y, z});
+            }
         }
     }
-    // generateChunk(vec3i{0, 0, 0});
-    // render::activateChunk(vec3i{0, 0, 0});
+    say("vertex count:", 4*render::accum);
+    say("triangle count:", 2*render::accum);
 }
 
 void deinit() {
@@ -35,8 +37,8 @@ void generateChunk(vec3i p_pos) {
     Chunk* chunk = rcast<Chunk*>(new Chunk());
     for (i32 x = 0; x < 16; x++) {
         for (i32 z = 0; z < 16; z++) {
-            i32 height = scast<i32>(noiseMap->GetValue(x/16.0 + p_pos.x, 0, z/16.0 + p_pos.z) * 14) + 1;
-            for (i32 y = 0; y < height; y++) {
+            i32 height = scast<i32>(noiseMap->GetValue((x + p_pos.x*16)/160.0, 0, (z + p_pos.z*16)/160.0) * 160);
+            for (i32 y = 0; (y < 16) && (y + p_pos.y*16 < height); y++) {
                 (*chunk)[x + y*16 + z*16*16] = 1;
             }
         }

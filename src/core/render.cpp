@@ -62,6 +62,8 @@ void addTextureToAtlas(InitBlockInfo& p_block) {
 
 }
 
+i64 accum = 0;
+
 void activateChunk(vec3i p_pos) {
     Chunk& chunk = *(world::chunks[p_pos]);
         renderChunks[p_pos] = {
@@ -76,6 +78,7 @@ void activateChunk(vec3i p_pos) {
     };
 
     u16 count = populateMesh(p_pos);
+    accum += count;
 
     auto& mesh = renderChunks[p_pos].mesh;
 
@@ -109,78 +112,126 @@ u16 populateMesh(vec3i p_pos) {
 
     say(chunk[16*16*16-1]);
 
-    u8 cullMask[16][16][16];
-    for (int x = 0; x < 16; x++) {
+    // mask for faces that are not visible
+    u8 cullMask[3][17][16][16];
+    // todo: make it work with chunk boundaries
+    for (int x = 0; x < 15; x++) {
         for (int y = 0; y < 16; y++) {
             for (int z = 0; z < 16; z++) {
-                cullMask[x][y][z] = (chunk[16*16*z + 16*y + x] != 0);
+                cullMask[0][x+1][y][z] = chunk[16*16*z + 16*y + x] && chunk[16*16*z + 16*y + x+1];
+            }
+        }
+    }
+    for (int x = 0; x < 16; x++) {
+        for (int y = 0; y < 15; y++) {
+            for (int z = 0; z < 16; z++) {
+                cullMask[1][y+1][z][x] = chunk[16*16*z + 16*y + x] && chunk[16*16*z + 16*(y+1) + x];
+            }
+        }
+    }
+    for (int x = 0; x < 16; x++) {
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 15; z++) {
+                cullMask[2][z+1][x][y] = chunk[16*16*z + 16*y + x] && chunk[16*16*(z+1) + 16*y + x];
             }
         }
     }
 
-    for (int i = 0; i < 16*16*16; i++) {
-        u64& blockId = chunk[i];
-        if (blockId == 0) continue;
-        vec3i posInChunk = {
-            /*;)*/ (i & 0x0F),
-            ((i >> 4) & 0x0F),
-            ((i >> 8) & 0x0F),
-        };
-        vec3 pos = {
-            posInChunk.x + offset.x,
-            posInChunk.y + offset.y,
-            posInChunk.z + offset.z,
-        };
+    // GREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEED
+    // u8 greedyMask[16][16][16] = {0};
+    u8 greedyMask[3][17][16][16] = {0};
+    // for (i32 x = 0; x < 16; x++) {
+    //     for (i32 y = 0; y < 16; y++) {
+    //         for (i32 z = 0; z < 16; z++) {
+    //             u64 id = chunk[16*16*z + 16*y + x];
+    //             if (id == 0) continue;
+    //             if (greedyMask[x][y][z]) continue;
 
-        for (auto& [direction, vertArr] : DIRECTIONS) {
-            vec3i checkPos = {
-                posInChunk.x + direction.x,
-                posInChunk.y + direction.y,
-                posInChunk.z + direction.z,
-            };
+    //             vec3i start = {x, y, z};
 
-            if (
-                !(checkPos.x & 0x10) && // check if the block is in the same chunk
-                !(checkPos.y & 0x10) && // if it goes out of bounds, checkPos will
-                !(checkPos.z & 0x10) && // either be -1 or 16, which this catches
-                cullMask[checkPos.x][checkPos.y][checkPos.z]
-            ) continue;
-            
-            mesh.vertices[12*count + 0] = pos.x + vertArr[0].x;
-            mesh.vertices[12*count + 1] = pos.y + vertArr[0].y;
-            mesh.vertices[12*count + 2] = pos.z + vertArr[0].z;
+    //             i32 xi = x;
+    //             for (xi = x; (xi < 16) && (id == chunk[16*16*z + 16*y + xi]); xi++) {
+    //                 greedyMask[xi][y][z] = 1;
+    //             }
+    //         }
+    //     }
+    // }
+    for (i32 x = 0; x < 17; x++) {
+        for (i32 y = 0; y < 16; y++) {
+            for (i32 z = 0; z < 16; z++) {
+                if (cullMask[0][x][y][z]) continue;
+                if (greedyMask[0][x][y][z]) continue;
 
-            mesh.vertices[12*count + 3] = pos.x + vertArr[1].x;
-            mesh.vertices[12*count + 4] = pos.y + vertArr[1].y;
-            mesh.vertices[12*count + 5] = pos.z + vertArr[1].z;
-
-            mesh.vertices[12*count + 6] = pos.x + vertArr[2].x;
-            mesh.vertices[12*count + 7] = pos.y + vertArr[2].y;
-            mesh.vertices[12*count + 8] = pos.z + vertArr[2].z;
-
-            mesh.vertices[12*count + 9] = pos.x + vertArr[3].x;
-            mesh.vertices[12*count + 10] = pos.y + vertArr[3].y;
-            mesh.vertices[12*count + 11] = pos.z + vertArr[3].z;        
-
-            mesh.texcoords[8*count + 0] = 0.0f;
-            mesh.texcoords[8*count + 1] = 0.0f;
-            mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
-            mesh.texcoords[8*count + 3] = 0.0f;
-            mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
-            mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
-            mesh.texcoords[8*count + 6] = 0.0f;
-            mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
-
-            mesh.indices[6*count + 0] = 4*count + 0;
-            mesh.indices[6*count + 1] = 4*count + 1;
-            mesh.indices[6*count + 2] = 4*count + 2;
-            mesh.indices[6*count + 3] = 4*count + 2;
-            mesh.indices[6*count + 4] = 4*count + 3;
-            mesh.indices[6*count + 5] = 4*count + 0;
-
-            count++;
+                u64 id = chunk[16*16*z + 16*y + x];
+                if (id == 0) continue;
+            }
         }
     }
+                
+
+    // for (int i = 0; i < 16*16*16; i++) {
+    //     u64& blockId = chunk[i];
+    //     if (blockId == 0) continue;
+    //     vec3i posInChunk = {
+    //         /*;)*/ (i & 0x0F),
+    //         ((i >> 4) & 0x0F),
+    //         ((i >> 8) & 0x0F),
+    //     };
+    //     vec3 pos = {
+    //         posInChunk.x + offset.x,
+    //         posInChunk.y + offset.y,
+    //         posInChunk.z + offset.z,
+    //     };
+
+    //     for (auto& [direction, vertArr] : DIRECTIONS) {
+    //         vec3i checkPos = {
+    //             posInChunk.x + direction.x,
+    //             posInChunk.y + direction.y,
+    //             posInChunk.z + direction.z,
+    //         };
+
+    //         if (
+    //             !(checkPos.x & 0x10) && // check if the block is in the same chunk
+    //             !(checkPos.y & 0x10) && // if it goes out of bounds, checkPos will
+    //             !(checkPos.z & 0x10) && // either be -1 or 16, which this catches
+    //             cullMask[checkPos.x][checkPos.y][checkPos.z]
+    //         ) continue;
+            
+    //         mesh.vertices[12*count + 0] = pos.x + vertArr[0].x;
+    //         mesh.vertices[12*count + 1] = pos.y + vertArr[0].y;
+    //         mesh.vertices[12*count + 2] = pos.z + vertArr[0].z;
+
+    //         mesh.vertices[12*count + 3] = pos.x + vertArr[1].x;
+    //         mesh.vertices[12*count + 4] = pos.y + vertArr[1].y;
+    //         mesh.vertices[12*count + 5] = pos.z + vertArr[1].z;
+
+    //         mesh.vertices[12*count + 6] = pos.x + vertArr[2].x;
+    //         mesh.vertices[12*count + 7] = pos.y + vertArr[2].y;
+    //         mesh.vertices[12*count + 8] = pos.z + vertArr[2].z;
+
+    //         mesh.vertices[12*count + 9] = pos.x + vertArr[3].x;
+    //         mesh.vertices[12*count + 10] = pos.y + vertArr[3].y;
+    //         mesh.vertices[12*count + 11] = pos.z + vertArr[3].z;        
+
+    //         mesh.texcoords[8*count + 0] = 0.0f;
+    //         mesh.texcoords[8*count + 1] = 0.0f;
+    //         mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
+    //         mesh.texcoords[8*count + 3] = 0.0f;
+    //         mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
+    //         mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
+    //         mesh.texcoords[8*count + 6] = 0.0f;
+    //         mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
+
+    //         mesh.indices[6*count + 0] = 4*count + 0;
+    //         mesh.indices[6*count + 1] = 4*count + 1;
+    //         mesh.indices[6*count + 2] = 4*count + 2;
+    //         mesh.indices[6*count + 3] = 4*count + 2;
+    //         mesh.indices[6*count + 4] = 4*count + 3;
+    //         mesh.indices[6*count + 5] = 4*count + 0;
+
+    //         count++;
+    //     }
+    // }
     return count;
 }
 
