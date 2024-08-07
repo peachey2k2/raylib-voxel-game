@@ -110,128 +110,112 @@ u16 populateMesh(vec3i p_pos) {
     auto& chunk = *(renderChunks[p_pos].chunk);
     auto& mesh = renderChunks[p_pos].mesh;
 
-    say(chunk[16*16*16-1]);
+    #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
 
-    // mask for faces that are not visible
-    u8 cullMask[3][17][16][16];
+    say(BLOCK(15,15,15));
+
+    u8 faces[3][17][16][16];
     // todo: make it work with chunk boundaries
-    for (int x = 0; x < 15; x++) {
-        for (int y = 0; y < 16; y++) {
-            for (int z = 0; z < 16; z++) {
-                cullMask[0][x+1][y][z] = chunk[16*16*z + 16*y + x] && chunk[16*16*z + 16*y + x+1];
-            }
-        }
-    }
-    for (int x = 0; x < 16; x++) {
-        for (int y = 0; y < 15; y++) {
-            for (int z = 0; z < 16; z++) {
-                cullMask[1][y+1][z][x] = chunk[16*16*z + 16*y + x] && chunk[16*16*z + 16*(y+1) + x];
-            }
-        }
-    }
-    for (int x = 0; x < 16; x++) {
-        for (int y = 0; y < 16; y++) {
-            for (int z = 0; z < 15; z++) {
-                cullMask[2][z+1][x][y] = chunk[16*16*z + 16*y + x] && chunk[16*16*(z+1) + 16*y + x];
+    for (i32 i = 0; i < 15; i++) {
+        for (i32 j = 0; j < 16; j++) {
+            for (i32 k = 0; k < 16; k++) {
+                if (BLOCK(i, j, k) && BLOCK(i+1, j, k)) {
+                    faces[0][i+1][j][k] = 0;
+                } else {
+                    faces[0][i+1][j][k] = BLOCK(i, j, k) | BLOCK(i+1, j, k);
+                }
+
+                if (BLOCK(j, k, i) && BLOCK(j, k, i+1)) {
+                    faces[1][i+1][j][k] = 0;
+                } else {
+                    faces[1][i+1][j][k] = BLOCK(j, k, i) | BLOCK(j, k, i+1);
+                }
+
+                if (BLOCK(k, i, j) && BLOCK(k, i+1, j)) {
+                    faces[2][i+1][j][k] = 0;
+                } else {
+                    faces[2][i+1][j][k] = BLOCK(k, i, j) | BLOCK(k, i+1, j);
+                }
             }
         }
     }
 
     // GREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEED
-    // u8 greedyMask[16][16][16] = {0};
-    u8 greedyMask[3][17][16][16] = {0};
-    // for (i32 x = 0; x < 16; x++) {
-    //     for (i32 y = 0; y < 16; y++) {
-    //         for (i32 z = 0; z < 16; z++) {
-    //             u64 id = chunk[16*16*z + 16*y + x];
-    //             if (id == 0) continue;
-    //             if (greedyMask[x][y][z]) continue;
-
-    //             vec3i start = {x, y, z};
-
-    //             i32 xi = x;
-    //             for (xi = x; (xi < 16) && (id == chunk[16*16*z + 16*y + xi]); xi++) {
-    //                 greedyMask[xi][y][z] = 1;
-    //             }
-    //         }
-    //     }
-    // }
-    for (i32 x = 0; x < 17; x++) {
+    u8 greedyMask[17][16][16] = {0};
+    for (i32 x = 1; x < 17; x++) {
         for (i32 y = 0; y < 16; y++) {
             for (i32 z = 0; z < 16; z++) {
-                if (cullMask[0][x][y][z]) continue;
-                if (greedyMask[0][x][y][z]) continue;
-
-                u64 id = chunk[16*16*z + 16*y + x];
+                u64 id = faces[0][x][y][z];
                 if (id == 0) continue;
+                if (greedyMask[x][y][z]) continue;
+
+                greedyMask[x][y][z] = 1;
+
+                i32 yi = y+1;
+                for (; yi < 16; yi++) {
+                    if (faces[0][x][yi][z] != id) break;
+                    if (greedyMask[x][yi][z]) break;
+                    greedyMask[x][yi][z] = 1;
+                }
+
+                i32 zi = z+1;
+                for (; zi < 16; zi++) {
+                    for (i32 ytoyi = y; ytoyi <= yi; ytoyi++) {
+                        if (faces[0][x][ytoyi][zi] != id) goto endloop;
+                        if (greedyMask[x][ytoyi][zi]) goto endloop;
+                    }
+                    for (i32 ytoyi = y; ytoyi <= yi; ytoyi++) {
+                        greedyMask[x][ytoyi][zi] = 1;
+                    }
+                }
+                endloop:
+
+                mesh.vertices[12*count + 0] = x + offset.x;
+                mesh.vertices[12*count + 1] = y + offset.y;
+                mesh.vertices[12*count + 2] = z + offset.z;
+
+                mesh.vertices[12*count + 3] = x + offset.x;
+                mesh.vertices[12*count + 4] = yi + offset.y;
+                mesh.vertices[12*count + 5] = z + offset.z;
+
+                mesh.vertices[12*count + 6] = x + offset.x;
+                mesh.vertices[12*count + 7] = yi + offset.y;
+                mesh.vertices[12*count + 8] = zi + offset.z;
+
+                mesh.vertices[12*count + 9] = x + offset.x;
+                mesh.vertices[12*count + 10] = y + offset.y;
+                mesh.vertices[12*count + 11] = zi + offset.z;
+
+                mesh.texcoords[8*count + 0] = 0.0f;
+                mesh.texcoords[8*count + 1] = 0.0f;
+                mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
+                mesh.texcoords[8*count + 3] = 0.0f;
+                mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
+                mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
+                mesh.texcoords[8*count + 6] = 0.0f;
+                mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
+
+                mesh.indices[6*count + 0] = 4*count + 0;
+                mesh.indices[6*count + 1] = 4*count + 1;
+                mesh.indices[6*count + 2] = 4*count + 2;
+                mesh.indices[6*count + 3] = 4*count + 2;
+                mesh.indices[6*count + 4] = 4*count + 3;
+                mesh.indices[6*count + 5] = 4*count + 0;
+
+                count++;
             }
         }
     }
-                
 
-    // for (int i = 0; i < 16*16*16; i++) {
-    //     u64& blockId = chunk[i];
-    //     if (blockId == 0) continue;
-    //     vec3i posInChunk = {
-    //         /*;)*/ (i & 0x0F),
-    //         ((i >> 4) & 0x0F),
-    //         ((i >> 8) & 0x0F),
-    //     };
-    //     vec3 pos = {
-    //         posInChunk.x + offset.x,
-    //         posInChunk.y + offset.y,
-    //         posInChunk.z + offset.z,
-    //     };
+    std::cout << "Chunk Position: " << p_pos.x << ", " << p_pos.y << ", " << p_pos.z << std::endl;
+    std::cout << "Vertex Count: " << count*4 << std::endl;
+    for (u16 i = 0; i < count*4; i++) {
+        std::cout << "Vertex " << i << ": (" 
+                  << mesh.vertices[3*i + 0] << ", " 
+                  << mesh.vertices[3*i + 1] << ", " 
+                  << mesh.vertices[3*i + 2] << ")" << std::endl;
+    }
 
-    //     for (auto& [direction, vertArr] : DIRECTIONS) {
-    //         vec3i checkPos = {
-    //             posInChunk.x + direction.x,
-    //             posInChunk.y + direction.y,
-    //             posInChunk.z + direction.z,
-    //         };
-
-    //         if (
-    //             !(checkPos.x & 0x10) && // check if the block is in the same chunk
-    //             !(checkPos.y & 0x10) && // if it goes out of bounds, checkPos will
-    //             !(checkPos.z & 0x10) && // either be -1 or 16, which this catches
-    //             cullMask[checkPos.x][checkPos.y][checkPos.z]
-    //         ) continue;
-            
-    //         mesh.vertices[12*count + 0] = pos.x + vertArr[0].x;
-    //         mesh.vertices[12*count + 1] = pos.y + vertArr[0].y;
-    //         mesh.vertices[12*count + 2] = pos.z + vertArr[0].z;
-
-    //         mesh.vertices[12*count + 3] = pos.x + vertArr[1].x;
-    //         mesh.vertices[12*count + 4] = pos.y + vertArr[1].y;
-    //         mesh.vertices[12*count + 5] = pos.z + vertArr[1].z;
-
-    //         mesh.vertices[12*count + 6] = pos.x + vertArr[2].x;
-    //         mesh.vertices[12*count + 7] = pos.y + vertArr[2].y;
-    //         mesh.vertices[12*count + 8] = pos.z + vertArr[2].z;
-
-    //         mesh.vertices[12*count + 9] = pos.x + vertArr[3].x;
-    //         mesh.vertices[12*count + 10] = pos.y + vertArr[3].y;
-    //         mesh.vertices[12*count + 11] = pos.z + vertArr[3].z;        
-
-    //         mesh.texcoords[8*count + 0] = 0.0f;
-    //         mesh.texcoords[8*count + 1] = 0.0f;
-    //         mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
-    //         mesh.texcoords[8*count + 3] = 0.0f;
-    //         mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
-    //         mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
-    //         mesh.texcoords[8*count + 6] = 0.0f;
-    //         mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
-
-    //         mesh.indices[6*count + 0] = 4*count + 0;
-    //         mesh.indices[6*count + 1] = 4*count + 1;
-    //         mesh.indices[6*count + 2] = 4*count + 2;
-    //         mesh.indices[6*count + 3] = 4*count + 2;
-    //         mesh.indices[6*count + 4] = 4*count + 3;
-    //         mesh.indices[6*count + 5] = 4*count + 0;
-
-    //         count++;
-    //     }
-    // }
     return count;
 }
 

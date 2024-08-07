@@ -56,6 +56,7 @@ vec3 Core::getMovementDelta() {
 }
 
 void Core::draw3D() {
+    DrawGrid(20, 1.0f);
     render::draw();
 }
 
