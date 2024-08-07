@@ -114,107 +114,242 @@ u16 populateMesh(vec3i p_pos) {
 
     say(BLOCK(15,15,15));
 
-    u8 faces[3][17][16][16];
-    // todo: make it work with chunk boundaries
-    for (i32 i = 0; i < 15; i++) {
-        for (i32 j = 0; j < 16; j++) {
-            for (i32 k = 0; k < 16; k++) {
-                if (BLOCK(i, j, k) && BLOCK(i+1, j, k)) {
-                    faces[0][i+1][j][k] = 0;
-                } else {
-                    faces[0][i+1][j][k] = BLOCK(i, j, k) | BLOCK(i+1, j, k);
-                }
+    for (u32 d = 0; d < 3; d++) {
+        i32 i, j, k, l, w, h;
+        i32 u = (d+1) % 3;
+        i32 v = (d+2) % 3;
+        i32 x[3] = {0};
+        i32 q[3] = {0};
 
-                if (BLOCK(j, k, i) && BLOCK(j, k, i+1)) {
-                    faces[1][i+1][j][k] = 0;
-                } else {
-                    faces[1][i+1][j][k] = BLOCK(j, k, i) | BLOCK(j, k, i+1);
-                }
+        bool mask[16*16];
+        bool flip[16*16];
 
-                if (BLOCK(k, i, j) && BLOCK(k, i+1, j)) {
-                    faces[2][i+1][j][k] = 0;
-                } else {
-                    faces[2][i+1][j][k] = BLOCK(k, i, j) | BLOCK(k, i+1, j);
+        q[d] = 1;
+        x[d] = -1;
+
+        while (x[d] < 16) {
+
+            // cook le' mask
+            u32 n = 0;
+            for (x[v] = 0; x[v] < 16; x[v]++) {
+                for (x[u] = 0; x[u] < 16; x[u]++) {
+                    bool a = (x[d] >= 0) ? BLOCK(x[0],        x[1],        x[2]       ) > 0 : false;
+                    bool b = (x[d] < 15) ? BLOCK(x[0] + q[0], x[1] + q[1], x[2] + q[2]) > 0 : false;
+
+                    mask[n] = a != b;
+                    flip[n] = b;
+                    n++;
+                }
+            }
+
+            x[d]++;
+            n = 0;
+
+            for (j = 0; j < 16; j++) {
+                for (i = 0; i < 16;) {
+                    if (!mask[n]) {
+                        i++;
+                        n++;
+                        continue;
+                    }
+
+                    for (w = 1; i + w < 16 && mask[n + w]; w++);
+
+                    for (h = 1; j + h < 16; h++) {
+                        for (k = 0; k < w; k++) {
+                            if (!mask[n + k + h*16]) goto endloop;
+                            if (flip[n] != flip[n + k + h*16]) goto endloop;
+                        }
+                    } endloop:
+
+                    x[u] = i;
+                    x[v] = j;
+
+                    vec3i p = {
+                        x[0] + offset.x,
+                        x[1] + offset.y,
+                        x[2] + offset.z,
+                    };
+
+                    i32 du[3] = {0};
+                    i32 dv[3] = {0};
+
+                    du[u] = w;
+                    dv[v] = h;
+
+                    if (flip[n]) {
+                        mesh.vertices[12*count + 0] = p.x;
+                        mesh.vertices[12*count + 1] = p.y;
+                        mesh.vertices[12*count + 2] = p.z;
+
+                        mesh.vertices[12*count + 3] = p.x + dv[0];
+                        mesh.vertices[12*count + 4] = p.y + dv[1];
+                        mesh.vertices[12*count + 5] = p.z + dv[2];
+
+                        mesh.vertices[12*count + 6] = p.x + du[0] + dv[0];
+                        mesh.vertices[12*count + 7] = p.y + du[1] + dv[1];
+                        mesh.vertices[12*count + 8] = p.z + du[2] + dv[2];
+
+                        mesh.vertices[12*count + 9] = p.x + du[0];
+                        mesh.vertices[12*count + 10] = p.y + du[1];
+                        mesh.vertices[12*count + 11] = p.z + du[2];
+                    } else {
+                        mesh.vertices[12*count + 0] = p.x;
+                        mesh.vertices[12*count + 1] = p.y;
+                        mesh.vertices[12*count + 2] = p.z;
+
+                        mesh.vertices[12*count + 3] = p.x + du[0];
+                        mesh.vertices[12*count + 4] = p.y + du[1];
+                        mesh.vertices[12*count + 5] = p.z + du[2];
+
+                        mesh.vertices[12*count + 6] = p.x + du[0] + dv[0];
+                        mesh.vertices[12*count + 7] = p.y + du[1] + dv[1];
+                        mesh.vertices[12*count + 8] = p.z + du[2] + dv[2];
+
+                        mesh.vertices[12*count + 9] = p.x + dv[0];
+                        mesh.vertices[12*count + 10] = p.y + dv[1];
+                        mesh.vertices[12*count + 11] = p.z + dv[2];
+                        
+                    }
+
+                    mesh.texcoords[8*count + 0] = 0.0f;
+                    mesh.texcoords[8*count + 1] = 0.0f;
+                    mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
+                    mesh.texcoords[8*count + 3] = 0.0f;
+
+                    mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
+                    mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
+                    mesh.texcoords[8*count + 6] = 0.0f;
+                    mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
+
+                    mesh.indices[6*count + 0] = 4*count + 0;
+                    mesh.indices[6*count + 1] = 4*count + 1;
+                    mesh.indices[6*count + 2] = 4*count + 2;
+                    mesh.indices[6*count + 3] = 4*count + 2;
+                    mesh.indices[6*count + 4] = 4*count + 3;
+                    mesh.indices[6*count + 5] = 4*count + 0;
+
+                    count++;
+
+                    for (l = 0; l < h; l++) {
+                        for (k = 0; k < w; k++) {
+                            mask[n + k + l*16] = false;
+                        }
+                    }
+
+                    i += w;
+                    n += w;
                 }
             }
         }
     }
 
-    // GREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEED
-    u8 greedyMask[17][16][16] = {0};
-    for (i32 x = 1; x < 17; x++) {
-        for (i32 y = 0; y < 16; y++) {
-            for (i32 z = 0; z < 16; z++) {
-                u64 id = faces[0][x][y][z];
-                if (id == 0) continue;
-                if (greedyMask[x][y][z]) continue;
+    // // we precompute each face of each block
+    // // then roll the greedy meshing algorithm
+    // u8 faces[6][17][16][16];
+    // // todo: make it work with chunk boundaries
+    // for (i32 i = 0; i < 16; i++) {
+    //     for (i32 j = 0; j < 15; j++) {
+    //         for (i32 k = 0; k < 15; k++) {
+    //             if (BLOCK(i, j, k) && BLOCK(i+1, j, k)) {
+    //                 faces[0][i+1][j][k] = 0;
+    //                 faces[1][i+1][j][k] = 0;
+    //             } else if (BLOCK(i, j, k)) {
+    //                 faces[0][i+1][j][k] = BLOCK(i, j, k);
+    //             } else {
+    //                 faces[1][i+1][j][k] = BLOCK(i+1, j, k);
+    //             }
 
-                greedyMask[x][y][z] = 1;
+    //             if (BLOCK(j, k, i) && BLOCK(j, k, i+1)) {
+    //                 faces[2][i+1][j][k] = 0;
+    //                 faces[3][i+1][j][k] = 0;
+    //             } else if (BLOCK(j, k, i)) {
+    //                 faces[2][i+1][j][k] = BLOCK(j, k, i);
+    //             } else {
+    //                 faces[3][i+1][j][k] = BLOCK(j, k, i+1);
+    //             }
 
-                i32 yi = y+1;
-                for (; yi < 16; yi++) {
-                    if (faces[0][x][yi][z] != id) break;
-                    if (greedyMask[x][yi][z]) break;
-                    greedyMask[x][yi][z] = 1;
-                }
+    //             if (BLOCK(k, i, j) && BLOCK(k, i+1, j)) {
+    //                 faces[4][i+1][j][k] = 0;
+    //                 faces[5][i+1][j][k] = 0;
+    //             } else if (BLOCK(k, i, j)) {
+    //                 faces[4][i+1][j][k] = BLOCK(k, i, j);
+    //             } else {
+    //                 faces[5][i+1][j][k] = BLOCK(k, i+1, j);
+    //             }
+    //         }
+    //     }
+    // }
 
-                i32 zi = z+1;
-                for (; zi < 16; zi++) {
-                    for (i32 ytoyi = y; ytoyi <= yi; ytoyi++) {
-                        if (faces[0][x][ytoyi][zi] != id) goto endloop;
-                        if (greedyMask[x][ytoyi][zi]) goto endloop;
-                    }
-                    for (i32 ytoyi = y; ytoyi <= yi; ytoyi++) {
-                        greedyMask[x][ytoyi][zi] = 1;
-                    }
-                }
-                endloop:
+    // // GREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEED
+    // u8 greedyMask[6][16][16][16] = {0};
+    // for (i32 d = 0; d < 6; d++) {
+    //     auto& [dir, corners] = DIRECTIONS[d];
+    //     for (i32 x = 1; x < 17; x++) {
+    //         for (i32 y = 0; y < 16; y++) {
+    //             for (i32 z = 0; z < 16; z++) {
+    //                 u64 id = faces[0][x][y][z];
+    //                 if (id == 0) continue;
+    //                 if (greedyMask[d][x][y][z]) continue;
 
-                mesh.vertices[12*count + 0] = x + offset.x;
-                mesh.vertices[12*count + 1] = y + offset.y;
-                mesh.vertices[12*count + 2] = z + offset.z;
+    //                 greedyMask[d][x][y][z] = 1;
 
-                mesh.vertices[12*count + 3] = x + offset.x;
-                mesh.vertices[12*count + 4] = yi + offset.y;
-                mesh.vertices[12*count + 5] = z + offset.z;
+    //                 i32 yi = y+1;
+    //                 for (; yi < 16; yi++) {
+    //                     if (faces[0][x][yi][z] != id) break;
+    //                     if (greedyMask[d][x][yi][z]) break;
+    //                     greedyMask[d][x][yi][z] = 1;
+    //                 }
 
-                mesh.vertices[12*count + 6] = x + offset.x;
-                mesh.vertices[12*count + 7] = yi + offset.y;
-                mesh.vertices[12*count + 8] = zi + offset.z;
+    //                 i32 zi = z+1;
+    //                 for (; zi < 16; zi++) {
+    //                     for (i32 ytoyi = y; ytoyi <= yi; ytoyi++) {
+    //                         if (faces[0][x][ytoyi][zi] != id) goto endloop;
+    //                         if (greedyMask[d][x][ytoyi][zi]) goto endloop;
+    //                     }
+    //                     for (i32 ytoyi = y; ytoyi <= yi; ytoyi++) {
+    //                         greedyMask[d][x][ytoyi][zi] = 1;
+    //                     }
+    //                 }
+    //                 endloop:
 
-                mesh.vertices[12*count + 9] = x + offset.x;
-                mesh.vertices[12*count + 10] = y + offset.y;
-                mesh.vertices[12*count + 11] = zi + offset.z;
+    //                 mesh.vertices[12*count + 0] = x + offset.x + corners[0].x;
+    //                 mesh.vertices[12*count + 1] = y + offset.y + corners[0].y;
+    //                 mesh.vertices[12*count + 2] = z + offset.z + corners[0].z;
 
-                mesh.texcoords[8*count + 0] = 0.0f;
-                mesh.texcoords[8*count + 1] = 0.0f;
-                mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
-                mesh.texcoords[8*count + 3] = 0.0f;
-                mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
-                mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
-                mesh.texcoords[8*count + 6] = 0.0f;
-                mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
+    //                 mesh.vertices[12*count + 3] = x + offset.x + corners[1].x;
+    //                 mesh.vertices[12*count + 4] = yi + offset.y + corners[1].y;
+    //                 mesh.vertices[12*count + 5] = z + offset.z + corners[1].z;
 
-                mesh.indices[6*count + 0] = 4*count + 0;
-                mesh.indices[6*count + 1] = 4*count + 1;
-                mesh.indices[6*count + 2] = 4*count + 2;
-                mesh.indices[6*count + 3] = 4*count + 2;
-                mesh.indices[6*count + 4] = 4*count + 3;
-                mesh.indices[6*count + 5] = 4*count + 0;
+    //                 mesh.vertices[12*count + 6] = x + offset.x + corners[2].x;
+    //                 mesh.vertices[12*count + 7] = yi + offset.y + corners[2].y;
+    //                 mesh.vertices[12*count + 8] = zi + offset.z + corners[2].z;
 
-                count++;
-            }
-        }
-    }
+    //                 mesh.vertices[12*count + 9] = x + offset.x + corners[3].x;
+    //                 mesh.vertices[12*count + 10] = y + offset.y + corners[3].y;
+    //                 mesh.vertices[12*count + 11] = zi + offset.z + corners[3].z;
 
-    std::cout << "Chunk Position: " << p_pos.x << ", " << p_pos.y << ", " << p_pos.z << std::endl;
-    std::cout << "Vertex Count: " << count*4 << std::endl;
-    for (u16 i = 0; i < count*4; i++) {
-        std::cout << "Vertex " << i << ": (" 
-                  << mesh.vertices[3*i + 0] << ", " 
-                  << mesh.vertices[3*i + 1] << ", " 
-                  << mesh.vertices[3*i + 2] << ")" << std::endl;
-    }
+    //                 mesh.texcoords[8*count + 0] = 0.0f;
+    //                 mesh.texcoords[8*count + 1] = 0.0f;
+    //                 mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW;
+    //                 mesh.texcoords[8*count + 3] = 0.0f;
+    //                 mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW;
+    //                 mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW;
+    //                 mesh.texcoords[8*count + 6] = 0.0f;
+    //                 mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW;
+
+    //                 mesh.indices[6*count + 0] = 4*count + 0;
+    //                 mesh.indices[6*count + 1] = 4*count + 1;
+    //                 mesh.indices[6*count + 2] = 4*count + 2;
+    //                 mesh.indices[6*count + 3] = 4*count + 2;
+    //                 mesh.indices[6*count + 4] = 4*count + 3;
+    //                 mesh.indices[6*count + 5] = 4*count + 0;
+
+    //                 count++;
+    //             }
+    //         }
+    //     }
+    // }
 
     return count;
 }
