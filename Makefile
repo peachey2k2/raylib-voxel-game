@@ -16,9 +16,9 @@ target := $(buildDir)/$(executable)
 sources := $(call rwildcard,src/,*.cpp)
 objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
-compileFlags := -std=c++20 -I./include -I./src -I./lib
+compileFlags := -std=c++20 -I./include -I./src -I./include
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
-linkFlags = -L lib/$(platform) -l raylib -l noise
+linkFlags = -L lib/$(platform) -L ./lib -l raylib -l noise
 
 # Check for Windows
 ifeq ($(OS), Windows_NT)
@@ -67,22 +67,22 @@ run: $(target) execute
 # Sets up the project for compiling, generates includes and libs
 setup: include lib
 
-# Pull and update the the build submodules
-submodules:
-	git submodule update --init --recursive --depth 1
+# # Pull and update the the build submodules
+# submodules:
+# 	git submodule update --init --recursive --depth 1
 
-# Copy the relevant header files into includes
-include: submodules
-	$(MKDIR) $(call platformpth, ./include)
-	$(call COPY,vendor/raylib/src,./include,raylib.h)
-	$(call COPY,vendor/raylib/src,./include,raymath.h)
-	$(call COPY,vendor/raylib-cpp/include,./include,*.hpp)
+# # Copy the relevant header files into includes
+# include: submodules
+# 	$(MKDIR) $(call platformpth, ./include)
+# 	$(call COPY,vendor/raylib/src,./include,raylib.h)
+# 	$(call COPY,vendor/raylib/src,./include,raymath.h)
+# 	$(call COPY,vendor/raylib-cpp/include,./include,*.hpp)
 
-# Build the raylib static library file and copy it into lib
-lib: submodules
-	cd vendor/raylib/src $(THEN) "$(MAKE)" PLATFORM=PLATFORM_DESKTOP
-	$(MKDIR) $(call platformpth, lib/$(platform))
-	$(call COPY,vendor/raylib/src,lib/$(platform),libraylib.a)
+# # Build the raylib static library file and copy it into lib
+# lib: submodules
+# 	cd vendor/raylib/src $(THEN) "$(MAKE)" PLATFORM=PLATFORM_DESKTOP
+# 	$(MKDIR) $(call platformpth, lib/$(platform))
+# 	$(call COPY,vendor/raylib/src,lib/$(platform),libraylib.a)
 
 # Link the program and create the executable
 $(target): $(objects)

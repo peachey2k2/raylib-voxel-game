@@ -15,7 +15,8 @@ out vec4 finalColor;
 void main()
 {
     // Texel color fetching from texture sampler
-    vec4 texelColor = texture(texture0, fragTexCoord);
+    // vec4 texelColor = texture(texture0, fragTexCoord);
+    vec4 texelColor = texture(texture0, fract(fragTexCoord * 16) / 16);
 
     // NOTE: Implement here your fragment shader code
 

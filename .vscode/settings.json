@@ -77,7 +77,8 @@
         "hash_map": "cpp",
         "future": "cpp",
         "shared_mutex": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "complex": "cpp"
     },
     "makefile.launchConfigurations": [
         {

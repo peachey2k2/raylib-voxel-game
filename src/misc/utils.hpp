@@ -1,15 +1,18 @@
 #pragma once
 
-#include "raylib-cpp.hpp"
-
 #include <cstdlib>
 #include <cstdint>
+
 #include <stdexcept>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <algorithm>
+
+#include "./raylib.h"
+// #include <raymath.h>
 
 #define wmac WorldMachine
 
@@ -36,35 +39,35 @@ void say(const T& first, const Args&... args) {
 
 // mmmmm gotta save those keystrokes
 #ifndef u8
-typedef uint8_t u8;
+typedef __UINT8_TYPE__ u8;
 #endif
 
 #ifndef u16
-typedef uint16_t u16;
+typedef __UINT16_TYPE__ u16;
 #endif
 
 #ifndef u32
-typedef uint32_t u32;
+typedef __UINT32_TYPE__ u32;
 #endif
 
 #ifndef u64
-typedef uint64_t u64;
+typedef __UINT64_TYPE__ u64;
 #endif
 
 #ifndef i8
-typedef int8_t i8;
+typedef __INT8_TYPE__ i8;
 #endif
 
 #ifndef i16
-typedef int16_t i16;
+typedef __INT16_TYPE__ i16;
 #endif
 
 #ifndef i32
-typedef int32_t i32;
+typedef __INT32_TYPE__ i32;
 #endif
 
 #ifndef i64
-typedef int64_t i64;
+typedef __INT64_TYPE__ i64;
 #endif
 
 #ifndef f32
@@ -76,13 +79,20 @@ typedef double f64;
 #endif
 
 #ifndef size_t
-typedef std::size_t size_t;
+typedef __SIZE_TYPE__ size_t;
 #endif
 
-typedef Vector2 vec2;
-typedef Vector3 vec3;
-typedef Vector4 vec4;
-typedef Matrix mat4;
+typedef raylib::Vector2 vec2;
+typedef raylib::Vector3 vec3;
+typedef raylib::Vector4 vec4;
+typedef raylib::Matrix mat4;
+
+inline const mat4 IDENTITY_MATRIX = {
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+}; 
 
 constexpr vec2 operator+(const vec2& a, const vec2& b) {
     return { a.x + b.x, a.y + b.y };
@@ -254,9 +264,9 @@ namespace std {
     // hash function for vec3i, necessary for unordered_map
     template<> struct hash<wmac::vec3i> {
         size_t operator()(const wmac::vec3i& vec) const noexcept {
-            size_t h1 = std::hash<int>{}(vec.x);
-            size_t h2 = std::hash<int>{}(vec.y);
-            size_t h3 = std::hash<int>{}(vec.z);
+            size_t h1 = ::std::hash<int>{}(vec.x);
+            size_t h2 = ::std::hash<int>{}(vec.y);
+            size_t h3 = ::std::hash<int>{}(vec.z);
             return h1 ^ (h2 << 1) ^ (h3 << 2);
         }
     };

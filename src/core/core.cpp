@@ -6,67 +6,67 @@ using namespace wmac;
 
 void Core::run() {
     init();
-    while (!WindowShouldClose()) {
+    while (!raylib::WindowShouldClose()) {
         update();
-        BeginDrawing(); {
-        ClearBackground(BLUE);
-            BeginMode3D(camera); {
+        raylib::BeginDrawing(); {
+        raylib::ClearBackground(raylib::BLUE);
+            raylib::BeginMode3D(camera); {
                 draw3D();
-            } EndMode3D();
+            } raylib::EndMode3D();
             drawUI();
-        } EndDrawing();
+        } raylib::EndDrawing();
     }
     deinit();
 }
 
 void Core::init() {
-    const std::string dir = GetWorkingDirectory();
+    const std::string dir = raylib::GetWorkingDirectory();
     if (dir.ends_with("/bin")) {
-        ChangeDirectory("../");
+        raylib::ChangeDirectory("../");
     };
     
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(WIDTH, HEIGHT, TITLE);
-    DisableCursor();
+    raylib::SetConfigFlags(raylib::FLAG_WINDOW_RESIZABLE);
+    raylib::InitWindow(WIDTH, HEIGHT, TITLE);
+    raylib::DisableCursor();
     render::initAtlas();
     blocks::addDefaultBlocks();
     
     #if FPS > 0
     SetTargetFPS(FPS);
     #endif
-    texture = LoadTexture("texture.png");
+    texture = raylib::LoadTexture("texture.png");
     render::initMesh();
     world::init();
 }
 
 void Core::update() {
     vec3 movementDelta = getMovementDelta();
-    vec3 rotationDelta = VEC3(GetMouseDelta(), 0.0f) * SENSITIVITY;
+    vec3 rotationDelta = VEC3(raylib::GetMouseDelta(), 0.0f) * SENSITIVITY;
     UpdateCameraPro(&camera, movementDelta, rotationDelta, 0.0f);
     ticks::check();
 }
 
 vec3 Core::getMovementDelta() {
     vec3 movementDelta = {
-        (float)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
-        (float)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
-        (float)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
+        (float)(raylib::IsKeyDown(raylib::KEY_W) - raylib::IsKeyDown(raylib::KEY_S)),
+        (float)(raylib::IsKeyDown(raylib::KEY_D) - raylib::IsKeyDown(raylib::KEY_A)),
+        (float)(raylib::IsKeyDown(raylib::KEY_SPACE) - raylib::IsKeyDown(raylib::KEY_LEFT_SHIFT)),
     };
-    return movementDelta * (IsKeyDown(KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * GetFrameTime();;
+    return movementDelta * (raylib::IsKeyDown(raylib::KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * raylib::GetFrameTime();;
 }
 
 void Core::draw3D() {
-    DrawGrid(20, 1.0f);
+    raylib::DrawGrid(20, 1.0f);
     render::draw();
 }
 
 void Core::drawUI() {
-    DrawRectangle(0, 0, 120, 40, BLACK);
-    DrawFPS(10, 10);
+    raylib::DrawRectangle(0, 0, 120, 40, raylib::BLACK);
+    raylib::DrawFPS(10, 10);
 }
 
 void Core::deinit() {
     world::deinit();
-    CloseWindow();
+    raylib::CloseWindow();
 }
 

@@ -8,22 +8,21 @@ namespace wmac::render {
 
 extern const i32 TILE_SIZE;
 extern const i32 TILE_PER_ROW;
-extern const std::pair<vec3i, std::array<vec3, 4>> DIRECTIONS[6];
 
 typedef struct RenderChunk {
     Chunk* chunk;
-    Mesh mesh;
+    raylib::Mesh mesh;
 } RenderChunk;
 
 #ifdef RENDER_CPP
 
-Shader shader;
-Material material;
+raylib::Shader shader;
+raylib::Material material;
 
 std::unordered_map<vec3i, RenderChunk> renderChunks;
 
-Image atlasImage;
-Texture2D atlas;
+raylib::Image atlasImage;
+raylib::Texture2D atlas;
 u32 atlasIndex = 0;
 
 std::vector<f32> vertices;
