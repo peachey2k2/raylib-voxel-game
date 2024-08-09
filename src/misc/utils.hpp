@@ -11,7 +11,7 @@
 #include <functional>
 #include <algorithm>
 
-#include "./raylib.h"
+#include "raylib.hpp"
 // #include <raymath.h>
 
 #define wmac WorldMachine
