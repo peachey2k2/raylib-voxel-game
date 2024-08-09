@@ -4,6 +4,7 @@
 #include "core/world.hpp"
 
 #include "core/core.hpp"
+#include "rlgl.hpp"
 namespace wmac::render {
 
 const i32 TILE_SIZE = 32;
@@ -14,28 +15,25 @@ void initAtlas() {
 }
 
 void initMesh() {
-    raylib::Shader shader = raylib::LoadShader("shaders/block.vert", "shaders/block.frag");
-    uniformChunkPos = raylib::GetShaderLocation(shader, "chunkPos");
-    say("Shader loaded. uniformChunkPos location:", uniformChunkPos);
-    atlas = raylib::LoadTextureFromImage(atlasImage);
     material = raylib::LoadMaterialDefault();
-    material.shader = shader;
+    material.shader = raylib::LoadShader("shaders/block.vert", "shaders/block.frag");
+    uniformChunkPos = raylib::GetShaderLocation(material.shader, "chunkPos");
+
+    atlas = raylib::LoadTextureFromImage(atlasImage);
     raylib::SetMaterialTexture(&material, raylib::MATERIAL_MAP_ALBEDO, atlas);
-    vec3 test;
-    raylib::SetShaderValue(shader, uniformChunkPos, &test, raylib::SHADER_UNIFORM_VEC3);
-    test = {16, 16, 16};
 }
 
 void draw() {
     vec3 offset;
     for (auto& [chunkPos, renderChunk] : renderChunks) {
+        raylib::Mesh& mesh = renderChunk.mesh;
         offset = {
             (f32)(chunkPos.x * 16),
             (f32)(chunkPos.y * 16),
             (f32)(chunkPos.z * 16),
         };
-        raylib::SetShaderValue(shader, uniformChunkPos, &offset, raylib::SHADER_UNIFORM_VEC3);
-        raylib::DrawMesh(renderChunk.mesh, material, IDENTITY_MATRIX);
+        raylib::SetShaderValue(material.shader, uniformChunkPos, &offset, raylib::SHADER_UNIFORM_VEC3);
+        raylib::DrawMesh(mesh, material, IDENTITY_MATRIX);
     }
 }
 

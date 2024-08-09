@@ -16,7 +16,7 @@ typedef struct RenderChunk {
 
 #ifdef RENDER_CPP
 
-raylib::Shader shader;
+// raylib::Shader shader; // FUCK YOU
 raylib::Material material;
 i32 uniformChunkPos;
 
