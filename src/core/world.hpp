@@ -45,11 +45,11 @@ typedef u64 Chunk[16*16*16];
 
 namespace wmac::world {
 
-inline std::unordered_map<vec3i, Chunk*> chunks;
+inline std::unordered_map<vec3i, Chunk*> m_chunks;
 
 #ifdef WORLD_CPP
 
-noise::module::Perlin* noiseMap = nullptr;
+noise::module::Perlin* m_noiseMap = nullptr;
 
 #endif
 

@@ -19,8 +19,8 @@ namespace wmac::blocks {
 
 #ifdef BLOCKS_CPP
 
-std::vector<InitBlockInfo> blocks(256);
-u64 idCounter = 1; // 0 is reserved for air
+std::vector<InitBlockInfo> m_blocks(256);
+u64 m_idCounter = 1; // 0 is reserved for air
 
 #endif
 

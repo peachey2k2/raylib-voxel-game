@@ -11,16 +11,16 @@ const i32 TILE_SIZE = 32;
 const i32 TILE_PER_ROW = 16;
 
 void initAtlas() {
-    atlasImage = raylib::GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, raylib::WHITE);
+    m_atlasImage = raylib::GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, raylib::WHITE);
 }
 
 void initMesh() {
-    material = raylib::LoadMaterialDefault();
-    material.shader = raylib::LoadShader("shaders/block.vert", "shaders/block.frag");
-    uniformChunkPos = raylib::GetShaderLocation(material.shader, "chunkPos");
+    m_material = raylib::LoadMaterialDefault();
+    m_material.shader = raylib::LoadShader("shaders/block.vert", "shaders/block.frag");
+    m_uniformChunkPos = raylib::GetShaderLocation(m_material.shader, "chunkPos");
 
-    atlas = raylib::LoadTextureFromImage(atlasImage);
-    raylib::SetMaterialTexture(&material, raylib::MATERIAL_MAP_ALBEDO, atlas);
+    m_atlas = raylib::LoadTextureFromImage(m_atlasImage);
+    raylib::SetMaterialTexture(&m_material, raylib::MATERIAL_MAP_ALBEDO, m_atlas);
 }
 
 void draw() {
@@ -32,23 +32,23 @@ void draw() {
             (f32)(chunkPos.y * 16),
             (f32)(chunkPos.z * 16),
         };
-        raylib::SetShaderValue(material.shader, uniformChunkPos, &offset, raylib::SHADER_UNIFORM_VEC3);
-        raylib::DrawMesh(mesh, material, IDENTITY_MATRIX);
+        raylib::SetShaderValue(m_material.shader, m_uniformChunkPos, &offset, raylib::SHADER_UNIFORM_VEC3);
+        raylib::DrawMesh(mesh, m_material, IDENTITY_MATRIX);
     }
 }
 
 void addTextureToAtlas(InitBlockInfo& p_block) {
     p_block.texCoords = {
-        (float)(atlasIndex % TILE_PER_ROW) * TILE_SIZE,
-        (float)(atlasIndex / TILE_PER_ROW) * TILE_SIZE
+        (float)(m_atlasIndex % TILE_PER_ROW) * TILE_SIZE,
+        (float)(m_atlasIndex / TILE_PER_ROW) * TILE_SIZE
     };
-    atlasIndex++;
+    m_atlasIndex++;
 
     raylib::Image image = raylib::LoadImage(p_block.texture);
     raylib::ImageResize(&image, TILE_SIZE, TILE_SIZE);
     raylib::ImageAlphaClear(&image, raylib::WHITE, 0.0f);
     raylib::ImageDraw(
-        &atlasImage,
+        &m_atlasImage,
         image,
         {
             0, 0, 
@@ -66,7 +66,7 @@ void addTextureToAtlas(InitBlockInfo& p_block) {
 i64 accum = 0;
 
 void activateChunk(vec3i p_pos) {
-    Chunk& chunk = *(world::chunks[p_pos]);
+    Chunk& chunk = *(world::m_chunks[p_pos]);
         renderChunks[p_pos] = {
         .chunk = &chunk,
         .mesh = {

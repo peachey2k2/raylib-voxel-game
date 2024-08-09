@@ -1,9 +1,8 @@
 #include "core/core.hpp"
 
 int main() {
-    wmac::Core core;
     try {
-        core.run();
+        wmac::core::run();
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         return 1;
@@ -18,3 +17,6 @@ Fuck it, I'll just type whatever i have in mind into here. If I encounter someth
 PLEASE PLEASE PLEASE use m_ for member variables, I don't want to spend another whole day losing my mind because of a scope (skill) issue.
 
 */
+
+
+// ^^^ MAIN FUNCTION IS AT THE TOP ^^^

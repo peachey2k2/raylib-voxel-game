@@ -17,18 +17,18 @@ typedef struct RenderChunk {
 #ifdef RENDER_CPP
 
 // raylib::Shader shader; // FUCK YOU
-raylib::Material material;
-i32 uniformChunkPos;
+raylib::Material m_material;
+i32 m_uniformChunkPos;
 
 std::unordered_map<vec3i, RenderChunk> renderChunks;
 
-raylib::Image atlasImage;
-raylib::Texture2D atlas;
-u32 atlasIndex = 0;
+raylib::Image m_atlasImage;
+raylib::Texture2D m_atlas;
+u32 m_atlasIndex = 0;
 
 #endif
 
-extern i64 accum;
+inline i64 m_accum;
 
 void initAtlas();
 void initMesh();

@@ -12,8 +12,8 @@ extern const f64 TICK_RATE;
 
 #ifdef TICKS_CPP
 
-f64 tickDesync = 0.0;
-std::vector<void (*)()> tickCallbacks;
+f64 m_tickDesync = 0.0;
+std::vector<void (*)()> m_tickCallbacks;
 
 #endif
 

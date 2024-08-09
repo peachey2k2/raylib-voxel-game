@@ -1,16 +1,23 @@
-#include "./core.hpp"
+#define CORE_CPP
 
-using namespace wmac;
+#include "core/core.hpp"
+
+#include "core/blocks.hpp"
+#include "core/render.hpp"
+#include "core/ticks.hpp"
+#include "core/world.hpp"
+
+namespace wmac::core {
 
 #define FPS 0
 
-void Core::run() {
+void run() {
     init();
     while (!raylib::WindowShouldClose()) {
         update();
         raylib::BeginDrawing(); {
         raylib::ClearBackground(raylib::BLUE);
-            raylib::BeginMode3D(camera); {
+            raylib::BeginMode3D(m_camera); {
                 draw3D();
             } raylib::EndMode3D();
             drawUI();
@@ -19,7 +26,7 @@ void Core::run() {
     deinit();
 }
 
-void Core::init() {
+void init() {
     const std::string dir = raylib::GetWorkingDirectory();
     if (dir.ends_with("/bin")) {
         raylib::ChangeDirectory("../");
@@ -34,19 +41,18 @@ void Core::init() {
     #if FPS > 0
     SetTargetFPS(FPS);
     #endif
-    texture = raylib::LoadTexture("texture.png");
     render::initMesh();
     world::init();
 }
 
-void Core::update() {
+void update() {
     vec3 movementDelta = getMovementDelta();
     vec3 rotationDelta = VEC3(raylib::GetMouseDelta(), 0.0f) * SENSITIVITY;
-    UpdateCameraPro(&camera, movementDelta, rotationDelta, 0.0f);
+    UpdateCameraPro(&m_camera, movementDelta, rotationDelta, 0.0f);
     ticks::check();
 }
 
-vec3 Core::getMovementDelta() {
+vec3 getMovementDelta() {
     vec3 movementDelta = {
         (float)(raylib::IsKeyDown(raylib::KEY_W) - raylib::IsKeyDown(raylib::KEY_S)),
         (float)(raylib::IsKeyDown(raylib::KEY_D) - raylib::IsKeyDown(raylib::KEY_A)),
@@ -55,18 +61,19 @@ vec3 Core::getMovementDelta() {
     return movementDelta * (raylib::IsKeyDown(raylib::KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * raylib::GetFrameTime();;
 }
 
-void Core::draw3D() {
+void draw3D() {
     raylib::DrawGrid(20, 1.0f);
     render::draw();
 }
 
-void Core::drawUI() {
+void drawUI() {
     raylib::DrawRectangle(0, 0, 120, 40, raylib::BLACK);
     raylib::DrawFPS(10, 10);
 }
 
-void Core::deinit() {
+void deinit() {
     world::deinit();
     raylib::CloseWindow();
 }
 
+}

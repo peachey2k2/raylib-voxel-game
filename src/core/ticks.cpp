@@ -6,27 +6,27 @@ namespace wmac::ticks {
 const f64 TICK_RATE = 0.05;
 
 void check() {
-    tickDesync += raylib::GetFrameTime();
-    if (tickDesync >= TICK_RATE) {
-        tickDesync -= TICK_RATE;
+    m_tickDesync += raylib::GetFrameTime();
+    if (m_tickDesync >= TICK_RATE) {
+        m_tickDesync -= TICK_RATE;
         update(); // TODO: move this to a separate thread
     }
 }
 
 void update() {
-    for (auto callback : tickCallbacks) {
+    for (auto callback : m_tickCallbacks) {
         callback();
     }
 }
 
 void addCallback(void (*p_callback)()) {
-    tickCallbacks.push_back(p_callback);
+    m_tickCallbacks.push_back(p_callback);
 }
 
 void removeCallback(void (*p_callback)()) {
-    for (auto it = tickCallbacks.begin(); it != tickCallbacks.end(); it++) {
+    for (auto it = m_tickCallbacks.begin(); it != m_tickCallbacks.end(); it++) {
         if (*it == p_callback) {
-            tickCallbacks.erase(it);
+            m_tickCallbacks.erase(it);
             return;
         }
     }

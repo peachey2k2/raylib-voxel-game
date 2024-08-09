@@ -8,8 +8,8 @@ namespace wmac::world {
 
 void init() {
     say("Initializing world");
-    noiseMap = new noise::module::Perlin();
-    chunks.clear();
+    m_noiseMap = new noise::module::Perlin();
+    m_chunks.clear();
     for (i32 x = 0; x < 10; x++) {
         for (i32 y = 0; y < 10; y++) {
             for (i32 z = 0; z < 10; z++) {
@@ -18,26 +18,26 @@ void init() {
             }
         }
     }
-    say("vertex count:", 4*render::accum);
-    say("triangle count:", 2*render::accum);
+    say("vertex count:", 4*render::m_accum);
+    say("triangle count:", 2*render::m_accum);
 }
 
 void deinit() {
-    delete noiseMap;
-    for (auto& [pos, chunk] : chunks) {
+    delete m_noiseMap;
+    for (auto& [pos, chunk] : m_chunks) {
         delete chunk;
     }
 }
 
 void addChunk(vec3i p_pos, Chunk *p_chunk) {
-    chunks[p_pos] = p_chunk;
+    m_chunks[p_pos] = p_chunk;
 }
 
 void generateChunk(vec3i p_pos) {
     Chunk* chunk = rcast<Chunk*>(new Chunk());
     for (i32 x = 0; x < 16; x++) {
         for (i32 z = 0; z < 16; z++) {
-            i32 height = scast<i32>(noiseMap->GetValue((x + p_pos.x*16)/160.0, 0, (z + p_pos.z*16)/160.0) * 160);
+            i32 height = scast<i32>(m_noiseMap->GetValue((x + p_pos.x*16)/160.0, 0, (z + p_pos.z*16)/160.0) * 160);
             for (i32 y = 0; (y < 16) && (y + p_pos.y*16 < height); y++) {
                 (*chunk)[x + y*16 + z*16*16] = 1;
             }
@@ -65,14 +65,14 @@ ChunkPos getPosInChunk(vec3i p_pos) {
 void changeBlock(vec3i p_pos, u64 p_id) {
     vec3i chunkLoc = getChunkLoc(p_pos);
     
-    if (chunks.find(chunkLoc) == chunks.end()) {
+    if (m_chunks.find(chunkLoc) == m_chunks.end()) {
         say("--Chunk not found");
         return;
     }
 
     ChunkPos posInChunk = getPosInChunk(p_pos);
 
-    Chunk& chunk = *chunks[chunkLoc];
+    Chunk& chunk = *m_chunks[chunkLoc];
     chunk[posInChunk.xyz] = p_id;
 }
 
