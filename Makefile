@@ -16,7 +16,7 @@ target := $(buildDir)/$(executable)
 sources := $(call rwildcard,src/,*.cpp)
 objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
-compileFlags := -std=c++20 -I./include -I./src -I./include
+compileFlags := -std=c++20 -I./include -I./src -I./include -g
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
 linkFlags = -L lib/$(platform) -L ./lib -l raylib -l noise
 
@@ -65,7 +65,14 @@ all: $(target)
 run: $(target) execute
 
 # Sets up the project for compiling, generates includes and libs
-setup: include lib
+# setup: include lib
+
+setup: /lib/libraylib.a
+
+/lib/libraylib.a:
+	cd ./raylib-src &&\
+	make RAYLIB_LIBTYPE=STATIC DESTDIR=. clean &&\
+	make RAYLIB_LIBTYPE=STATIC DESTDIR=. RAYLIB_BUILD_MODE=DEBUG
 
 # # Pull and update the the build submodules
 # submodules:

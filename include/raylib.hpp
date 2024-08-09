@@ -75,11 +75,10 @@
 *     3. This notice may not be removed or altered from any source distribution.
 *
 **********************************************************************************************/
+namespace raylib {
 
 #ifndef RAYLIB_H
 #define RAYLIB_H
-
-namespace raylib {
 
 #include <stdarg.h>     // Required for: va_list - Only used by TraceLogCallback
 

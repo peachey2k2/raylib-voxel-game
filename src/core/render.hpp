@@ -18,16 +18,13 @@ typedef struct RenderChunk {
 
 raylib::Shader shader;
 raylib::Material material;
+i32 uniformChunkPos;
 
 std::unordered_map<vec3i, RenderChunk> renderChunks;
 
 raylib::Image atlasImage;
 raylib::Texture2D atlas;
 u32 atlasIndex = 0;
-
-std::vector<f32> vertices;
-std::vector<f32> texcoords;
-std::vector<u16> indices;
 
 #endif
 

@@ -48,11 +48,10 @@
 *     3. This notice may not be removed or altered from any source distribution.
 *
 **********************************************************************************************/
+namespace raylib {
 
 #ifndef RAYMATH_H
 #define RAYMATH_H
-
-namespace raylib {
 
 #if defined(RAYMATH_IMPLEMENTATION) && defined(RAYMATH_STATIC_INLINE)
     #error "Specifying both RAYMATH_IMPLEMENTATION and RAYMATH_STATIC_INLINE is contradictory"

@@ -3,8 +3,7 @@
 #include "core/ticks.hpp"
 #include "core/world.hpp"
 
-#include <rlgl.h>
-
+#include "core/core.hpp"
 namespace wmac::render {
 
 const i32 TILE_SIZE = 32;
@@ -16,15 +15,26 @@ void initAtlas() {
 
 void initMesh() {
     raylib::Shader shader = raylib::LoadShader("shaders/block.vert", "shaders/block.frag");
-    // shaderParam = GetShaderLocation(shader, "side");
+    uniformChunkPos = raylib::GetShaderLocation(shader, "chunkPos");
+    say("Shader loaded. uniformChunkPos location:", uniformChunkPos);
     atlas = raylib::LoadTextureFromImage(atlasImage);
     material = raylib::LoadMaterialDefault();
     material.shader = shader;
     raylib::SetMaterialTexture(&material, raylib::MATERIAL_MAP_ALBEDO, atlas);
+    vec3 test;
+    raylib::SetShaderValue(shader, uniformChunkPos, &test, raylib::SHADER_UNIFORM_VEC3);
+    test = {16, 16, 16};
 }
 
 void draw() {
+    vec3 offset;
     for (auto& [chunkPos, renderChunk] : renderChunks) {
+        offset = {
+            (f32)(chunkPos.x * 16),
+            (f32)(chunkPos.y * 16),
+            (f32)(chunkPos.z * 16),
+        };
+        raylib::SetShaderValue(shader, uniformChunkPos, &offset, raylib::SHADER_UNIFORM_VEC3);
         raylib::DrawMesh(renderChunk.mesh, material, IDENTITY_MATRIX);
     }
 }
@@ -65,7 +75,6 @@ void activateChunk(vec3i p_pos) {
             .vertexCount = 8 * 16*16*16,
             .triangleCount = 12 * 16*16*16,
             .vertices = new f32[3*4*6 * 16*16*16],
-            .texcoords = new f32[2*4*6 * 16*16*16],
             .indices = new u16[6*6 * 16*16*16],
         }
     };
@@ -81,7 +90,6 @@ void activateChunk(vec3i p_pos) {
     renderChunks[p_pos].mesh.triangleCount = 2*count;
 
     UpdateMeshBuffer(mesh, raylib::SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, raylib::SHADER_LOC_VERTEX_TEXCOORD01, mesh.texcoords, 8*count * sizeof(f32), 0);
     UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
 }
 
@@ -94,24 +102,23 @@ void updateChunk(vec3i p_pos) {
     renderChunks[p_pos].mesh.triangleCount = 2*count;
 
     UpdateMeshBuffer(mesh, raylib::SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, raylib::SHADER_LOC_VERTEX_TEXCOORD01, mesh.texcoords, 8*count * sizeof(f32), 0);
     UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
 }
 
 u16 populateMesh(vec3i p_pos) {
     u16 count = 0;
-    vec3 offset = {
-        p_pos.x * 16,
-        p_pos.y * 16,
-        p_pos.z * 16,
-    };
+    // vec3 offset = {
+    //     p_pos.x * 16,
+    //     p_pos.y * 16,
+    //     p_pos.z * 16,
+    // };
 
     auto& chunk = *(renderChunks[p_pos].chunk);
     auto& mesh = renderChunks[p_pos].mesh;
 
     #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
 
-    say(BLOCK(15,15,15));
+    // say(BLOCK(15,15,15));
 
     for (u32 d = 0; d < 3; d++) {
         i32 i, j, k, l, w, h;
@@ -164,62 +171,88 @@ u16 populateMesh(vec3i p_pos) {
                     x[u] = i;
                     x[v] = j;
 
+                    // vec3i p = {
+                    //     x[0] + offset.x,
+                    //     x[1] + offset.y,
+                    //     x[2] + offset.z,
+                    // };
+
+                    /*
+                     * We don't need floats for vertices since it's all grid aligned
+                     * Heck, we don't even need all 32 bits on each axis, so we use
+                     * some of those bits for other purposes.
+                     * x: 
+                     *  0-4: x
+                     *  5-9: y
+                     *  10-14: z
+                     *  24-31: unused
+                     * y:
+                     *  0-31: unused
+                     * z:
+                     *  0-15: tex-x
+                     *  16-31: tex-y
+                     */
+
+                    // i32 du[3] = {0};
+                    // i32 dv[3] = {0};
+                    // du[u] = w;
+                    // dv[v] = h;
+
+                    i32 du = w << (5*u);
+                    i32 dv = h << (5*v);
+
                     vec3i p = {
-                        x[0] + offset.x,
-                        x[1] + offset.y,
-                        x[2] + offset.z,
+                        x[0] + (x[1]<<5) + (x[2]<<10),
+                        0,
+                        0,
                     };
 
-                    i32 du[3] = {0};
-                    i32 dv[3] = {0};
-
-                    du[u] = w;
-                    dv[v] = h;
+                    u32* verts = rcast<u32*>(mesh.vertices);
 
                     if (flip[n]) {
-                        mesh.vertices[12*count + 0] = p.x + dv[0];
-                        mesh.vertices[12*count + 1] = p.y + dv[1];
-                        mesh.vertices[12*count + 2] = p.z + dv[2];
+                        verts[12*count + 0] = p.x + dv;
+                        verts[12*count + 1] = p.y;
+                        verts[12*count + 2] = p.z;
 
-                        mesh.vertices[12*count + 3] = p.x + du[0] + dv[0];
-                        mesh.vertices[12*count + 4] = p.y + du[1] + dv[1];
-                        mesh.vertices[12*count + 5] = p.z + du[2] + dv[2];
+                        verts[12*count + 3] = p.x + du + dv;
+                        verts[12*count + 4] = p.y;
+                        verts[12*count + 5] = p.z;
 
-                        mesh.vertices[12*count + 6] = p.x + du[0];
-                        mesh.vertices[12*count + 7] = p.y + du[1];
-                        mesh.vertices[12*count + 8] = p.z + du[2];
+                        verts[12*count + 6] = p.x + du;
+                        verts[12*count + 7] = p.y;
+                        verts[12*count + 8] = p.z;
 
-                        mesh.vertices[12*count + 9] = p.x;
-                        mesh.vertices[12*count + 10] = p.y;
-                        mesh.vertices[12*count + 11] = p.z;
+                        verts[12*count + 9] = p.x;
+                        verts[12*count + 10] = p.y;
+                        verts[12*count + 11] = p.z;
                     } else {
-                        mesh.vertices[12*count + 0] = p.x;
-                        mesh.vertices[12*count + 1] = p.y;
-                        mesh.vertices[12*count + 2] = p.z;
+                        verts[12*count + 0] = p.x;
+                        verts[12*count + 1] = p.y;
+                        verts[12*count + 2] = p.z;
 
-                        mesh.vertices[12*count + 3] = p.x + du[0];
-                        mesh.vertices[12*count + 4] = p.y + du[1];
-                        mesh.vertices[12*count + 5] = p.z + du[2];
+                        verts[12*count + 3] = p.x + du;
+                        verts[12*count + 4] = p.y;
+                        verts[12*count + 5] = p.z;
 
-                        mesh.vertices[12*count + 6] = p.x + du[0] + dv[0];
-                        mesh.vertices[12*count + 7] = p.y + du[1] + dv[1];
-                        mesh.vertices[12*count + 8] = p.z + du[2] + dv[2];
+                        verts[12*count + 6] = p.x + du + dv;
+                        verts[12*count + 7] = p.y;
+                        verts[12*count + 8] = p.z;
 
-                        mesh.vertices[12*count + 9] = p.x + dv[0];
-                        mesh.vertices[12*count + 10] = p.y + dv[1];
-                        mesh.vertices[12*count + 11] = p.z + dv[2];
+                        verts[12*count + 9] = p.x + dv;
+                        verts[12*count + 10] = p.y;
+                        verts[12*count + 11] = p.z;
                         
                     }
 
-                    mesh.texcoords[8*count + 0] = 0.0f;
-                    mesh.texcoords[8*count + 1] = 0.0f;
-                    mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW * w;
-                    mesh.texcoords[8*count + 3] = 0.0f;
+                    // mesh.texcoords[8*count + 0] = 0.0f;
+                    // mesh.texcoords[8*count + 1] = 0.0f;
+                    // mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW * w;
+                    // mesh.texcoords[8*count + 3] = 0.0f;
 
-                    mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW * w;
-                    mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW * h;
-                    mesh.texcoords[8*count + 6] = 0.0f;
-                    mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW * h;
+                    // mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW * w;
+                    // mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW * h;
+                    // mesh.texcoords[8*count + 6] = 0.0f;
+                    // mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW * h;
 
                     mesh.indices[6*count + 0] = 4*count + 0;
                     mesh.indices[6*count + 1] = 4*count + 1;

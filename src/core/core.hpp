@@ -17,6 +17,8 @@ class Core {
         const f32 SENSITIVITY = 0.1f;
         const f32 SPEED = 5.0f;
 
+    public:
+
         raylib::Camera3D camera {
             .position = { 10.0f, 1.0f, 10.0f },
             .target = { 0.0f, 0.0f, 0.0f },

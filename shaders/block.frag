@@ -2,6 +2,7 @@
 
 // Input vertex attributes (from vertex shader)
 in vec2 fragTexCoord;
+in vec4 debugColor;
 
 // Input uniform values
 uniform sampler2D texture0;
@@ -20,5 +21,6 @@ void main()
 
     // NOTE: Implement here your fragment shader code
 
-    finalColor = texelColor*colDiffuse;
+    // finalColor = texelColor*colDiffuse;
+    finalColor = texelColor*debugColor;
 }
