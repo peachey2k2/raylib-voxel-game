@@ -1,11 +1,11 @@
 #define CORE_CPP
 
-#include "core/core.hpp"
+#include "./core.hpp"
 
-#include "core/blocks.hpp"
-#include "core/render.hpp"
-#include "core/ticks.hpp"
-#include "core/world.hpp"
+#include "./blocks.hpp"
+#include "./render.hpp"
+#include "./ticks.hpp"
+#include "./world.hpp"
 
 namespace wmac::core {
 
@@ -27,6 +27,16 @@ void run() {
 }
 
 void init() {
+    initRaylib();
+    
+    render::initAtlas();
+    blocks::addDefaultBlocks();
+    
+    render::initMesh();
+    world::init();
+}
+
+void initRaylib() {
     const std::string dir = raylib::GetWorkingDirectory();
     if (dir.ends_with("/bin")) {
         raylib::ChangeDirectory("../");
@@ -38,14 +48,9 @@ void init() {
     );
     raylib::InitWindow(WIDTH, HEIGHT, TITLE);
     raylib::DisableCursor();
-    render::initAtlas();
-    blocks::addDefaultBlocks();
-    
     #if FPS > 0
     SetTargetFPS(FPS);
     #endif
-    render::initMesh();
-    world::init();
 }
 
 void update() {

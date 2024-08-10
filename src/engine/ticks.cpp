@@ -1,5 +1,5 @@
 #define TICKS_CPP
-#include "core/ticks.hpp"
+#include "./ticks.hpp"
 
 namespace wmac::ticks {
 

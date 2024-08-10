@@ -1,8 +1,8 @@
 #pragma once
 
 #include "misc/utils.hpp"
-#include "core/blocks.hpp"
-#include "core/world.hpp"
+#include "./blocks.hpp"
+#include "./world.hpp"
 
 namespace wmac::render {
 

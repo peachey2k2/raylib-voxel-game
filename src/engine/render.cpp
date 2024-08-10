@@ -1,9 +1,9 @@
 #define RENDER_CPP
-#include "core/render.hpp"
-#include "core/ticks.hpp"
-#include "core/world.hpp"
+#include "./render.hpp"
+#include "./ticks.hpp"
+#include "./world.hpp"
 
-#include "core/core.hpp"
+#include "./core.hpp"
 #include "rlgl.hpp"
 namespace wmac::render {
 

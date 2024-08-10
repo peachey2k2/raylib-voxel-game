@@ -1,7 +1,7 @@
 #define BLOCKS_CPP
-#include "core/blocks.hpp"
+#include "./blocks.hpp"
 
-#include "core/render.hpp"
+#include "./render.hpp"
 
 namespace wmac::blocks {
 

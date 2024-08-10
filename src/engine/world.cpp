@@ -1,7 +1,7 @@
 #define WORLD_CPP
-#include "core/world.hpp"
+#include "./world.hpp"
 
-#include "core/render.hpp"
+#include "./render.hpp"
 #include <math.h>
 
 namespace wmac::world {

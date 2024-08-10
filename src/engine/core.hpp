@@ -22,6 +22,7 @@ inline raylib::Camera3D m_camera {
 #ifdef CORE_CPP
 
 void init();
+    void initRaylib();
 void update();
     vec3 getMovementDelta();
 void draw3D();
