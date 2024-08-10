@@ -6,17 +6,22 @@
 namespace wmac::blocks {
 
 void add(InitBlockInfo& p_block) {
-    render::addTextureToAtlas(p_block);
-    p_block.id = m_idCounter++;
-    m_blocks.push_back(p_block);
+    m_blocks.push_back(
+        Block {
+            .itemId = getNewId(),
+            .textureId = render::addTextureToAtlas(p_block.texture),
+            .name = p_block.name,
+            .tooltip = p_block.tooltip,
+            .texture = p_block.texture,
+        }
+    );
 }
 
-void add(std::vector<InitBlockInfo>& p_blocks) {
+template <typename Container>
+void add(Container& p_blocks) {
     for (auto& block : p_blocks) {
-        render::addTextureToAtlas(block);
-        block.id = m_idCounter++;
+        add(block);
     }
-    m_blocks.insert(m_blocks.end(), p_blocks.begin(), p_blocks.end());
 }
 
 void addDefaultBlocks() {
@@ -26,6 +31,10 @@ void addDefaultBlocks() {
         .texture = "texture.png",
     };
     add(block);
+}
+
+u64 getNewId() {
+    return m_idCounter++;
 }
 
 };

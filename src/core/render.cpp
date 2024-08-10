@@ -37,15 +37,15 @@ void draw() {
     }
 }
 
-void addTextureToAtlas(InitBlockInfo& p_block) {
-    p_block.texCoords = {
-        (float)(m_atlasIndex % TILE_PER_ROW) * TILE_SIZE,
-        (float)(m_atlasIndex / TILE_PER_ROW) * TILE_SIZE
-    };
-    m_atlasIndex++;
+u32 addTextureToAtlas(const char* p_texture) {
+    u32 idx = m_atlasIndex++;
 
-    raylib::Image image = raylib::LoadImage(p_block.texture);
-    raylib::ImageResize(&image, TILE_SIZE, TILE_SIZE);
+    raylib::Image image = raylib::LoadImage(p_texture);
+    ASSERT(image.data != nullptr, "Failed to load image " + std::string(p_texture) + ", is it in the right place?");
+    if (image.width != TILE_SIZE || image.height != TILE_SIZE) {
+        say("[WARNING] Image " + std::string(p_texture) + " is not " + std::to_string(TILE_SIZE) + "x" + std::to_string(TILE_SIZE) + " pixels. Resizing.");
+        raylib::ImageResize(&image, TILE_SIZE, TILE_SIZE);
+    }
     raylib::ImageAlphaClear(&image, raylib::WHITE, 0.0f);
     raylib::ImageDraw(
         &m_atlasImage,
@@ -54,16 +54,14 @@ void addTextureToAtlas(InitBlockInfo& p_block) {
             0, 0, 
             (float)image.width, (float)image.height
         }, {
-            p_block.texCoords.x, p_block.texCoords.y,
+            (float)(idx % TILE_PER_ROW) * TILE_SIZE, (float)(idx / TILE_PER_ROW) * TILE_SIZE,
             TILE_SIZE, TILE_SIZE
         },
         raylib::WHITE
     );
     raylib::UnloadImage(image);
-
+    return idx;
 }
-
-i64 accum = 0;
 
 void activateChunk(vec3i p_pos) {
     Chunk& chunk = *(world::m_chunks[p_pos]);
@@ -78,7 +76,7 @@ void activateChunk(vec3i p_pos) {
     };
 
     u16 count = populateMesh(p_pos);
-    accum += count;
+    m_accum += count;
 
     auto& mesh = renderChunks[p_pos].mesh;
 
@@ -177,13 +175,16 @@ u16 populateMesh(vec3i p_pos) {
 
                     /*
                      * We don't need floats for vertices since it's all grid aligned
-                     * Heck, we don't even need all 32 bits on each axis, so we use
-                     * some of those bits for other purposes.
+                     * Heck, we don't even need most of the 32 bits on each axis, so
+                     * we use some of those bits for other purposes.
                      * x: 
                      *  0-4: x
                      *  5-9: y
                      *  10-14: z
-                     *  24-31: unused
+                     *  15-17: normal-ish
+                     *  18-21: size-u
+                     *  22-25: size-v
+                     *  26-31: unused
                      * y:
                      *  0-31: unused
                      * z:
@@ -191,16 +192,31 @@ u16 populateMesh(vec3i p_pos) {
                      *  16-31: tex-y
                      */
 
-                    // i32 du[3] = {0};
-                    // i32 dv[3] = {0};
-                    // du[u] = w;
-                    // dv[v] = h;
-
                     i32 du = w << (5*u);
                     i32 dv = h << (5*v);
 
+                    u8 normal;
+                    switch (d + flip[n]*3) {
+                        case 0: normal = 0; break;
+                        case 1: normal = 1; break; // top
+                        case 2: normal = 3; break;
+                        case 3: normal = 0; break;
+                        case 4: normal = 1; break; // bottom
+                        case 5: normal = 1; break;
+                    }
+
+                    i32 w2, h2;
+
+                    if (normal%2) {
+                        w2 = w;
+                        h2 = h;
+                    } else {
+                        w2 = h;
+                        h2 = w;
+                    }
+
                     vec3i p = {
-                        x[0] + (x[1]<<5) + (x[2]<<10),
+                        x[0] + (x[1]<<5) + (x[2]<<10) + (normal<<15) + ((w2-1)<<18) + ((h2-1)<<22),
                         0,
                         0,
                     };

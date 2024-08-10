@@ -33,7 +33,7 @@ inline i64 m_accum;
 void initAtlas();
 void initMesh();
 void draw();
-void addTextureToAtlas(InitBlockInfo& p_block);
+u32 addTextureToAtlas(const char* p_texture);
 
 void activateChunk(vec3i p_pos);
 void updateChunk(vec3i p_pos);

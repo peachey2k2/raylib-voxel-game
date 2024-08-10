@@ -32,7 +32,10 @@ void init() {
         raylib::ChangeDirectory("../");
     };
     
-    raylib::SetConfigFlags(raylib::FLAG_WINDOW_RESIZABLE);
+    raylib::SetConfigFlags(
+        // raylib::FLAG_WINDOW_RESIZABLE |
+        raylib::FLAG_BORDERLESS_WINDOWED_MODE    
+    );
     raylib::InitWindow(WIDTH, HEIGHT, TITLE);
     raylib::DisableCursor();
     render::initAtlas();

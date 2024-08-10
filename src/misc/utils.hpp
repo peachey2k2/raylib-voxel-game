@@ -18,6 +18,8 @@
 
 namespace wmac {
 
+#define ASSERT(x, msg) if (!(x)) { throw std::runtime_error(msg); }
+
 // look, i like c++ but at times it'sbit too verbose.
 // so here's what we will be doing:
 #define scast static_cast

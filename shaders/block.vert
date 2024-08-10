@@ -1,21 +1,22 @@
 #version 330
 
 // Input vertex attributes
-// in vec3 vertexPosition;
-// in vec2 vertexTexCoord;
 in ivec3 data;
 
 // Input uniform values
 uniform mat4 mvp;
 
 // Output vertex attributes (to fragment shader)
+flat out ivec2 fragSize;
 out vec2 fragTexCoord;
-out vec4 debugColor;
+// out vec3 debugColor;
 
 // NOTE: Add here your custom variables
 uniform vec3 chunkPos;
 
 vec3 pos;
+int normal;
+ivec2 size;
 vec2 tex; 
 
 void unpack() {
@@ -23,6 +24,11 @@ void unpack() {
         data.x & 0x1F,
         (data.x >> 5) & 0x1F,
         (data.x >> 10) & 0x1F
+    );
+    normal = (data.x >> 15) & 0x07;
+    size = ivec2(
+        ((data.x >> 18) & 0x0F) + 1,
+        ((data.x >> 22) & 0x0F) + 1
     );
     tex = vec2(
         (data.z & 0x0F) / 16.0,
@@ -35,15 +41,30 @@ void main() {
 
     // Send vertex attributes to fragment shader
     // fragTexCoord = vertexTexCoord;
-    fragTexCoord = tex;
+    // fragTexCoord = tex;
+    // fragTexCoord = vec2(tex.x + 1-(gl_VertexID & 1), tex.y + ((gl_VertexID >> 1) & 1));
+    // fragTexCoord = vec2(
+    //     tex.x + (1-((gl_VertexID & 2)>>1)),
+    //     tex.y + ((gl_VertexID & 3)==3 ? 1 : 0)
+    // );
+    // debugColor = vec3(
+    //     (gl_VertexID & 3) == (0 + normal)%4 ? 1 : 0,
+    //     (gl_VertexID & 3) == (1 + normal)%4 ? 1 : 0,
+    //     (gl_VertexID & 3) == (2 + normal)%4 ? 1 : 0
+    // );
+    // fragTexCoord = vec2(
+    //     tex.x + 1-(gl_VertexID & 1),
+    //     tex.y + ((gl_VertexID & 3) % 3 == 0 ? 1 : 0)
+    // );
+    int magic = gl_VertexID + normal;
+    fragTexCoord = vec2(
+        (magic & 2) != 0 ? tex.x : tex.x + 1,
+        ((magic & 3)%3) != 0 ? tex.y : tex.y + 1
+    );
+
+    fragSize = size;
 
     // Calculate final vertex position
     // gl_Position = mvp*vec4(vertexPosition, 1.0);
     gl_Position = mvp*vec4(pos + chunkPos, 1.0);
-    debugColor = vec4(
-        fract(chunkPos.x/160),
-        fract(chunkPos.y/160),
-        fract(chunkPos.z/160),
-        1.0
-    );
 }

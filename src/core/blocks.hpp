@@ -5,13 +5,18 @@
 namespace wmac {
 
 typedef struct InitBlockInfo {
-    u64 id;
     const char* name;
     const char* tooltip;
     const char* texture;
-    const char* model;
-    vec2 texCoords;
 } InitBlockInfo;
+
+typedef struct Block {
+    u64 itemId;
+    u32 textureId;
+    const char* name;
+    const char* tooltip;
+    const char* texture;
+} Block;
 
 };
 
@@ -19,7 +24,7 @@ namespace wmac::blocks {
 
 #ifdef BLOCKS_CPP
 
-std::vector<InitBlockInfo> m_blocks(256);
+std::vector<Block> m_blocks(256);
 u64 m_idCounter = 1; // 0 is reserved for air
 
 #endif
@@ -28,6 +33,7 @@ void add(InitBlockInfo &p_block);
 void add(std::vector<InitBlockInfo> &p_blocks);
 
 void addDefaultBlocks();
+u64 getNewId();
 
 
 };
