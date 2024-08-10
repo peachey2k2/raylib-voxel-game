@@ -30,9 +30,7 @@ u64 m_idCounter = 1; // 0 is reserved for air
 #endif
 
 void add(InitBlockInfo &p_block);
-void add(std::vector<InitBlockInfo> &p_blocks);
 
-void addDefaultBlocks();
 u64 getNewId();
 
 

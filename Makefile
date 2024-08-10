@@ -14,6 +14,8 @@ buildDir := bin
 executable := app
 target := $(buildDir)/$(executable)
 sources := $(call rwildcard,src/,*.cpp)
+excludeDir := src/game # it counts as a mod so we exclude it
+sources := $(filter-out $(excludeDir)/*,$(sources))
 objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 compileFlags := -std=c++20 -I./include -I./src -I./include -g

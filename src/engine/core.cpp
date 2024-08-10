@@ -7,6 +7,8 @@
 #include "./ticks.hpp"
 #include "./world.hpp"
 
+#include "mod-loader/loader.hpp"
+
 namespace wmac::core {
 
 #define FPS 0
@@ -29,8 +31,11 @@ void run() {
 void init() {
     initRaylib();
     
+    loader::loadMods();
+
     render::initAtlas();
-    blocks::addDefaultBlocks();
+    // blocks::addDefaultBlocks();
+    loader::initBlocks();
     
     render::initMesh();
     world::init();

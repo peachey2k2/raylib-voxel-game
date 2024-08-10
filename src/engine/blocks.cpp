@@ -17,22 +17,6 @@ void add(InitBlockInfo& p_block) {
     );
 }
 
-template <typename Container>
-void add(Container& p_blocks) {
-    for (auto& block : p_blocks) {
-        add(block);
-    }
-}
-
-void addDefaultBlocks() {
-    InitBlockInfo block {
-        .name = "grass",
-        .tooltip = "Grass",
-        .texture = "texture.png",
-    };
-    add(block);
-}
-
 u64 getNewId() {
     return m_idCounter++;
 }
