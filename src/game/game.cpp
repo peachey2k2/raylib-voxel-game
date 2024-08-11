@@ -3,9 +3,9 @@
 extern "C" Mod init() {
     ModInfo info = {
         .name = "World Eater",
+        .version = "0.0.1",
         .author = "peachey2k2",
         .license = "MIT",
-        .version = "0.0.1",
     };
 
     Mod mod = {
@@ -14,7 +14,7 @@ extern "C" Mod init() {
         .initBlocks = initBlocks,
     };
 
-
+    return mod;
 }
 
 void initItems() {

@@ -12,10 +12,16 @@ platformpth = $(subst /,$(PATHSEP),$1)
 # Set global macros
 buildDir := bin
 executable := app
+
 target := $(buildDir)/$(executable)
+modsDir := $(buildDir)/mods
+
+coreMod := WorldEater
+coreSrc := $(call rwildcard,src/game/,*.cpp)
+
 sources := $(call rwildcard,src/,*.cpp)
-excludeDir := src/game # it counts as a mod so we exclude it
-sources := $(filter-out $(excludeDir)/*,$(sources))
+excludeDir := src/game# it counts as a mod so we exclude it
+sources := $(filter-out $(excludeDir)/%,$(sources))
 objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 compileFlags := -std=c++20 -I./include -I./src -I./include -g
@@ -33,6 +39,7 @@ ifeq ($(OS), Windows_NT)
 	MKDIR := -mkdir -p
 	RM := -del /q
 	COPY = -robocopy "$(call platformpth,$1)" "$(call platformpth,$2)" $3
+	coreModDir := $(modsDir)/$(coreMod).dll
 else
 	# Check for MacOS/Linux
 	UNAMEOS := $(shell uname)
@@ -41,12 +48,14 @@ else
 		platform := Linux
 		CXX ?= g++
 		linkFlags += -l GL -l m -l pthread -l dl -l rt -l X11
+		coreModDir := $(modsDir)/lib$(coreMod).so
 	endif
 	ifeq ($(UNAMEOS), Darwin)
 		# Set macOS macros
 		platform := macOSlinkFlags
 		CXX ?= clang++
 		linkFlags += -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL
+		coreModDir := $(modsDir)/lib$(coreMod).dylib
 	endif
 
 	# Set UNIX macros
@@ -61,7 +70,7 @@ endif
 .PHONY: all setup submodules execute clean
 
 # Default target to build the program
-all: $(target)
+all: $(coreModDir) $(target)
 
 # Compile then execute the program
 run: $(target) execute
@@ -73,8 +82,8 @@ setup: /lib/libraylib.a
 
 /lib/libraylib.a:
 	cd ./raylib-src &&\
-	make RAYLIB_LIBTYPE=STATIC DESTDIR=. clean &&\
-	make RAYLIB_LIBTYPE=STATIC DESTDIR=. RAYLIB_BUILD_MODE=DEBUG
+	$(MAKE) RAYLIB_LIBTYPE=STATIC DESTDIR=. clean &&\
+	$(MAKE) RAYLIB_LIBTYPE=STATIC DESTDIR=. RAYLIB_BUILD_MODE=DEBUG
 
 # # Pull and update the the build submodules
 # submodules:
@@ -92,6 +101,12 @@ setup: /lib/libraylib.a
 # 	cd vendor/raylib/src $(THEN) "$(MAKE)" PLATFORM=PLATFORM_DESKTOP
 # 	$(MKDIR) $(call platformpth, lib/$(platform))
 # 	$(call COPY,vendor/raylib/src,lib/$(platform),libraylib.a)
+
+# Compile the core mod
+$(coreModDir): 
+	mkdir -p $(modsDir)
+	cd ./src/game &&\
+	$(MAKE)
 
 # Link the program and create the executable
 $(target): $(objects)

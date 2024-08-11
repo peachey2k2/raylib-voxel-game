@@ -16,7 +16,9 @@ Fuck it, I'll just type whatever i have in mind into here. If I encounter someth
 
 PLEASE PLEASE PLEASE use m_ for member variables, I don't want to spend another whole day losing my mind because of a scope (skill) issue.
 
-I used greedy meshing for performance, it's decent for now, maybe that'll change later on when I implement all the dynamic texture logic. 
+I used greedy meshing for performance, it's decent for now, maybe that'll change later on when I implement all the dynamic texture logic.
+
+Appaerently some genius thought not filtering out spaces at the end of the line in makefiles was a good idea.
 
 */
 

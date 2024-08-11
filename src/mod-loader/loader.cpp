@@ -20,7 +20,7 @@ const char* SHARED_LIB_EXT =
 
 void loadMods() {
     raylib::FilePathList modsFiles = raylib::LoadDirectoryFilesEx(MODS_DIR, SHARED_LIB_EXT, true);
-    for (i32 i = 0; i < modsFiles.count; i++) {
+    for (u32 i = 0; i < modsFiles.count; i++) {
         const char* modFile = modsFiles.paths[i];
         loadMod(modFile);
     }
@@ -28,23 +28,24 @@ void loadMods() {
 
 void loadMod(const char* modFile) {
     #ifdef _WIN32
-    void* mod = LoadLibrary(modFile);
+    void* modLib = LoadLibrary(modFile);
     #elif __linux__
-    void* mod = dlopen(modFile, RTLD_NOW);
+    void* modLib = dlopen(modFile, RTLD_NOW);
     #endif
     
-    ASSERT(mod, std::string("Failed to load mod: ") + modFile);
+    ASSERT(modLib, std::string("Failed to load mod: ") + modFile);
 
     Mod (*initFunc)();
     #ifdef _WIN32
-    initFunc = (Mod (*)())GetProcAddress((HMODULE)mod, "init");
+    initFunc = (Mod (*)())GetProcAddress((HMODULE)modLib, "init");
     #elif __linux__
-    initFunc = (Mod (*)())dlsym(mod, "init");
+    initFunc = (Mod (*)())dlsym(modLib, "init");
     #endif
 
     ASSERT(initFunc, std::string("Failed to find init function in mod: ") + modFile);
 
     Mod mod = initFunc();
+    modList.push_back(mod);
 }
 
 void initItems() {
