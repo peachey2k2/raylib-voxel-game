@@ -1,5 +1,6 @@
 #define LOADER_CPP
 #include "./loader.hpp"
+#include "engine/core.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -19,21 +20,24 @@ const char* SHARED_LIB_EXT =
 #endif
 
 void loadMods() {
-    raylib::FilePathList modsFiles = raylib::LoadDirectoryFilesEx(MODS_DIR, SHARED_LIB_EXT, true);
-    for (u32 i = 0; i < modsFiles.count; i++) {
-        const char* modFile = modsFiles.paths[i];
-        loadMod(modFile);
+    raylib::FilePathList modsPaths = raylib::LoadDirectoryFilesEx(MODS_DIR, SHARED_LIB_EXT, true);
+    for (u32 i = 0; i < modsPaths.count; i++) {
+        const char* modsPath = modsPaths.paths[i];
+        loadMod(modsPath);
+        printf("Loaded mod: %s\n", modsPath);
     }
 }
 
-void loadMod(const char* modFile) {
+void loadMod(const char* p_modPath) {
+    const std::string modAbsPath = (core::getAppDir() + p_modPath);
+
     #ifdef _WIN32
-    void* modLib = LoadLibrary(modFile);
+    void* modLib = LoadLibrary(modAbsPath.c_str());
     #elif __linux__
-    void* modLib = dlopen(modFile, RTLD_NOW);
+    void* modLib = dlopen(modAbsPath.c_str(), RTLD_NOW);
     #endif
     
-    ASSERT(modLib, std::string("Failed to load mod: ") + modFile);
+    ASSERT(modLib, "Failed to load mod: " + modAbsPath + '\n' + dlerror());
 
     Mod (*initFunc)();
     #ifdef _WIN32
@@ -42,10 +46,21 @@ void loadMod(const char* modFile) {
     initFunc = (Mod (*)())dlsym(modLib, "init");
     #endif
 
-    ASSERT(initFunc, std::string("Failed to find init function in mod: ") + modFile);
+    ASSERT(initFunc, "Failed to find init function in mod: " + modAbsPath);
 
     Mod mod = initFunc();
-    modList.push_back(mod);
+    modList.push_back(mod);modList.push_back(mod);
+}
+
+void initFunctions() {
+    ApiFunctions api = {
+        .blocks__add = blocks::add,
+    };
+    for (auto& mod : modList) {
+        if (mod.initFunctions) {
+            mod.initFunctions(api);
+        }
+    }
 }
 
 void initItems() {

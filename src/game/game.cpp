@@ -10,6 +10,7 @@ extern "C" Mod init() {
 
     Mod mod = {
         .info = info,
+        .initFunctions = initFunctions,
         .initItems = initItems,
         .initBlocks = initBlocks,
     };
@@ -17,15 +18,18 @@ extern "C" Mod init() {
     return mod;
 }
 
-void initItems() {
+void initFunctions(ApiFunctions &p_api) {
+    BIND_FUNCTIONS(p_api);
+}
 
+void initItems() {
 }
 
 void initBlocks() {
     InitBlockInfo block {
         .name = "grass",
         .tooltip = "Grass",
-        .texture = "texture.png",
+        .texture = "../texture.png",
     };
     wmac::blocks::add(block);
 }

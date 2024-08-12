@@ -16,7 +16,7 @@ void initAtlas() {
 
 void initMesh() {
     m_material = raylib::LoadMaterialDefault();
-    m_material.shader = raylib::LoadShader("shaders/block.vert", "shaders/block.frag");
+    m_material.shader = raylib::LoadShader("../shaders/block.vert", "../shaders/block.frag");
     m_uniformChunkPos = raylib::GetShaderLocation(m_material.shader, "chunkPos");
 
     m_atlas = raylib::LoadTextureFromImage(m_atlasImage);

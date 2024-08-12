@@ -1,30 +1,14 @@
 #pragma once
-#define WMAC_API extern "C"
 
-WMAC_API typedef struct ModInfo {
-    const char* name;
-    const char* version;
-    const char* author;
-    const char* description;
-    const char* license;
-    const char* source;
-    const char* dependencies;
-    const char* conflicts;
-    const int loadPriority;
-} ModInfo;
-
-WMAC_API typedef struct Mod {
-    ModInfo info;
-    void (*initItems)();
-    void (*initBlocks)();
-} Mod;
-
-typedef struct InitBlockInfo {
-    const char* name;
-    const char* tooltip;
-    const char* texture;
-} InitBlockInfo;
+#include "utils.hpp"
 
 namespace wmac::blocks {
-    WMAC_API void add(InitBlockInfo &p_block);
+    // WMAC_API void add(InitBlockInfo &p_block);
+    void (*add)(InitBlockInfo &p_block);
 }
+
+#define BIND_FUNCTIONS(api) \
+    wmac::blocks::add = api.blocks__add;
+
+
+

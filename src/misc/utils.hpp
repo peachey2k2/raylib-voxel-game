@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include "raylib.hpp"
+#include "./types.hpp"
 
 #define wmac WorldMachine
 
@@ -19,8 +20,7 @@ namespace wmac {
 
 #define ASSERT(x, msg) if (!(x)) { throw std::runtime_error(msg); }
 
-// look, i like c++ but at times it'sbit too verbose.
-// so here's what we will be doing:
+// mmmmm gotta save those keystrokes
 #define scast static_cast
 #define dcast dynamic_cast
 #define ccast const_cast
@@ -38,55 +38,7 @@ void say(const T& first, const Args&... args) {
     }
 }
 
-// mmmmm gotta save those keystrokes
-#ifndef u8
-typedef __UINT8_TYPE__ u8;
-#endif
-
-#ifndef u16
-typedef __UINT16_TYPE__ u16;
-#endif
-
-#ifndef u32
-typedef __UINT32_TYPE__ u32;
-#endif
-
-#ifndef u64
-typedef __UINT64_TYPE__ u64;
-#endif
-
-#ifndef i8
-typedef __INT8_TYPE__ i8;
-#endif
-
-#ifndef i16
-typedef __INT16_TYPE__ i16;
-#endif
-
-#ifndef i32
-typedef __INT32_TYPE__ i32;
-#endif
-
-#ifndef i64
-typedef __INT64_TYPE__ i64;
-#endif
-
-#ifndef f32
-typedef float f32;
-#endif
-
-#ifndef f64
-typedef double f64;
-#endif
-
-#ifndef size_t
-typedef __SIZE_TYPE__ size_t;
-#endif
-
-typedef raylib::Vector2 vec2;
-typedef raylib::Vector3 vec3;
-typedef raylib::Vector4 vec4;
-typedef raylib::Matrix mat4;
+};
 
 inline const mat4 IDENTITY_MATRIX = {
     1, 0, 0, 0,
@@ -172,24 +124,6 @@ constexpr vec4 VEC4(const vec3& a, f32 w) {
     return { a.x, a.y, a.z, w };
 }
 
-typedef struct vec2i {
-    i32 x;
-    i32 y;
-} vec2i;
-
-typedef struct vec3i {
-    i32 x;
-    i32 y;
-    i32 z;
-} vec3i;
-
-typedef struct vec4i {
-    i32 x;
-    i32 y;
-    i32 z;
-    i32 w;
-} vec4i;
-
 constexpr vec2i operator+(const vec2i& a, const vec2i& b) {
     return { a.x + b.x, a.y + b.y };
 }
@@ -258,13 +192,10 @@ inline i32 pow(i32 base, i32 exp) {
     return result;
 }
 
-
-};
-
 namespace std { 
     // hash function for vec3i, necessary for unordered_map
-    template<> struct hash<wmac::vec3i> {
-        size_t operator()(const wmac::vec3i& vec) const noexcept {
+    template<> struct hash<vec3i> {
+        size_t operator()(const vec3i& vec) const noexcept {
             size_t h1 = ::std::hash<int>{}(vec.x);
             size_t h2 = ::std::hash<int>{}(vec.y);
             size_t h3 = ::std::hash<int>{}(vec.z);
@@ -272,5 +203,4 @@ namespace std {
         }
     };
 }
-
 

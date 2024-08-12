@@ -32,6 +32,7 @@ void init() {
     initRaylib();
     
     loader::loadMods();
+    loader::initFunctions();
 
     render::initAtlas();
     // blocks::addDefaultBlocks();
@@ -42,10 +43,8 @@ void init() {
 }
 
 void initRaylib() {
-    const std::string dir = raylib::GetWorkingDirectory();
-    if (dir.ends_with("/bin")) {
-        raylib::ChangeDirectory("../");
-    };
+    m_appDir = raylib::GetApplicationDirectory();
+    raylib::ChangeDirectory(m_appDir.c_str());
     
     raylib::SetConfigFlags(
         // raylib::FLAG_WINDOW_RESIZABLE |
@@ -87,6 +86,10 @@ void drawUI() {
 void deinit() {
     world::deinit();
     raylib::CloseWindow();
+}
+
+std::string getAppDir() {
+    return m_appDir;
 }
 
 }

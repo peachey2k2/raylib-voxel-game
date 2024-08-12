@@ -2,25 +2,7 @@
 
 #include "misc/utils.hpp"
 
-extern "C" {
-    typedef struct ModInfo {
-        const char* name;
-        const char* version;
-        const char* author;
-        const char* description;
-        const char* license;
-        const char* source;
-        const char* dependencies;
-        const char* conflicts;
-        const int loadPriority;
-    } ModInfo;
-
-    typedef struct Mod {
-        ModInfo info;
-        void (*initItems)();
-        void (*initBlocks)();
-    } Mod;
-}
+#include "engine/blocks.hpp"
 
 namespace wmac::loader {
 
@@ -37,8 +19,11 @@ inline auto modList = std::vector<Mod>();
 
 void loadMods();
 
+void initFunctions();
 void initItems();
 void initBlocks();
 
 }
+
+
 

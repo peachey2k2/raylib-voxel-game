@@ -16,7 +16,7 @@ sources := $(call rwildcard,./,*.cpp)
 objects := $(patsubst ./%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 # compileFlags := -std=c++20 -I./include -I./src -I./include -g
-compileFlags := -std=c++20 -I ../../include -I ./src/misc -I ./include -g -fPIC
+compileFlags := -std=c++20 -I ../../include -I ./src/misc -I -g -fPIC
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
 linkFlags = -shared -L lib/$(platform) -L ../../lib -l raylib -l noise
 

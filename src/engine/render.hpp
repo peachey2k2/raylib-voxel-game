@@ -9,11 +9,6 @@ namespace wmac::render {
 extern const i32 TILE_SIZE;
 extern const i32 TILE_PER_ROW;
 
-typedef struct RenderChunk {
-    Chunk* chunk;
-    raylib::Mesh mesh;
-} RenderChunk;
-
 #ifdef RENDER_CPP
 
 // raylib::Shader shader; // FUCK YOU

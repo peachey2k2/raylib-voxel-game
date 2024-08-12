@@ -21,6 +21,8 @@ inline raylib::Camera3D m_camera {
 
 #ifdef CORE_CPP
 
+std::string m_appDir;
+
 void init();
     void initRaylib();
 void update();
@@ -32,6 +34,8 @@ void deinit();
 #endif
 
 void run();
+
+std::string getAppDir();
 
 
 };

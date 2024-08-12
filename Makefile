@@ -24,7 +24,7 @@ excludeDir := src/game# it counts as a mod so we exclude it
 sources := $(filter-out $(excludeDir)/%,$(sources))
 objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
-compileFlags := -std=c++20 -I./include -I./src -I./include -g
+compileFlags := -std=c++20 -I./include -I./src -g
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
 linkFlags = -L lib/$(platform) -L ./lib -l raylib -l noise
 
@@ -71,6 +71,8 @@ endif
 
 # Default target to build the program
 all: $(coreModDir) $(target)
+
+core-mod: clean-mods $(coreModDir)
 
 # Compile then execute the program
 run: $(target) execute
@@ -127,3 +129,6 @@ execute:
 # Clean up all relevant files
 clean:
 	$(RM) $(call platformpth, $(buildDir)/*)
+
+clean-mods:
+	$(RM) $(call platformpth, $(modsDir)/*)
