@@ -1,6 +1,6 @@
 #pragma once
 
-#include "misc/utils.hpp"
+#include <utils.hpp>
 #include "./blocks.hpp"
 #include "./world.hpp"
 
@@ -11,14 +11,14 @@ extern const i32 TILE_PER_ROW;
 
 #ifdef RENDER_CPP
 
-// raylib::Shader shader; // FUCK YOU
-raylib::Material m_material;
+// Shader shader; // FUCK YOU
+Material m_material;
 i32 m_uniformChunkPos;
 
 std::unordered_map<vec3i, RenderChunk> renderChunks;
 
-raylib::Image m_atlasImage;
-raylib::Texture2D m_atlas;
+Image m_atlasImage;
+Texture2D m_atlas;
 u32 m_atlasIndex = 0;
 
 #endif

@@ -6,7 +6,7 @@ namespace wmac::ticks {
 const f64 TICK_RATE = 0.05;
 
 void check() {
-    m_tickDesync += raylib::GetFrameTime();
+    m_tickDesync += GetFrameTime();
     if (m_tickDesync >= TICK_RATE) {
         m_tickDesync -= TICK_RATE;
         update(); // TODO: move this to a separate thread

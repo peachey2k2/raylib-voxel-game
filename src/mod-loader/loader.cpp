@@ -20,15 +20,16 @@ const char* SHARED_LIB_EXT =
 #endif
 
 void loadMods() {
-    raylib::FilePathList modsPaths = raylib::LoadDirectoryFilesEx(MODS_DIR, SHARED_LIB_EXT, true);
+    FilePathList modsPaths = LoadDirectoryFilesEx(MODS_DIR, SHARED_LIB_EXT, true);
     for (u32 i = 0; i < modsPaths.count; i++) {
+        ModID id = modList.size();
         const char* modsPath = modsPaths.paths[i];
-        loadMod(modsPath);
+        loadMod(modsPath, id);
         printf("Loaded mod: %s\n", modsPath);
     }
 }
 
-void loadMod(const char* p_modPath) {
+void loadMod(const char* p_modPath, ModID p_id) {
     const std::string modAbsPath = (core::getAppDir() + p_modPath);
 
     #ifdef _WIN32
@@ -39,24 +40,26 @@ void loadMod(const char* p_modPath) {
     
     ASSERT(modLib, "Failed to load mod: " + modAbsPath + '\n' + dlerror());
 
-    Mod (*initFunc)();
+    Mod (*initFunc)(ModID);
     #ifdef _WIN32
-    initFunc = (Mod (*)())GetProcAddress((HMODULE)modLib, "init");
+    initFunc = (Mod (*)(ModID))GetProcAddress((HMODULE)modLib, "init");
     #elif __linux__
-    initFunc = (Mod (*)())dlsym(modLib, "init");
+    initFunc = (Mod (*)(ModID))dlsym(modLib, "init");
     #endif
 
     ASSERT(initFunc, "Failed to find init function in mod: " + modAbsPath);
 
-    Mod mod = initFunc();
+    Mod mod = initFunc(p_id);
+    mod.path = modAbsPath.substr(0, modAbsPath.find_last_of('/') + 1);
     modList.push_back(mod);modList.push_back(mod);
 }
 
 void initFunctions() {
-    ApiFunctions api = {
-        .blocks__add = blocks::add,
-    };
-    for (auto& mod : modList) {
+    for (ModID id=0; id<modList.size(); id++) {
+        Mod& mod = modList[id];
+        ApiFunctions api = {
+            .blocks__add = blocks::add,
+        };
         if (mod.initFunctions) {
             mod.initFunctions(api);
         }
@@ -79,5 +82,8 @@ void initBlocks() {
     }
 }
 
+std::string getModPath(ModID p_id) {
+    return modList[p_id].path;
+}
 
 }

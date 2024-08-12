@@ -4,50 +4,50 @@
 #include "./world.hpp"
 
 #include "./core.hpp"
-#include "rlgl.hpp"
+#include <rlgl.h>
 namespace wmac::render {
 
 const i32 TILE_SIZE = 32;
 const i32 TILE_PER_ROW = 16;
 
 void initAtlas() {
-    m_atlasImage = raylib::GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, raylib::WHITE);
+    m_atlasImage = GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, WHITE);
 }
 
 void initMesh() {
-    m_material = raylib::LoadMaterialDefault();
-    m_material.shader = raylib::LoadShader("../shaders/block.vert", "../shaders/block.frag");
-    m_uniformChunkPos = raylib::GetShaderLocation(m_material.shader, "chunkPos");
+    m_material = LoadMaterialDefault();
+    m_material.shader = LoadShader("shaders/block.vert", "shaders/block.frag");
+    m_uniformChunkPos = GetShaderLocation(m_material.shader, "chunkPos");
 
-    m_atlas = raylib::LoadTextureFromImage(m_atlasImage);
-    raylib::SetMaterialTexture(&m_material, raylib::MATERIAL_MAP_ALBEDO, m_atlas);
+    m_atlas = LoadTextureFromImage(m_atlasImage);
+    SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
 }
 
 void draw() {
     vec3 offset;
     for (auto& [chunkPos, renderChunk] : renderChunks) {
-        raylib::Mesh& mesh = renderChunk.mesh;
+        Mesh& mesh = renderChunk.mesh;
         offset = {
             (f32)(chunkPos.x * 16),
             (f32)(chunkPos.y * 16),
             (f32)(chunkPos.z * 16),
         };
-        raylib::SetShaderValue(m_material.shader, m_uniformChunkPos, &offset, raylib::SHADER_UNIFORM_VEC3);
-        raylib::DrawMesh(mesh, m_material, IDENTITY_MATRIX);
+        SetShaderValue(m_material.shader, m_uniformChunkPos, &offset, SHADER_UNIFORM_VEC3);
+        DrawMesh(mesh, m_material, IDENTITY_MATRIX);
     }
 }
 
 u32 addTextureToAtlas(const char* p_texture) {
     u32 idx = m_atlasIndex++;
 
-    raylib::Image image = raylib::LoadImage(p_texture);
+    Image image = LoadImage(p_texture);
     ASSERT(image.data != nullptr, "Failed to load image " + std::string(p_texture) + ", is it in the right place?");
     if (image.width != TILE_SIZE || image.height != TILE_SIZE) {
         say("[WARNING] Image " + std::string(p_texture) + " is not " + std::to_string(TILE_SIZE) + "x" + std::to_string(TILE_SIZE) + " pixels. Resizing.");
-        raylib::ImageResize(&image, TILE_SIZE, TILE_SIZE);
+        ImageResize(&image, TILE_SIZE, TILE_SIZE);
     }
-    raylib::ImageAlphaClear(&image, raylib::WHITE, 0.0f);
-    raylib::ImageDraw(
+    ImageAlphaClear(&image, WHITE, 0.0f);
+    ImageDraw(
         &m_atlasImage,
         image,
         {
@@ -57,9 +57,9 @@ u32 addTextureToAtlas(const char* p_texture) {
             (float)(idx % TILE_PER_ROW) * TILE_SIZE, (float)(idx / TILE_PER_ROW) * TILE_SIZE,
             TILE_SIZE, TILE_SIZE
         },
-        raylib::WHITE
+        WHITE
     );
-    raylib::UnloadImage(image);
+    UnloadImage(image);
     return idx;
 }
 
@@ -85,7 +85,7 @@ void activateChunk(vec3i p_pos) {
     renderChunks[p_pos].mesh.vertexCount = 4*count;
     renderChunks[p_pos].mesh.triangleCount = 2*count;
 
-    UpdateMeshBuffer(mesh, raylib::SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
+    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
     UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
 }
 
@@ -97,7 +97,7 @@ void updateChunk(vec3i p_pos) {
     renderChunks[p_pos].mesh.vertexCount = 4*count;
     renderChunks[p_pos].mesh.triangleCount = 2*count;
 
-    UpdateMeshBuffer(mesh, raylib::SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
+    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
     UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
 }
 

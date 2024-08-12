@@ -1,6 +1,6 @@
 #pragma once
 
-#include "misc/utils.hpp"
+#include <utils.hpp>
 
 namespace wmac::blocks {
 
@@ -11,7 +11,7 @@ u64 m_idCounter = 1; // 0 is reserved for air
 
 #endif
 
-void add(InitBlockInfo &p_block);
+void add(ModID modId ,InitBlockInfo &p_block);
 
 u64 getNewId();
 

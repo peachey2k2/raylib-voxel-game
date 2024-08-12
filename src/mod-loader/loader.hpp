@@ -1,6 +1,6 @@
 #pragma once
 
-#include "misc/utils.hpp"
+#include <utils.hpp>
 
 #include "engine/blocks.hpp"
 
@@ -11,7 +11,7 @@ namespace wmac::loader {
 extern const char* MODS_DIR;
 extern const char* SHARED_LIB_EXT;
 
-void loadMod(const char* modFile);
+void loadMod(const char* modFile, ModID id);
 
 #endif
 
@@ -22,6 +22,8 @@ void loadMods();
 void initFunctions();
 void initItems();
 void initBlocks();
+
+std::string getModPath(ModID id);
 
 }
 

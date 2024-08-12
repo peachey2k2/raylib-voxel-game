@@ -1,5 +1,7 @@
 #pragma once
 
+#include <raylib.h>
+
 #define WMAC_API extern "C"
 
 #ifndef u8
@@ -46,10 +48,12 @@ typedef double f64;
 typedef __SIZE_TYPE__ size_t;
 #endif
 
-typedef raylib::Vector2 vec2;
-typedef raylib::Vector3 vec3;
-typedef raylib::Vector4 vec4;
-typedef raylib::Matrix mat4;
+typedef u32 ModID;
+
+typedef Vector2 vec2;
+typedef Vector3 vec3;
+typedef Vector4 vec4;
+typedef Matrix mat4;
 
 typedef struct vec2i {
     i32 x;
@@ -121,11 +125,11 @@ typedef u64 Chunk[16*16*16];
 
 typedef struct RenderChunk {
     Chunk* chunk;
-    raylib::Mesh mesh;
+    Mesh mesh;
 } RenderChunk;
 
 WMAC_API typedef struct ApiFunctions {
-    void (*blocks__add)(InitBlockInfo &p_block);
+    void (*blocks__add)(ModID modId, InitBlockInfo &p_block);
 } ApiFunctions;
 
 WMAC_API typedef struct ModInfo {
@@ -142,6 +146,7 @@ WMAC_API typedef struct ModInfo {
 
 WMAC_API typedef struct Mod {
     ModInfo info;
+    std::string path; // auto-filled by game, no need to set
     void (*initFunctions)(ApiFunctions &p_api);
     void (*initItems)();
     void (*initBlocks)();

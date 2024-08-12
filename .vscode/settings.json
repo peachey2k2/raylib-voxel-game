@@ -85,6 +85,11 @@
             "cwd": "/home/pea/development/raylib tinkering/bin",
             "binaryPath": "/home/pea/development/raylib tinkering/bin/app",
             "binaryArgs": []
+        },
+        {
+            "cwd": "/home/pea/development/world-eater/world-machine/bin",
+            "binaryPath": "/home/pea/development/world-eater/world-machine/bin/app",
+            "binaryArgs": []
         }
     ],
     "cmake.ignoreCMakeListsMissing": true,

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "misc/utils.hpp"
+#include <utils.hpp>
 #include <noise/noise.h>
 
 
