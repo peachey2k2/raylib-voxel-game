@@ -95,7 +95,9 @@ run: $(target) execute
 $(target): $(objects)
 	$(MKDIR) $(outputDir) 
 	$(CXX) $(objects) -o $(outputDir)/$(executable) $(linkFlags)
+	rm -rf $(outputDir)/res
 	rm -rf $(outputDir)/shaders
+	cp -r ./res $(outputDir)
 	cp -r ./shaders $(outputDir)
 
 # Add all rules from dependency files

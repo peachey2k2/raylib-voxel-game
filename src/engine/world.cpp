@@ -10,16 +10,17 @@ void init() {
     say("Initializing world");
     m_noiseMap = new noise::module::Perlin();
     m_chunks.clear();
-    for (i32 x = 0; x < 10; x++) {
-        for (i32 y = 0; y < 10; y++) {
-            for (i32 z = 0; z < 10; z++) {
-                generateChunk(vec3i{x, y, z});
-                render::activateChunk(vec3i{x, y, z});
-            }
-        }
-    }
-    say("vertex count:", 4*render::m_accum);
-    say("triangle count:", 2*render::m_accum);
+    // for (i32 x = -3; x < 4; x++) {
+    //     for (i32 y = -3; y < 4; y++) {
+    //         for (i32 z = -3; z < 4; z++) {
+    //             generateChunk(vec3i{x, y, z});
+    //             render::activateChunk(vec3i{x, y, z});
+    //         }
+    //     }
+    // }
+    // say("vertex count:", 4*render::m_accum);
+    // say("triangle count:", 2*render::m_accum);
+    generateChunksAt({0,0,0}, 16);
 }
 
 void deinit() {
@@ -46,11 +47,51 @@ void generateChunk(vec3i p_pos) {
     addChunk(p_pos, chunk);
 }
 
+void generateChunksAt(vec3i p_pos, u32 p_radius) {
+    i32 radius = scast<i32>(p_radius);
+    std::vector<vec3i> toDisable = {};
+
+    for (auto& [pos, chunk] : m_chunks) {
+        if (
+            abs(pos.x - p_pos.x) > radius ||
+            abs(pos.y - p_pos.y) > radius ||
+            abs(pos.z - p_pos.z) > radius
+        ) {
+            toDisable.push_back(pos);
+        }
+    }
+
+    for (auto& pos : toDisable) {
+        render::deactivateChunk(pos);
+        delete m_chunks[pos];
+        m_chunks.erase(pos);
+    }
+
+    for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
+        for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
+            for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
+                if (m_chunks.find(vec3i{x, y, z}) == m_chunks.end()) {
+                    generateChunk(vec3i{x, y, z});
+                    render::activateChunk(vec3i{x, y, z});
+                }
+            }
+        }
+    }
+}
+
 vec3i getChunkLoc(vec3i p_pos) {
     return {
-        .x = p_pos.x / 16,
-        .y = p_pos.y / 16,
-        .z = p_pos.z / 16,
+        .x = scast<int>(floor(p_pos.x / 16.0)),
+        .y = scast<int>(floor(p_pos.y / 16.0)),
+        .z = scast<int>(floor(p_pos.z / 16.0)),
+    };
+}
+
+vec3i getChunkLoc(vec3 p_pos) {
+    return {
+        .x = scast<int>(floor(p_pos.x / 16.0)),
+        .y = scast<int>(floor(p_pos.y / 16.0)),
+        .z = scast<int>(floor(p_pos.z / 16.0)),
     };
 }
 

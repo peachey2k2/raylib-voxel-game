@@ -19,8 +19,10 @@ void deinit();
 void addChunk(vec3i p_pos, Chunk *p_chunk);
 
 void generateChunk(vec3i p_pos);
+void generateChunksAt(vec3i p_pos, u32 p_radius);
 
 vec3i getChunkLoc(vec3i p_pos);
+vec3i getChunkLoc(vec3 p_pos);
 ChunkPos getPosInChunk(vec3i p_pos);
 void changeBlock(vec3i p_pos, u64 p_id);
 

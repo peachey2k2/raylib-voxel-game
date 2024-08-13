@@ -10,18 +10,22 @@ inline const u32 HEIGHT = 600;
 
 inline const f32 SENSITIVITY = 0.1f;
 inline const f32 SPEED = 5.0f;
+
+#ifdef CORE_CPP
  
-inline Camera3D m_camera {
+Camera3D m_camera {
     .position = { 10.0f, 1.0f, 10.0f },
     .target = { 0.0f, 0.0f, 0.0f },
     .up = { 0.0f, 1.0f, 0.0f },
     .fovy = 60.0f,
     .projection = CAMERA_PERSPECTIVE,
 };
-
-#ifdef CORE_CPP
-
+vec3i m_chunk;
+vec3& m_position = m_camera.position;
 std::string m_appDir;
+Font m_font;
+
+u32 m_renderDistance = 16;
 
 void init();
     void initRaylib();

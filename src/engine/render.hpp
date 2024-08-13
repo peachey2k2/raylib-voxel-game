@@ -11,11 +11,11 @@ extern const i32 TILE_PER_ROW;
 
 #ifdef RENDER_CPP
 
-// Shader shader; // FUCK YOU
 Material m_material;
 i32 m_uniformChunkPos;
 
-std::unordered_map<vec3i, RenderChunk> renderChunks;
+std::unordered_map<vec3i, RenderChunk> m_renderChunks;
+std::vector<Mesh*> m_meshPool;
 
 Image m_atlasImage;
 Texture2D m_atlas;
@@ -34,5 +34,8 @@ void activateChunk(vec3i p_pos);
 void updateChunk(vec3i p_pos);
 u16 populateMesh(vec3i p_pos);
 void deactivateChunk(vec3i p_pos);
+
+Mesh* getNewMesh();
+void dropMesh(Mesh*);
 
 };

@@ -25,8 +25,8 @@ void initMesh() {
 
 void draw() {
     vec3 offset;
-    for (auto& [chunkPos, renderChunk] : renderChunks) {
-        Mesh& mesh = renderChunk.mesh;
+    for (auto& [chunkPos, renderChunk] : m_renderChunks) {
+        Mesh& mesh = *(renderChunk.mesh);
         offset = {
             (f32)(chunkPos.x * 16),
             (f32)(chunkPos.y * 16),
@@ -64,57 +64,44 @@ u32 addTextureToAtlas(const char* p_texture) {
 }
 
 void activateChunk(vec3i p_pos) {
+    Mesh* mesh = getNewMesh();
     Chunk& chunk = *(world::m_chunks[p_pos]);
-        renderChunks[p_pos] = {
+        m_renderChunks[p_pos] = {
         .chunk = &chunk,
-        .mesh = {
-            .vertexCount = 8 * 16*16*16,
-            .triangleCount = 12 * 16*16*16,
-            .vertices = new f32[3*4*6 * 16*16*16],
-            .indices = new u16[6*6 * 16*16*16],
-        }
+        .mesh = mesh,
     };
 
     u16 count = populateMesh(p_pos);
     m_accum += count;
 
-    auto& mesh = renderChunks[p_pos].mesh;
+    m_renderChunks[p_pos].mesh = mesh;
 
-    UploadMesh(&mesh, true);
+    mesh->vertexCount = 4*count;
+    mesh->triangleCount = 2*count;
 
-    renderChunks[p_pos].mesh.vertexCount = 4*count;
-    renderChunks[p_pos].mesh.triangleCount = 2*count;
-
-    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
+    UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
+    UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
 }
 
 void updateChunk(vec3i p_pos) {
     u16 count = populateMesh(p_pos);
 
-    auto& mesh = renderChunks[p_pos].mesh;
+    auto& mesh = m_renderChunks[p_pos].mesh;
 
-    renderChunks[p_pos].mesh.vertexCount = 4*count;
-    renderChunks[p_pos].mesh.triangleCount = 2*count;
+    mesh->vertexCount = 4*count;
+    mesh->triangleCount = 2*count;
 
-    UpdateMeshBuffer(mesh, SHADER_LOC_VERTEX_POSITION, mesh.vertices, 12*count * sizeof(f32), 0);
-    UpdateMeshBuffer(mesh, 6 /* indices location */ , mesh.indices, 6*count * sizeof(u16), 0);
+    UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
+    UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
 }
 
 u16 populateMesh(vec3i p_pos) {
     u16 count = 0;
-    // vec3 offset = {
-    //     p_pos.x * 16,
-    //     p_pos.y * 16,
-    //     p_pos.z * 16,
-    // };
 
-    auto& chunk = *(renderChunks[p_pos].chunk);
-    auto& mesh = renderChunks[p_pos].mesh;
+    auto& chunk = *(m_renderChunks[p_pos].chunk);
+    auto& mesh = m_renderChunks[p_pos].mesh;
 
     #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
-
-    // say(BLOCK(15,15,15));
 
     for (u32 d = 0; d < 3; d++) {
         i32 i, j, k, l, w, h;
@@ -221,7 +208,7 @@ u16 populateMesh(vec3i p_pos) {
                         0,
                     };
 
-                    u32* verts = rcast<u32*>(mesh.vertices);
+                    u32* verts = rcast<u32*>(mesh->vertices);
 
                     if (flip[n]) {
                         verts[12*count + 0] = p.x + dv;
@@ -258,22 +245,12 @@ u16 populateMesh(vec3i p_pos) {
                         
                     }
 
-                    // mesh.texcoords[8*count + 0] = 0.0f;
-                    // mesh.texcoords[8*count + 1] = 0.0f;
-                    // mesh.texcoords[8*count + 2] = 1.0f/TILE_PER_ROW * w;
-                    // mesh.texcoords[8*count + 3] = 0.0f;
-
-                    // mesh.texcoords[8*count + 4] = 1.0f/TILE_PER_ROW * w;
-                    // mesh.texcoords[8*count + 5] = 1.0f/TILE_PER_ROW * h;
-                    // mesh.texcoords[8*count + 6] = 0.0f;
-                    // mesh.texcoords[8*count + 7] = 1.0f/TILE_PER_ROW * h;
-
-                    mesh.indices[6*count + 0] = 4*count + 0;
-                    mesh.indices[6*count + 1] = 4*count + 1;
-                    mesh.indices[6*count + 2] = 4*count + 2;
-                    mesh.indices[6*count + 3] = 4*count + 2;
-                    mesh.indices[6*count + 4] = 4*count + 3;
-                    mesh.indices[6*count + 5] = 4*count + 0;
+                    mesh->indices[6*count + 0] = 4*count + 0;
+                    mesh->indices[6*count + 1] = 4*count + 1;
+                    mesh->indices[6*count + 2] = 4*count + 2;
+                    mesh->indices[6*count + 3] = 4*count + 2;
+                    mesh->indices[6*count + 4] = 4*count + 3;
+                    mesh->indices[6*count + 5] = 4*count + 0;
 
                     count++;
 
@@ -294,10 +271,28 @@ u16 populateMesh(vec3i p_pos) {
 }
 
 void deactivateChunk(vec3i p_pos) {
-    delete renderChunks[p_pos].mesh.vertices;
-    delete renderChunks[p_pos].mesh.texcoords;
-    delete renderChunks[p_pos].mesh.indices;
-    renderChunks.erase(p_pos);
+    dropMesh(m_renderChunks[p_pos].mesh);
+    m_renderChunks.erase(p_pos);
+}
+
+Mesh* getNewMesh() {
+    if (m_meshPool.size() == 0) {
+        Mesh* mesh = new Mesh();
+        mesh -> vertexCount = 8 * 16*16*16;
+        mesh -> triangleCount = 12 * 16*16*16;
+        mesh -> vertices = new f32[3*4*6 * 16*16*16];
+        mesh -> indices = new u16[6*6 * 16*16*16];
+        UploadMesh(mesh, true);
+        return mesh;
+    }
+    Mesh* mesh = m_meshPool.back();
+    m_meshPool.pop_back();
+    return mesh;
+}
+
+void dropMesh(Mesh* p_mesh) {
+    m_meshPool.push_back(p_mesh);
 }
 
 };
+

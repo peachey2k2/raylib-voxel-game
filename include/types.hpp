@@ -125,7 +125,7 @@ typedef u64 Chunk[16*16*16];
 
 typedef struct RenderChunk {
     Chunk* chunk;
-    Mesh mesh;
+    Mesh* mesh;
 } RenderChunk;
 
 WMAC_API typedef struct ApiFunctions {
