@@ -11,6 +11,8 @@ namespace wmac::loader {
 extern const char* MODS_DIR;
 extern const char* SHARED_LIB_EXT;
 
+ModID m_currentMod;
+
 void loadMod(const char* modFile, ModID id);
 
 #endif
@@ -24,6 +26,7 @@ void initItems();
 void initBlocks();
 
 std::string getModPath(ModID id);
+ModID getCurrentMod();
 
 }
 

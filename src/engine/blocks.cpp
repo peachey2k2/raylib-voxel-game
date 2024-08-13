@@ -6,8 +6,8 @@
 
 namespace wmac::blocks {
 
-void add(ModID modId, InitBlockInfo& p_block) {
-    std::string texPath = loader::getModPath(modId) + p_block.texture;
+void add(InitBlockInfo& p_block) {
+    std::string texPath = loader::getModPath(loader::getCurrentMod()) + p_block.texture;
     m_blocks.push_back(
         Block {
             .itemId = getNewId(),

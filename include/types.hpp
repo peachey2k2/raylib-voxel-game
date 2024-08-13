@@ -129,7 +129,7 @@ typedef struct RenderChunk {
 } RenderChunk;
 
 WMAC_API typedef struct ApiFunctions {
-    void (*blocks__add)(ModID modId, InitBlockInfo &p_block);
+    void (*blocks__add)(InitBlockInfo &p_block);
 } ApiFunctions;
 
 WMAC_API typedef struct ModInfo {

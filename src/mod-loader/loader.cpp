@@ -55,11 +55,11 @@ void loadMod(const char* p_modPath, ModID p_id) {
 }
 
 void initFunctions() {
+    ApiFunctions api = {
+        .blocks__add = blocks::add,
+    };
     for (ModID id=0; id<modList.size(); id++) {
         Mod& mod = modList[id];
-        ApiFunctions api = {
-            .blocks__add = blocks::add,
-        };
         if (mod.initFunctions) {
             mod.initFunctions(api);
         }
@@ -67,7 +67,9 @@ void initFunctions() {
 }
 
 void initItems() {
-    for (auto& mod : modList) {
+    for (ModID id=0; id<modList.size(); id++) {
+        Mod& mod = modList[id];
+        m_currentMod = id;
         if (mod.initItems) {
             mod.initItems();
         }
@@ -75,7 +77,9 @@ void initItems() {
 }
 
 void initBlocks() {
-    for (auto& mod : modList) {
+    for (ModID id=0; id<modList.size(); id++) {
+        Mod& mod = modList[id];
+        m_currentMod = id;
         if (mod.initBlocks) {
             mod.initBlocks();
         }
@@ -84,6 +88,10 @@ void initBlocks() {
 
 std::string getModPath(ModID p_id) {
     return modList[p_id].path;
+}
+
+ModID getCurrentMod() {
+    return m_currentMod;
 }
 
 }
