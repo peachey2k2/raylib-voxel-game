@@ -5,10 +5,20 @@
 
 #include "./core.hpp"
 #include <rlgl.h>
+
+#include <GL/glew.h>
+#include <GL/gl.h>
 namespace wmac::render {
 
-const i32 TILE_SIZE = 32;
-const i32 TILE_PER_ROW = 16;
+const u32 TILE_SIZE = 32;
+const u32 TILE_PER_ROW = 16;
+
+const f32 QUAD_VERTICES[6*4] = {
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+     0.5f,  0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f,
+};
 
 void initAtlas() {
     m_atlasImage = GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, WHITE);
@@ -21,6 +31,14 @@ void initMesh() {
 
     m_atlas = LoadTextureFromImage(m_atlasImage);
     SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
+
+    // hmmmmm
+    glGenBuffers(1, &m_vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(f32), QUAD_VERTICES, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &m_dataBuffer);
+    
 }
 
 void draw() {
@@ -35,6 +53,17 @@ void draw() {
         SetShaderValue(m_material.shader, m_uniformChunkPos, &offset, SHADER_UNIFORM_VEC3);
         DrawMesh(mesh, m_material, IDENTITY_MATRIX);
     }
+
+    mat4 model = IDENTITY_MATRIX * rlGetMatrixTransform();
+    mat4 view = rlGetMatrixModelview();
+    mat4 proj = rlGetMatrixProjection();
+    mat4 mvp = model * view * proj;
+
+    glBindVertexArray(m_vertexBuffer);
+    glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, m_indirectCmds.data(), m_indirectCmds.size(), 0);
+
+    rlSetMatrixModelview(view);
+    rlSetMatrixProjection(proj);
 }
 
 u32 addTextureToAtlas(const char* p_texture) {
@@ -74,13 +103,16 @@ void activateChunk(vec3i p_pos) {
     u16 count = populateMesh(p_pos);
     m_accum += count;
 
-    m_renderChunks[p_pos].mesh = mesh;
+    // m_renderChunks[p_pos].mesh = mesh;
 
-    mesh->vertexCount = 4*count;
-    mesh->triangleCount = 2*count;
+    // mesh->vertexCount = 4*count;
+    // mesh->triangleCount = 2*count;
 
-    UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
-    UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
+    // UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
+    // UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_dataBuffer);
+    glBufferData(GL_ARRAY_BUFFER, m_dataArray.size() * sizeof(u64), m_dataArray.data(), GL_DYNAMIC_DRAW);
 }
 
 void updateChunk(vec3i p_pos) {
@@ -210,49 +242,7 @@ u16 populateMesh(vec3i p_pos) {
 
                     u32* verts = rcast<u32*>(mesh->vertices);
 
-                    if (flip[n]) {
-                        verts[12*count + 0] = p.x + dv;
-                        verts[12*count + 1] = p.y;
-                        verts[12*count + 2] = p.z;
-
-                        verts[12*count + 3] = p.x + du + dv;
-                        verts[12*count + 4] = p.y;
-                        verts[12*count + 5] = p.z;
-
-                        verts[12*count + 6] = p.x + du;
-                        verts[12*count + 7] = p.y;
-                        verts[12*count + 8] = p.z;
-
-                        verts[12*count + 9] = p.x;
-                        verts[12*count + 10] = p.y;
-                        verts[12*count + 11] = p.z;
-                    } else {
-                        verts[12*count + 0] = p.x;
-                        verts[12*count + 1] = p.y;
-                        verts[12*count + 2] = p.z;
-
-                        verts[12*count + 3] = p.x + du;
-                        verts[12*count + 4] = p.y;
-                        verts[12*count + 5] = p.z;
-
-                        verts[12*count + 6] = p.x + du + dv;
-                        verts[12*count + 7] = p.y;
-                        verts[12*count + 8] = p.z;
-
-                        verts[12*count + 9] = p.x + dv;
-                        verts[12*count + 10] = p.y;
-                        verts[12*count + 11] = p.z;
-                        
-                    }
-
-                    mesh->indices[6*count + 0] = 4*count + 0;
-                    mesh->indices[6*count + 1] = 4*count + 1;
-                    mesh->indices[6*count + 2] = 4*count + 2;
-                    mesh->indices[6*count + 3] = 4*count + 2;
-                    mesh->indices[6*count + 4] = 4*count + 3;
-                    mesh->indices[6*count + 5] = 4*count + 0;
-
-                    count++;
+                    verts[]
 
                     for (l = 0; l < h; l++) {
                         for (k = 0; k < w; k++) {
@@ -292,6 +282,111 @@ Mesh* getNewMesh() {
 
 void dropMesh(Mesh* p_mesh) {
     m_meshPool.push_back(p_mesh);
+}
+
+IndirectCommand* createCommand(u32 p_size) {
+    IndirectCommand cmd = {
+        .count = 4,
+        .instanceCount = p_size,
+        .first = 0, // we'll find the right place later
+        .baseInstance = 0,
+    };
+    IndirectCommand* cmdPtr; // for return value
+
+    u32 i = 0;
+    // check the start
+    if (m_indirectCmds[0].first >= p_size) {
+        m_indirectCmds.insert(m_indirectCmds.begin(), cmd);
+        return m_indirectCmds.data();
+    }
+
+    // check any other gaps
+    for (i = 1; i < m_indirectCmds.size(); i++) {
+        if (m_indirectCmds[i].first - (m_indirectCmds[i-1].first + m_indirectCmds[i-1].instanceCount) >= p_size) {
+            cmd.first = m_indirectCmds[i].first + m_indirectCmds[i].instanceCount;
+            m_indirectCmds.insert(m_indirectCmds.begin() + i, cmd);
+            return &(m_indirectCmds[i]);
+        }
+    }
+
+    // place it in the end
+    cmd.first = m_indirectCmds.back().first + m_indirectCmds.back().instanceCount;
+    m_dataArraySize = cmd.first + p_size;
+    m_indirectCmds.push_back(cmd);
+    return &(m_indirectCmds.back());
+}
+
+// warning: this might move the command, making the pointer invalid
+// so always use the returned pointer
+IndirectCommand* resizeCommand(IndirectCommand* p_cmd, u32 p_newSize) {
+    // no shrinking, at least for now
+    if (p_cmd->instanceCount > p_newSize) return p_cmd;
+
+    // if at the end, we mignt need to increase the buffer size
+    if (p_cmd == m_indirectCmds.data() + m_indirectCmds.size() - 1) {
+        if (p_cmd->first + p_newSize > m_dataArraySize) {
+            m_dataArraySize = p_cmd->first + p_newSize;
+        }
+        p_cmd->instanceCount = p_newSize;
+        return p_cmd;
+    };
+
+    // keep in mind vectors aren't null-terminated
+    // but the last check should prevent us from going out of bounds
+    IndirectCommand* next = p_cmd + 1;
+
+    // if we can expand, we expand
+    if (p_cmd->first + p_newSize <= next->first) {
+        p_cmd->instanceCount = p_newSize;
+        return p_cmd;
+    }
+
+    IndirectCommand cmdCopy = *p_cmd;
+
+    // else, we move it. first check if it fits to the front
+    if (p_cmd->instanceCount <= m_indirectCmds[0].first) {
+        for (auto cur = p_cmd; cur > m_indirectCmds.data(); cur--) {
+            *cur = *(cur-1);
+        }
+        m_indirectCmds[0] = cmdCopy;
+        m_indirectCmds[0].instanceCount = p_newSize;
+        return m_indirectCmds.data();
+    }
+
+    // if not, scan the rest of the array for a gap
+    for (u32 i = 1; i < m_indirectCmds.size(); i++) {
+        if (m_indirectCmds[i].first - (m_indirectCmds[i-1].first + m_indirectCmds[i-1].instanceCount) >= p_newSize) {
+            p_cmd->first = m_indirectCmds[i].first + m_indirectCmds[i].instanceCount;
+            p_cmd->instanceCount = p_newSize;
+
+            // we moved it, so we need to move it in the array to keep the order correct
+            if (p_cmd < m_indirectCmds.data() + i) {
+                // move forward (move everything back)
+                for (auto cur = p_cmd; cur < m_indirectCmds.data() + i; cur++) {
+                    *cur = *(cur+1);
+                }
+            } else {
+                // move backward (move everything forward)
+                for (auto cur = p_cmd; cur > m_indirectCmds.data() + i; cur--) {
+                    *cur = *(cur-1);
+                }
+            }
+            m_indirectCmds[i] = cmdCopy;
+            m_indirectCmds[i].instanceCount = p_newSize;
+            return &(m_indirectCmds[i]);
+        }
+    }
+
+    // if we're here, we couldn't find any gaps to fit the mesh,
+    // so we need to move it to the end
+    m_indirectCmds.erase(m_indirectCmds.begin() + (p_cmd - m_indirectCmds.data())); // iterator nonsense
+    u32 temp = m_dataArraySize;
+    m_dataArraySize = cmdCopy.first + cmdCopy.instanceCount;
+
+    cmdCopy.first = temp;
+    cmdCopy.instanceCount = p_newSize;
+    m_indirectCmds.push_back(cmdCopy);
+    return m_indirectCmds.data() + m_indirectCmds.size() - 1;
 }
 
 };

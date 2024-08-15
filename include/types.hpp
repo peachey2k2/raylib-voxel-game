@@ -73,6 +73,13 @@ typedef struct vec4i {
     i32 w;
 } vec4i;
 
+typedef  struct IndirectCommand {
+    u32 count; // indices to render (4 for quad)
+    u32 instanceCount; // data size
+    u32 first; // data start
+    u32 baseInstance; // base vertex index (0 for quad)
+} IndirectCommand;
+
 typedef struct InitBlockInfo {
     const char* name;
     const char* tooltip;
@@ -123,10 +130,10 @@ typedef struct ChunkPos {
 // takes up 16*16*16*8 = 32KB
 typedef u64 Chunk[16*16*16];
 
-typedef struct RenderChunk {
-    Chunk* chunk;
-    Mesh* mesh;
-} RenderChunk;
+// typedef struct RenderChunk {
+//     Chunk* chunk;
+//     Mesh* mesh;
+// } RenderChunk;
 
 WMAC_API typedef struct ApiFunctions {
     void (*blocks__add)(InitBlockInfo &p_block);
