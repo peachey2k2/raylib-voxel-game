@@ -24,10 +24,19 @@ Image m_atlasImage;
 Texture2D m_atlas;
 u32 m_atlasIndex = 0;
 
+// this holds the vertex data. just a single quad, instanced
 u32 m_vertexBuffer;
+
+// ssbo to send the chunk positions
+u32 m_shaderStorageBuffer;
+std::vector<u32> m_shaderStorageArray;
+
+// actual per-quad data
 u32 m_dataBuffer;
 std::vector<u64> m_dataArray;
 u64 m_dataArraySize = 0;
+
+// indirect draw commands. specifically in ascending order.
 u32 m_indirectBuffer;
 std::vector<IndirectCommand> m_indirectCmds = {};
 
@@ -45,11 +54,8 @@ void updateChunk(vec3i p_pos);
 u16 populateMesh(vec3i p_pos);
 void deactivateChunk(vec3i p_pos);
 
-Mesh* getNewMesh();
-void dropMesh(Mesh*);
-
-IndirectCommand* createMesh(u64* p_data, u32 p_size, vec3i p_chunk);
-IndirectCommand* resizeMesh(u64* p_data, u32 p_newSize);
+u32 calculateVertexData(vec3i p_chunkPos, u64* p_data);
+void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size);
 
 IndirectCommand* createCommand(u32 p_size);
 IndirectCommand* resizeCommand(IndirectCommand* p_cmd, u32 p_newSize);

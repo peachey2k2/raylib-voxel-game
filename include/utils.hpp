@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <cstring> // memcpy
 
 #include <stdexcept>
 #include <iostream>

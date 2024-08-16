@@ -1,4 +1,4 @@
-#version 330
+#version 430
 
 // Input vertex attributes
 in ivec3 data;
@@ -12,7 +12,10 @@ out vec2 fragTexCoord;
 // out vec3 debugColor;
 
 // NOTE: Add here your custom variables
-uniform vec3 chunkPos;
+// uniform vec3 chunkPos;
+layout(std430, binding = 3) buffer ssbo {
+    vec3 chunkPositions[];
+};
 
 vec3 pos;
 int normal;
@@ -21,14 +24,14 @@ vec2 tex;
 
 void unpack() {
     pos = vec3(
-        data.x & 0x1F,
-        (data.x >> 5) & 0x1F,
-        (data.x >> 10) & 0x1F
+        data.x & 0x0F,
+        (data.x >> 4) & 0x0F,
+        (data.x >> 8) & 0x0F
     );
-    normal = (data.x >> 15) & 0x07;
+    normal = (data.x >> 12) & 0x07;
     size = ivec2(
-        ((data.x >> 18) & 0x0F) + 1,
-        ((data.x >> 22) & 0x0F) + 1
+        ((data.x >> 15) & 0x0F) + 1,
+        ((data.x >> 19) & 0x0F) + 1
     );
     tex = vec2(
         (data.z & 0x0F) / 16.0,

@@ -35,24 +35,27 @@ void initMesh() {
     // hmmmmm
     glGenBuffers(1, &m_vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(f32), QUAD_VERTICES, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(u32), QUAD_VERTICES, GL_STATIC_DRAW);
 
     glGenBuffers(1, &m_dataBuffer);
-    
+
+    glGenBuffers(1, &m_indirectBuffer);
+
+    glGenBuffers(1, &m_shaderStorageBuffer);
 }
 
 void draw() {
-    vec3 offset;
-    for (auto& [chunkPos, renderChunk] : m_renderChunks) {
-        Mesh& mesh = *(renderChunk.mesh);
-        offset = {
-            (f32)(chunkPos.x * 16),
-            (f32)(chunkPos.y * 16),
-            (f32)(chunkPos.z * 16),
-        };
-        SetShaderValue(m_material.shader, m_uniformChunkPos, &offset, SHADER_UNIFORM_VEC3);
-        DrawMesh(mesh, m_material, IDENTITY_MATRIX);
-    }
+    // vec3 offset;
+    // for (auto& [chunkPos, renderChunk] : m_renderChunks) {
+    //     Mesh& mesh = *(renderChunk.mesh);
+    //     offset = {
+    //         (f32)(chunkPos.x * 16),
+    //         (f32)(chunkPos.y * 16),
+    //         (f32)(chunkPos.z * 16),
+    //     };
+    //     SetShaderValue(m_material.shader, m_uniformChunkPos, &offset, SHADER_UNIFORM_VEC3);
+    //     DrawMesh(mesh, m_material, IDENTITY_MATRIX);
+    // }
 
     mat4 model = IDENTITY_MATRIX * rlGetMatrixTransform();
     mat4 view = rlGetMatrixModelview();
@@ -93,15 +96,14 @@ u32 addTextureToAtlas(const char* p_texture) {
 }
 
 void activateChunk(vec3i p_pos) {
-    Mesh* mesh = getNewMesh();
     Chunk& chunk = *(world::m_chunks[p_pos]);
-        m_renderChunks[p_pos] = {
-        .chunk = &chunk,
-        .mesh = mesh,
-    };
 
-    u16 count = populateMesh(p_pos);
-    m_accum += count;
+    // u16 count = populateMesh(p_pos);
+    // m_accum += count;
+
+    u64* data;
+    u32 dataSize = calculateVertexData(p_pos, &data);
+    editMesh(p_pos, data, dataSize);
 
     // m_renderChunks[p_pos].mesh = mesh;
 
@@ -123,15 +125,15 @@ void updateChunk(vec3i p_pos) {
     mesh->vertexCount = 4*count;
     mesh->triangleCount = 2*count;
 
-    UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
-    UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
+    // UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
+    // UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
 }
 
-u16 populateMesh(vec3i p_pos) {
-    u16 count = 0;
+u64 tmpVertBuffer[6*16*16*16];
+u32 calculateVertexData(vec3i p_chunkPos, u64* p_data) {
+    u32 size = 0;
 
-    auto& chunk = *(m_renderChunks[p_pos].chunk);
-    auto& mesh = m_renderChunks[p_pos].mesh;
+    auto& chunk = *(world::m_chunks[p_chunkPos]);
 
     #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
 
@@ -186,29 +188,18 @@ u16 populateMesh(vec3i p_pos) {
                     x[u] = i;
                     x[v] = j;
 
-                    // vec3i p = {
-                    //     x[0] + offset.x,
-                    //     x[1] + offset.y,
-                    //     x[2] + offset.z,
-                    // };
-
                     /*
-                     * We don't need floats for vertices since it's all grid aligned
-                     * Heck, we don't even need most of the 32 bits on each axis, so
-                     * we use some of those bits for other purposes.
-                     * x: 
-                     *  0-4: x
-                     *  5-9: y
-                     *  10-14: z
-                     *  15-17: normal-ish
-                     *  18-21: size-u
-                     *  22-25: size-v
-                     *  26-31: unused
-                     * y:
-                     *  0-31: unused
-                     * z:
-                     *  0-15: tex-x
-                     *  16-31: tex-y
+                     * we use 64 bits for everything. here's the layout:
+                     * 
+                     *  0-3: x
+                     *  4-7: y
+                     *  8-11: z
+                     *  12-14: normal-ish
+                     *  15-18: size-u
+                     *  19-22: size-v
+                     *  23-31: unused
+                     *  32-47: tex-x
+                     *  48-63: tex-y
                      */
 
                     i32 du = w << (5*u);
@@ -234,15 +225,17 @@ u16 populateMesh(vec3i p_pos) {
                         h2 = w;
                     }
 
-                    vec3i p = {
-                        x[0] + (x[1]<<5) + (x[2]<<10) + (normal<<15) + ((w2-1)<<18) + ((h2-1)<<22),
-                        0,
-                        0,
-                    };
-
-                    u32* verts = rcast<u32*>(mesh->vertices);
-
-                    verts[]
+                    u64 p = 
+                        x[0] |
+                        (x[1]<<4) |
+                        (x[2]<<8) |
+                        (normal<<12) |
+                        ((w2-1)<<15) |
+                        ((h2-1)<<19) |
+                        (0 << 32) |
+                        (0 << 48);
+                    
+                    tmpVertBuffer[size++] = p;
 
                     for (l = 0; l < h; l++) {
                         for (k = 0; k < w; k++) {
@@ -256,32 +249,22 @@ u16 populateMesh(vec3i p_pos) {
             }
         }
     }
-
-    return count;
+    p_data = tmpVertBuffer;
+    return size;
 }
 
-void deactivateChunk(vec3i p_pos) {
-    dropMesh(m_renderChunks[p_pos].mesh);
-    m_renderChunks.erase(p_pos);
-}
-
-Mesh* getNewMesh() {
-    if (m_meshPool.size() == 0) {
-        Mesh* mesh = new Mesh();
-        mesh -> vertexCount = 8 * 16*16*16;
-        mesh -> triangleCount = 12 * 16*16*16;
-        mesh -> vertices = new f32[3*4*6 * 16*16*16];
-        mesh -> indices = new u16[6*6 * 16*16*16];
-        UploadMesh(mesh, true);
-        return mesh;
+void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
+    IndirectCommand* cmd;
+    if (m_renderChunks.find(p_chunkPos) == m_renderChunks.end()) {
+        cmd = createCommand(p_size);
+        m_renderChunks[p_chunkPos] = cmd;
+    } else {
+        cmd = resizeCommand(m_renderChunks[p_chunkPos], p_size);
+        m_renderChunks[p_chunkPos] = cmd; // resizeCommand might move the command
     }
-    Mesh* mesh = m_meshPool.back();
-    m_meshPool.pop_back();
-    return mesh;
-}
 
-void dropMesh(Mesh* p_mesh) {
-    m_meshPool.push_back(p_mesh);
+    u64* dataLoc = m_dataArray.data() + cmd->first;
+    std::memcpy(dataLoc, p_data, p_size * sizeof(u64));
 }
 
 IndirectCommand* createCommand(u32 p_size) {

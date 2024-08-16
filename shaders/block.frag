@@ -1,4 +1,4 @@
-#version 330
+#version 430
 
 // Input vertex attributes (from vertex shader)
 flat in ivec2 fragSize;
