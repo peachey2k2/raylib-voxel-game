@@ -72,7 +72,7 @@ core-mod: clean-mods $(coreModDir)
 run: $(target) execute
 
 # Sets up the project for compiling, generates includes and libs
-# setup: include lib
+setup: include lib
 
 # Pull and update the the build submodules
 submodules:
@@ -83,11 +83,11 @@ include: submodules
 	$(MKDIR) $(call platformpth, ./include)
 	$(call COPY,vendor/raylib/src,./include,raylib.h)
 	$(call COPY,vendor/raylib/src,./include,raymath.h)
-	$(call COPY,vendor/raylib-cpp/include,./include,*.hpp)
+	$(call COPY,vendor/raylib/src,./include,rlgl.h)
 
 # Build the raylib static library file and copy it into lib
 lib: submodules
-	cd vendor/raylib/src $(THEN) "$(MAKE)" PLATFORM=PLATFORM_DESKTOP
+	cd vendor/raylib/src $(THEN) "$(MAKE)" PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_43
 	$(MKDIR) $(call platformpth, lib/$(platform))
 	$(call COPY,vendor/raylib/src,lib/$(platform),libraylib.a)
 
