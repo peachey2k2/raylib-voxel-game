@@ -1,6 +1,6 @@
 #pragma once
 
-#include <raylib.h>
+#include "raylib/raylib.h"
 
 #define WMAC_API extern "C"
 

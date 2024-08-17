@@ -78,7 +78,8 @@
         "future": "cpp",
         "shared_mutex": "cpp",
         "cfenv": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "*.m": "cpp"
     },
     "makefile.launchConfigurations": [
         {

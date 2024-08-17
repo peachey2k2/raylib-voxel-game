@@ -4,10 +4,11 @@
 #include "./world.hpp"
 
 #include "./core.hpp"
-#include <rlgl.h>
+#include "raylib/rlgl.h"
 
 #include <GL/glew.h>
 #include <GL/gl.h>
+
 namespace wmac::render {
 
 const u32 TILE_SIZE = 32;
@@ -35,6 +36,8 @@ void initMesh() {
     SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
 
     // hmmmmm
+    glewInit();
+    
     glGenVertexArrays(1, &m_vao);
     glBindVertexArray(m_vao);
 
@@ -51,6 +54,7 @@ void initMesh() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
 }
 
+int idk = 0;
 void draw() {
     glUseProgram(m_material.shader.id);
     
@@ -294,6 +298,15 @@ u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {
     };
 
     u32 i = 0;
+
+    // check if empty. this might seem redundant, but it prevents a crash
+    if (m_indirectCmds.size() == 0) {
+        m_attribArraySize = p_size;
+        m_indirectCmds.insert(m_indirectCmds.begin(), cmd);
+        p_cmd = m_indirectCmds.data();
+        return 0;
+    }
+
     // check the start
     if (m_indirectCmds[0].first >= p_size) {
         m_indirectCmds.insert(m_indirectCmds.begin(), cmd);

@@ -21,7 +21,7 @@ objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 compileFlags := -std=c++20 -I./include -I./src -g
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
-linkFlags = -L lib/$(platform) -L ./lib -l raylib -l noise -l GLEW
+linkFlags = -L ./lib/$(platform) -l raylib -l noise -l GLEW
 
 # Check for Windows
 ifeq ($(OS), Windows_NT)
@@ -81,9 +81,9 @@ submodules:
 # Copy the relevant header files into includes
 include: submodules
 	$(MKDIR) $(call platformpth, ./include)
-	$(call COPY,vendor/raylib/src,./include,raylib.h)
-	$(call COPY,vendor/raylib/src,./include,raymath.h)
-	$(call COPY,vendor/raylib/src,./include,rlgl.h)
+	$(call COPY,vendor/raylib/src,./include/raylib,raylib.h)
+	$(call COPY,vendor/raylib/src,./include/raylib,raymath.h)
+	$(call COPY,vendor/raylib/src,./include/raylib,rlgl.h)
 
 # Build the raylib static library file and copy it into lib
 lib: submodules

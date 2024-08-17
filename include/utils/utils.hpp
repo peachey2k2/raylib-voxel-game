@@ -12,7 +12,7 @@
 #include <functional>
 #include <algorithm>
 
-#include "types.hpp"
+#include "./types.hpp"
 
 #define wmac WorldMachine
 

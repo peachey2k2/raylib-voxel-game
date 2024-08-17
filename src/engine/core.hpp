@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utils.hpp>
+#include "utils/utils.hpp"
 
 namespace wmac::core {
 
@@ -25,7 +25,7 @@ vec3& m_position = m_camera.position;
 std::string m_appDir;
 Font m_font;
 
-u32 m_renderDistance = 16;
+u32 m_renderDistance = 4;
 
 void init();
     void initRaylib();
