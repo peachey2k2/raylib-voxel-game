@@ -1,7 +1,8 @@
 #version 430
 
 // Input vertex attributes
-in ivec3 data;
+layout(location = 0) in vec3 vertPos;
+layout(location = 1) in ivec2 data;
 
 // Input uniform values
 uniform mat4 mvp;
@@ -34,8 +35,8 @@ void unpack() {
         ((data.x >> 19) & 0x0F) + 1
     );
     tex = vec2(
-        (data.z & 0x0F) / 16.0,
-        (data.z >> 4) / 16.0
+        (data.y & 0x0F) / 16.0,
+        (data.y >> 4) / 16.0
     );
 }
 
@@ -69,5 +70,5 @@ void main() {
 
     // Calculate final vertex position
     // gl_Position = mvp*vec4(vertexPosition, 1.0);
-    gl_Position = mvp*vec4(pos + chunkPos, 1.0);
+    gl_Position = mvp*vec4(pos + (chunkPositions[gl_InstanceID] * 16), 1.0);
 }

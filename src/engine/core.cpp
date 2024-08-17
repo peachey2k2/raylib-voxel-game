@@ -74,9 +74,9 @@ void update() {
 
 vec3 getMovementDelta() {
     vec3 movementDelta = {
-        (float)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
-        (float)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
-        (float)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
+        (f32)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
+        (f32)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
+        (f32)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
     };
     return movementDelta * (IsKeyDown(KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * GetFrameTime();;
 }

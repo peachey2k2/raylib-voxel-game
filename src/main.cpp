@@ -1,6 +1,6 @@
 #include "engine/core.hpp"
 
-int main() {
+i32 main() {
     try {
         wmac::core::run();
     } catch (const std::exception& e) {

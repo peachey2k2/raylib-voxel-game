@@ -27,43 +27,62 @@ void initAtlas() {
 void initMesh() {
     m_material = LoadMaterialDefault();
     m_material.shader = LoadShader("shaders/block.vert", "shaders/block.frag");
-    m_uniformChunkPos = GetShaderLocation(m_material.shader, "chunkPos");
+
+    m_uniformMVP = GetShaderLocation(m_material.shader, "mvp");
+    m_uniformSampler = GetShaderLocation(m_material.shader, "texture0");
 
     m_atlas = LoadTextureFromImage(m_atlasImage);
     SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
 
     // hmmmmm
-    glGenBuffers(1, &m_vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+    glGenVertexArrays(1, &m_vao);
+    glBindVertexArray(m_vao);
+
+    glGenBuffers(1, &m_vertexPosBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
     glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(u32), QUAD_VERTICES, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &m_dataBuffer);
+    glGenBuffers(1, &m_attribBuffer);
 
     glGenBuffers(1, &m_indirectBuffer);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
 
     glGenBuffers(1, &m_shaderStorageBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
 }
 
 void draw() {
-    // vec3 offset;
-    // for (auto& [chunkPos, renderChunk] : m_renderChunks) {
-    //     Mesh& mesh = *(renderChunk.mesh);
-    //     offset = {
-    //         (f32)(chunkPos.x * 16),
-    //         (f32)(chunkPos.y * 16),
-    //         (f32)(chunkPos.z * 16),
-    //     };
-    //     SetShaderValue(m_material.shader, m_uniformChunkPos, &offset, SHADER_UNIFORM_VEC3);
-    //     DrawMesh(mesh, m_material, IDENTITY_MATRIX);
-    // }
-
+    glUseProgram(m_material.shader.id);
+    
     mat4 model = IDENTITY_MATRIX * rlGetMatrixTransform();
     mat4 view = rlGetMatrixModelview();
     mat4 proj = rlGetMatrixProjection();
     mat4 mvp = model * view * proj;
+    glUniformMatrix4fv(m_uniformMVP, 1, GL_FALSE, rcast<f32*>(&mvp));
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_atlas.id);
+    glUniform1i(m_uniformSampler, 0);
 
-    glBindVertexArray(m_vertexBuffer);
+    glBindVertexArray(m_vao);
+
+    glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(u32), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
+    glVertexAttribDivisor(0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
+    glBufferData(GL_ARRAY_BUFFER, m_attribArray.size() * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(u32), (void*)0);
+    glVertexAttribDivisor(1, 1);
+    glEnableVertexAttribArray(1);
+
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, m_indirectCmds.data(), m_indirectCmds.size(), 0);
+
+    glBindVertexArray(0);
 
     rlSetMatrixModelview(view);
     rlSetMatrixProjection(proj);
@@ -84,9 +103,9 @@ u32 addTextureToAtlas(const char* p_texture) {
         image,
         {
             0, 0, 
-            (float)image.width, (float)image.height
+            (f32)image.width, (f32)image.height
         }, {
-            (float)(idx % TILE_PER_ROW) * TILE_SIZE, (float)(idx / TILE_PER_ROW) * TILE_SIZE,
+            (f32)(idx % TILE_PER_ROW) * TILE_SIZE, (f32)(idx / TILE_PER_ROW) * TILE_SIZE,
             TILE_SIZE, TILE_SIZE
         },
         WHITE
@@ -96,41 +115,32 @@ u32 addTextureToAtlas(const char* p_texture) {
 }
 
 void activateChunk(vec3i p_pos) {
-    Chunk& chunk = *(world::m_chunks[p_pos]);
-
-    // u16 count = populateMesh(p_pos);
-    // m_accum += count;
-
     u64* data;
-    u32 dataSize = calculateVertexData(p_pos, &data);
+    u32 dataSize = calculateVertexData(p_pos, data);
     editMesh(p_pos, data, dataSize);
 
-    // m_renderChunks[p_pos].mesh = mesh;
-
-    // mesh->vertexCount = 4*count;
-    // mesh->triangleCount = 2*count;
-
-    // UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
-    // UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_dataBuffer);
-    glBufferData(GL_ARRAY_BUFFER, m_dataArray.size() * sizeof(u64), m_dataArray.data(), GL_DYNAMIC_DRAW);
+    m_accum += dataSize;
 }
 
 void updateChunk(vec3i p_pos) {
-    u16 count = populateMesh(p_pos);
+    u64* data;
+    u32 dataSize = calculateVertexData(p_pos, data);
+    editMesh(p_pos, data, dataSize);
 
-    auto& mesh = m_renderChunks[p_pos].mesh;
+    m_accum += dataSize;
+}
 
-    mesh->vertexCount = 4*count;
-    mesh->triangleCount = 2*count;
-
-    // UpdateMeshBuffer(*mesh, SHADER_LOC_VERTEX_POSITION, mesh->vertices, 12*count * sizeof(f32), 0);
-    // UpdateMeshBuffer(*mesh, 6 /* indices location */ , mesh->indices, 6*count * sizeof(u16), 0);
+void deactivateChunk(vec3i p_pos) {
+    if (m_renderChunks.find(p_pos) != m_renderChunks.end()) {
+        u32 idx = m_renderChunks[p_pos] - m_indirectCmds.data();
+        m_indirectCmds.erase(m_indirectCmds.begin() + idx);
+        m_renderChunks.erase(p_pos);
+        m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idx);
+    }
 }
 
 u64 tmpVertBuffer[6*16*16*16];
-u32 calculateVertexData(vec3i p_chunkPos, u64* p_data) {
+u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
     u32 size = 0;
 
     auto& chunk = *(world::m_chunks[p_chunkPos]);
@@ -202,8 +212,8 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* p_data) {
                      *  48-63: tex-y
                      */
 
-                    i32 du = w << (5*u);
-                    i32 dv = h << (5*v);
+                    // i32 du = w << (5*u);
+                    // i32 dv = h << (5*v);
 
                     u8 normal;
                     switch (d + flip[n]*3) {
@@ -232,8 +242,9 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* p_data) {
                         (normal<<12) |
                         ((w2-1)<<15) |
                         ((h2-1)<<19) |
-                        (0 << 32) |
-                        (0 << 48);
+                        (0UL << 32) |
+                        (0UL << 48);
+                    
                     
                     tmpVertBuffer[size++] = p;
 
@@ -254,33 +265,40 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* p_data) {
 }
 
 void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
-    IndirectCommand* cmd;
     if (m_renderChunks.find(p_chunkPos) == m_renderChunks.end()) {
-        cmd = createCommand(p_size);
-        m_renderChunks[p_chunkPos] = cmd;
+        u32 idx = createCommand(m_renderChunks[p_chunkPos], p_size);
+        m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idx, p_chunkPos);
     } else {
-        cmd = resizeCommand(m_renderChunks[p_chunkPos], p_size);
-        m_renderChunks[p_chunkPos] = cmd; // resizeCommand might move the command
+        u32 idxOld = m_renderChunks[p_chunkPos] - m_indirectCmds.data();
+        u32 idxNew = resizeCommand(m_renderChunks[p_chunkPos], p_size);
+        if (idxOld != idxNew) {
+            m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idxOld);
+            m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idxNew, p_chunkPos);
+        }
     }
 
-    u64* dataLoc = m_dataArray.data() + cmd->first;
+    if (m_attribArraySize > m_attribArray.size()) {
+        m_attribArray.resize(m_attribArraySize + 1024);
+    }
+
+    u64* dataLoc = m_attribArray.data() + m_renderChunks[p_chunkPos]->first;
     std::memcpy(dataLoc, p_data, p_size * sizeof(u64));
 }
 
-IndirectCommand* createCommand(u32 p_size) {
+u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {
     IndirectCommand cmd = {
         .count = 4,
         .instanceCount = p_size,
         .first = 0, // we'll find the right place later
         .baseInstance = 0,
     };
-    IndirectCommand* cmdPtr; // for return value
 
     u32 i = 0;
     // check the start
     if (m_indirectCmds[0].first >= p_size) {
         m_indirectCmds.insert(m_indirectCmds.begin(), cmd);
-        return m_indirectCmds.data();
+        p_cmd = m_indirectCmds.data();
+        return 0;
     }
 
     // check any other gaps
@@ -288,30 +306,30 @@ IndirectCommand* createCommand(u32 p_size) {
         if (m_indirectCmds[i].first - (m_indirectCmds[i-1].first + m_indirectCmds[i-1].instanceCount) >= p_size) {
             cmd.first = m_indirectCmds[i].first + m_indirectCmds[i].instanceCount;
             m_indirectCmds.insert(m_indirectCmds.begin() + i, cmd);
-            return &(m_indirectCmds[i]);
+            p_cmd = &(m_indirectCmds[i]);
+            return i;
         }
     }
 
     // place it in the end
     cmd.first = m_indirectCmds.back().first + m_indirectCmds.back().instanceCount;
-    m_dataArraySize = cmd.first + p_size;
+    m_attribArraySize = cmd.first + p_size;
     m_indirectCmds.push_back(cmd);
-    return &(m_indirectCmds.back());
+    p_cmd = &(m_indirectCmds.back());
+    return m_indirectCmds.size() - 1;
 }
 
-// warning: this might move the command, making the pointer invalid
-// so always use the returned pointer
-IndirectCommand* resizeCommand(IndirectCommand* p_cmd, u32 p_newSize) {
+u32 resizeCommand(IndirectCommand* &p_cmd, u32 p_newSize) {
     // no shrinking, at least for now
-    if (p_cmd->instanceCount > p_newSize) return p_cmd;
+    if (p_cmd->instanceCount > p_newSize) return p_cmd - m_indirectCmds.data();
 
     // if at the end, we mignt need to increase the buffer size
     if (p_cmd == m_indirectCmds.data() + m_indirectCmds.size() - 1) {
-        if (p_cmd->first + p_newSize > m_dataArraySize) {
-            m_dataArraySize = p_cmd->first + p_newSize;
+        if (p_cmd->first + p_newSize > m_attribArraySize) {
+            m_attribArraySize = p_cmd->first + p_newSize;
         }
         p_cmd->instanceCount = p_newSize;
-        return p_cmd;
+        return p_cmd - m_indirectCmds.data();
     };
 
     // keep in mind vectors aren't null-terminated
@@ -321,7 +339,7 @@ IndirectCommand* resizeCommand(IndirectCommand* p_cmd, u32 p_newSize) {
     // if we can expand, we expand
     if (p_cmd->first + p_newSize <= next->first) {
         p_cmd->instanceCount = p_newSize;
-        return p_cmd;
+        return p_cmd - m_indirectCmds.data();
     }
 
     IndirectCommand cmdCopy = *p_cmd;
@@ -333,7 +351,8 @@ IndirectCommand* resizeCommand(IndirectCommand* p_cmd, u32 p_newSize) {
         }
         m_indirectCmds[0] = cmdCopy;
         m_indirectCmds[0].instanceCount = p_newSize;
-        return m_indirectCmds.data();
+        p_cmd = m_indirectCmds.data();
+        return 0;
     }
 
     // if not, scan the rest of the array for a gap
@@ -356,20 +375,22 @@ IndirectCommand* resizeCommand(IndirectCommand* p_cmd, u32 p_newSize) {
             }
             m_indirectCmds[i] = cmdCopy;
             m_indirectCmds[i].instanceCount = p_newSize;
-            return &(m_indirectCmds[i]);
+            p_cmd = m_indirectCmds.data() + i;
+            return i;
         }
     }
 
     // if we're here, we couldn't find any gaps to fit the mesh,
     // so we need to move it to the end
     m_indirectCmds.erase(m_indirectCmds.begin() + (p_cmd - m_indirectCmds.data())); // iterator nonsense
-    u32 temp = m_dataArraySize;
-    m_dataArraySize = cmdCopy.first + cmdCopy.instanceCount;
+    u32 temp = m_attribArraySize;
+    m_attribArraySize = cmdCopy.first + cmdCopy.instanceCount;
 
     cmdCopy.first = temp;
     cmdCopy.instanceCount = p_newSize;
     m_indirectCmds.push_back(cmdCopy);
-    return m_indirectCmds.data() + m_indirectCmds.size() - 1;
+    p_cmd = m_indirectCmds.data() + m_indirectCmds.size() - 1;
+    return m_indirectCmds.size() - 1;
 }
 
 };

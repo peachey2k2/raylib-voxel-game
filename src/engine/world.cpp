@@ -81,17 +81,17 @@ void generateChunksAt(vec3i p_pos, u32 p_radius) {
 
 vec3i getChunkLoc(vec3i p_pos) {
     return {
-        .x = scast<int>(floor(p_pos.x / 16.0)),
-        .y = scast<int>(floor(p_pos.y / 16.0)),
-        .z = scast<int>(floor(p_pos.z / 16.0)),
+        .x = scast<i32>(floor(p_pos.x / 16.0)),
+        .y = scast<i32>(floor(p_pos.y / 16.0)),
+        .z = scast<i32>(floor(p_pos.z / 16.0)),
     };
 }
 
 vec3i getChunkLoc(vec3 p_pos) {
     return {
-        .x = scast<int>(floor(p_pos.x / 16.0)),
-        .y = scast<int>(floor(p_pos.y / 16.0)),
-        .z = scast<int>(floor(p_pos.z / 16.0)),
+        .x = scast<i32>(floor(p_pos.x / 16.0)),
+        .y = scast<i32>(floor(p_pos.y / 16.0)),
+        .z = scast<i32>(floor(p_pos.z / 16.0)),
     };
 }
 
