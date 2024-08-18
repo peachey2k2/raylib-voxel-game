@@ -1,6 +1,8 @@
 #define TICKS_CPP
 #include "./ticks.hpp"
 
+#include "utils/tools.hpp"
+
 namespace wmac::ticks {
 
 const f64 TICK_RATE = 0.05;
@@ -30,7 +32,7 @@ void removeCallback(void (*p_callback)()) {
             return;
         }
     }
-    say("--Callback not found");
+    tools::say("--Callback not found");
 }
 
 };

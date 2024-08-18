@@ -2,8 +2,10 @@
 #include "./render.hpp"
 #include "./ticks.hpp"
 #include "./world.hpp"
-
 #include "./core.hpp"
+
+#include "utils/tools.hpp"
+
 #include "raylib/rlgl.h"
 
 #include <GL/glew.h>
@@ -26,6 +28,8 @@ void initAtlas() {
 }
 
 void initMesh() {
+    auto bm = new tools::Benchmark("initMesh");
+
     m_material = LoadMaterialDefault();
     m_material.shader = LoadShader("shaders/block.vert", "shaders/block.frag");
 
@@ -37,7 +41,7 @@ void initMesh() {
 
     // hmmmmm
     glewInit();
-    
+
     glGenVertexArrays(1, &m_vao);
     glBindVertexArray(m_vao);
 
@@ -52,10 +56,17 @@ void initMesh() {
 
     glGenBuffers(1, &m_shaderStorageBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
+
+    glBindVertexArray(0);
+    GL_CHECK_ERROR("init mesh");
+
+    bm->end();
 }
 
 int idk = 0;
 void draw() {
+    // auto bm = new tools::Benchmark("draw");
+
     glUseProgram(m_material.shader.id);
     
     mat4 model = IDENTITY_MATRIX * rlGetMatrixTransform();
@@ -69,27 +80,38 @@ void draw() {
     glUniform1i(m_uniformSampler, 0);
 
     glBindVertexArray(m_vao);
+    GL_CHECK_ERROR("bind vao");
 
     glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(u32), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
+    GL_CHECK_ERROR("bind ssbo");
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
     glVertexAttribDivisor(0, 0);
     glEnableVertexAttribArray(0);
+    GL_CHECK_ERROR("bind vertex buffer");
 
     glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
     glBufferData(GL_ARRAY_BUFFER, m_attribArray.size() * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
     glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(u32), (void*)0);
     glVertexAttribDivisor(1, 1);
     glEnableVertexAttribArray(1);
+    GL_CHECK_ERROR("bind attrib buffer");
 
-    glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, m_indirectCmds.data(), m_indirectCmds.size(), 0);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
+    glBufferData(GL_DRAW_INDIRECT_BUFFER, m_indirectCmds.size() * sizeof(IndirectCommand), m_indirectCmds.data(), GL_DYNAMIC_DRAW);
+    GL_CHECK_ERROR("bind indirect buffer");
+
+    glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, 0, m_indirectCmds.size(), 0);
+    GL_CHECK_ERROR("draw");
 
     glBindVertexArray(0);
-
+    
     rlSetMatrixModelview(view);
     rlSetMatrixProjection(proj);
+
+    // bm->end();
 }
 
 u32 addTextureToAtlas(const char* p_texture) {
@@ -98,7 +120,7 @@ u32 addTextureToAtlas(const char* p_texture) {
     Image image = LoadImage(p_texture);
     ASSERT(image.data != nullptr, "Failed to load image " + std::string(p_texture) + ", is it in the right place?");
     if (image.width != TILE_SIZE || image.height != TILE_SIZE) {
-        say("[WARNING] Image " + std::string(p_texture) + " is not " + std::to_string(TILE_SIZE) + "x" + std::to_string(TILE_SIZE) + " pixels. Resizing.");
+        tools::say("[WARNING] Image " + std::string(p_texture) + " is not " + std::to_string(TILE_SIZE) + "x" + std::to_string(TILE_SIZE) + " pixels. Resizing.");
         ImageResize(&image, TILE_SIZE, TILE_SIZE);
     }
     ImageAlphaClear(&image, WHITE, 0.0f);

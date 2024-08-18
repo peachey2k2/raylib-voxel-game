@@ -2,25 +2,19 @@
 #include "./world.hpp"
 
 #include "./render.hpp"
+#include "utils/tools.hpp"
+#include "./core.hpp"
+
 #include <math.h>
 
 namespace wmac::world {
 
 void init() {
-    say("Initializing world");
+    auto bm = new tools::Benchmark("World init");
     m_noiseMap = new noise::module::Perlin();
     m_chunks.clear();
-    // for (i32 x = -3; x < 4; x++) {
-    //     for (i32 y = -3; y < 4; y++) {
-    //         for (i32 z = -3; z < 4; z++) {
-    //             generateChunk(vec3i{x, y, z});
-    //             render::activateChunk(vec3i{x, y, z});
-    //         }
-    //     }
-    // }
-    // say("vertex count:", 4*render::m_accum);
-    // say("triangle count:", 2*render::m_accum);
-    generateChunksAt({0,0,0}, 16);
+    generateChunksAt({0,0,0}, core::RENDER_DISTANCE);
+    bm->end();
 }
 
 void deinit() {
@@ -49,30 +43,29 @@ void generateChunk(vec3i p_pos) {
 
 void generateChunksAt(vec3i p_pos, u32 p_radius) {
     i32 radius = scast<i32>(p_radius);
-    std::vector<vec3i> toDisable = {};
 
-    for (auto& [pos, chunk] : m_chunks) {
+    std::erase_if(m_chunks, [&](auto& p) {
+        auto& [pos, chunk] = p;
         if (
             abs(pos.x - p_pos.x) > radius ||
             abs(pos.y - p_pos.y) > radius ||
             abs(pos.z - p_pos.z) > radius
         ) {
-            toDisable.push_back(pos);
+            render::deactivateChunk(pos);
+            tools::say(*chunk);
+            delete chunk;
+            return true;
         }
-    }
-
-    for (auto& pos : toDisable) {
-        render::deactivateChunk(pos);
-        delete m_chunks[pos];
-        m_chunks.erase(pos);
-    }
+        return false;
+    });
 
     for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
         for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
             for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
-                if (m_chunks.find(vec3i{x, y, z}) == m_chunks.end()) {
-                    generateChunk(vec3i{x, y, z});
-                    render::activateChunk(vec3i{x, y, z});
+                vec3i pos = {x, y, z};
+                if (m_chunks.find(pos) == m_chunks.end()) {
+                    generateChunk(pos);
+                    render::activateChunk(pos);
                 }
             }
         }
@@ -107,7 +100,7 @@ void changeBlock(vec3i p_pos, u64 p_id) {
     vec3i chunkLoc = getChunkLoc(p_pos);
     
     if (m_chunks.find(chunkLoc) == m_chunks.end()) {
-        say("--Chunk not found");
+        tools::say("--Chunk not found");
         return;
     }
 

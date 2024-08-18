@@ -19,24 +19,29 @@
 namespace wmac {
 
 #define ASSERT(x, msg) if (!(x)) { throw std::runtime_error(msg); }
+#define GL_CHECK_ERROR(msg) { \
+     GLenum err = glGetError(); \
+     std::string errName; \
+     if (err != GL_NO_ERROR) { \
+        switch (err) { \
+            case GL_INVALID_ENUM: errName = "GL_INVALID_ENUM"; break; \
+            case GL_INVALID_VALUE: errName = "GL_INVALID_VALUE"; break; \
+            case GL_INVALID_OPERATION: errName = "GL_INVALID_OPERATION"; break; \
+            case GL_STACK_OVERFLOW: errName = "GL_STACK_OVERFLOW"; break; \
+            case GL_STACK_UNDERFLOW: errName = "GL_STACK_UNDERFLOW"; break; \
+            case GL_OUT_OF_MEMORY: errName = "GL_OUT_OF_MEMORY"; break; \
+            case GL_INVALID_FRAMEBUFFER_OPERATION: errName = "GL_INVALID_FRAMEBUFFER_OPERATION"; break; \
+            default: errName = "UNKNOWN (code:" + std::to_string(err) + ")"; break; \
+        } \
+        std::cerr << "OpenGL error: " << errName << " at " << msg << '\n'; \
+    } \
+} \
 
 // mmmmm gotta save those keystrokes
 #define scast static_cast
 #define dcast dynamic_cast
 #define ccast const_cast
 #define rcast reinterpret_cast
-
-// convenient debug print
-template<typename T, typename... Args>
-void say(const T& first, const Args&... args) {
-    std::cout << first;
-    if constexpr (sizeof...(args) > 0) {
-        std::cout << ' ';
-        say(args...);
-    } else {
-        std::cout << '\n';
-    }
-}
 
 };
 
@@ -63,6 +68,11 @@ constexpr vec2 operator/(const vec2& a, const f32& b) {
     return { a.x / b, a.y / b };
 }
 
+inline std::ostream& operator<<(std::ostream& os, const vec2& vec) {
+    os << '[' << vec.x << ", " << vec.y << ", " << ']';
+    return os;
+}
+
 constexpr vec3 operator+(const vec3& a, const vec3& b) {
     return { a.x + b.x, a.y + b.y, a.z + b.z };
 }
@@ -79,6 +89,11 @@ constexpr vec3 operator/(const vec3& a, const f32& b) {
     return { a.x / b, a.y / b, a.z / b };
 }
 
+inline std::ostream& operator<<(std::ostream& os, const vec3& vec) {
+    os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ']';
+    return os;
+}
+
 constexpr vec4 operator+(const vec4& a, const vec4& b) {
     return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
 }
@@ -93,6 +108,11 @@ constexpr vec4 operator*(const vec4& a, const f32& b) {
 
 constexpr vec4 operator/(const vec4& a, const f32& b) {
     return { a.x / b, a.y / b, a.z / b, a.w / b };
+}
+
+inline std::ostream& operator<<(std::ostream& os, const vec4& vec) {
+    os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ']';
+    return os;
 }
 
 constexpr mat4 operator*(const mat4& a, const mat4& b) {
@@ -144,6 +164,11 @@ constexpr bool operator==(const vec2i& a, const vec2i& b) {
     return (a.x == b.x) && (a.y == b.y);
 }
 
+inline std::ostream& operator<<(std::ostream& os, const vec2i& vec) {
+    os << '[' << vec.x << ", " << vec.y << ']';
+    return os;
+}
+
 constexpr vec3i operator+(const vec3i& a, const vec3i& b) {
     return { a.x + b.x, a.y + b.y, a.z + b.z };
 }
@@ -164,6 +189,11 @@ constexpr bool operator==(const vec3i& a, const vec3i& b) {
     return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
 }
 
+inline std::ostream& operator<<(std::ostream& os, const vec3i& vec) {
+    os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ']';
+    return os;
+}
+
 constexpr vec4i operator+(const vec4i& a, const vec4i& b) {
     return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
 }
@@ -182,6 +212,28 @@ constexpr vec4i operator/(const vec4i& a, const i32& b) {
 
 constexpr bool operator==(const vec4i& a, const vec4i& b) {
     return (a.x == b.x) && (a.y == b.y) && (a.z == b.z) && (a.w == b.w);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const vec4i& vec) {
+    os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ']';
+    return os;
+}
+
+
+
+inline std::ostream& operator<<(std::ostream& os, const Chunk& chunk) {
+    os << "Chunk:\n";
+    for (i32 y = 0; y < 16; y++) {
+        os << "-----[ Layer " << y << " ]-----\n";
+        for (i32 z = 0; z < 16; z++) {
+            for (i32 x = 0; x < 16; x++) {
+                os << chunk[x + y*16 + z*16*16] << ' ';
+            }
+            os << '\n';
+        }
+        os << '\n';
+    }
+    return os;
 }
 
 inline i32 pow(i32 base, i32 exp) {

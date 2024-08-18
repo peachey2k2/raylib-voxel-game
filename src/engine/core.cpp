@@ -66,7 +66,7 @@ void update() {
     vec3i newChunk = world::getChunkLoc(m_position);
     if (newChunk != m_chunk) {
         m_chunk = newChunk;
-        world::generateChunksAt(m_chunk, m_renderDistance);
+        world::generateChunksAt(m_chunk, RENDER_DISTANCE);
     }
 
     ticks::check();
@@ -82,6 +82,7 @@ vec3 getMovementDelta() {
 }
 
 void draw3D() {
+    DrawGrid(20, 1.0f);
     render::draw();
 }
 
