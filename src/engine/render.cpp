@@ -63,18 +63,18 @@ void initMesh() {
     bm->end();
 }
 
-int idk = 0;
 void draw() {
     // auto bm = new tools::Benchmark("draw");
 
     glUseProgram(m_material.shader.id);
     
-    mat4 model = IDENTITY_MATRIX * rlGetMatrixTransform();
+    mat4 model = IDENTITY_MATRIX;
     mat4 view = rlGetMatrixModelview();
     mat4 proj = rlGetMatrixProjection();
     mat4 mvp = model * view * proj;
     glUniformMatrix4fv(m_uniformMVP, 1, GL_FALSE, rcast<f32*>(&mvp));
-    
+    GL_CHECK_ERROR("set mvp");
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_atlas.id);
     glUniform1i(m_uniformSampler, 0);
@@ -103,7 +103,7 @@ void draw() {
     glBufferData(GL_DRAW_INDIRECT_BUFFER, m_indirectCmds.size() * sizeof(IndirectCommand), m_indirectCmds.data(), GL_DYNAMIC_DRAW);
     GL_CHECK_ERROR("bind indirect buffer");
 
-    glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, 0, m_indirectCmds.size(), 0);
+    glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
     GL_CHECK_ERROR("draw");
 
     glBindVertexArray(0);

@@ -136,6 +136,14 @@ constexpr mat4 operator*(const mat4& a, const mat4& b) {
     };
 }
 
+inline std::ostream& operator<<(std::ostream& os, const mat4& mat) {
+    os << '[' << mat.m0 << ", " << mat.m1 << ", " << mat.m2 << ", " << mat.m3 << '\n';
+    os << ' ' << mat.m4 << ", " << mat.m5 << ", " << mat.m6 << ", " << mat.m7 << '\n';
+    os << ' ' << mat.m8 << ", " << mat.m9 << ", " << mat.m10 << ", " << mat.m11 << '\n';
+    os << ' ' << mat.m12 << ", " << mat.m13 << ", " << mat.m14 << ", " << mat.m15 << ']';
+    return os;
+}
+
 constexpr vec3 VEC3(const vec2& a, f32 w) {
     return { a.x, a.y, w };
 }

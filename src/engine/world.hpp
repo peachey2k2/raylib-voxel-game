@@ -16,7 +16,6 @@ noise::module::Perlin* m_noiseMap = nullptr;
 
 void init();
 void deinit();
-void addChunk(vec3i p_pos, Chunk *p_chunk);
 
 void generateChunk(vec3i p_pos);
 void generateChunksAt(vec3i p_pos, u32 p_radius);

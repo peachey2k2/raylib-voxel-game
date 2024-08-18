@@ -24,21 +24,22 @@ void deinit() {
     }
 }
 
-void addChunk(vec3i p_pos, Chunk *p_chunk) {
-    m_chunks[p_pos] = p_chunk;
-}
-
 void generateChunk(vec3i p_pos) {
-    Chunk* chunk = rcast<Chunk*>(new Chunk());
+    Chunk* chunkPtr = rcast<Chunk*>(new Chunk());
+    Chunk& chunk = *chunkPtr;
     for (i32 x = 0; x < 16; x++) {
         for (i32 z = 0; z < 16; z++) {
             i32 height = scast<i32>(m_noiseMap->GetValue((x + p_pos.x*16)/160.0, 0, (z + p_pos.z*16)/160.0) * 160);
-            for (i32 y = 0; (y < 16) && (y + p_pos.y*16 < height); y++) {
-                (*chunk)[x + y*16 + z*16*16] = 1;
+            i32 y;
+            for (y = 0; (y < 16) && (y + p_pos.y*16 < height); y++) {
+                chunk[x + y*16 + z*16*16] = 1;
+            }
+            for (; y < 16; y++) {
+                chunk[x + y*16 + z*16*16] = 0;
             }
         }
     }
-    addChunk(p_pos, chunk);
+    m_chunks[p_pos] = &chunk;
 }
 
 void generateChunksAt(vec3i p_pos, u32 p_radius) {
@@ -52,8 +53,11 @@ void generateChunksAt(vec3i p_pos, u32 p_radius) {
             abs(pos.z - p_pos.z) > radius
         ) {
             render::deactivateChunk(pos);
-            tools::say(*chunk);
-            delete chunk;
+            // tools::say(*chunk);
+            if (chunk != nullptr) {
+                delete chunk;
+                chunk = nullptr;
+            }
             return true;
         }
         return false;
