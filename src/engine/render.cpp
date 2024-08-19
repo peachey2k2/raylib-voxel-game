@@ -8,7 +8,7 @@
 
 #include "raylib/rlgl.h"
 
-#include <GL/glew.h>
+#include "gl/glad.h"
 #include <GL/gl.h>
 
 namespace wmac::render {
@@ -30,6 +30,9 @@ void initAtlas() {
 void initMesh() {
     auto bm = new tools::Benchmark("initMesh");
 
+    glGenVertexArrays(1, &m_vao);
+    glBindVertexArray(m_vao);
+
     m_material = LoadMaterialDefault();
     m_material.shader = LoadShader("shaders/block.vert", "shaders/block.frag");
 
@@ -37,13 +40,7 @@ void initMesh() {
     m_uniformSampler = GetShaderLocation(m_material.shader, "texture0");
 
     m_atlas = LoadTextureFromImage(m_atlasImage);
-    SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
-
-    // hmmmmm
-    glewInit();
-
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
+    // SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
 
     glGenBuffers(1, &m_vertexPosBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
@@ -65,12 +62,18 @@ void initMesh() {
 
 void draw() {
     // auto bm = new tools::Benchmark("draw");
+    glBindVertexArray(m_vao);
+    GL_CHECK_ERROR("bind vao");
 
     glUseProgram(m_material.shader.id);
     
     mat4 model = IDENTITY_MATRIX;
     mat4 view = rlGetMatrixModelview();
     mat4 proj = rlGetMatrixProjection();
+
+    rlSetMatrixModelview(view);
+    rlSetMatrixProjection(proj);
+    view = rlGetMatrixTransform() * view;
     mat4 mvp = model * view * proj;
     glUniformMatrix4fv(m_uniformMVP, 1, GL_FALSE, rcast<f32*>(&mvp));
     GL_CHECK_ERROR("set mvp");
@@ -79,22 +82,20 @@ void draw() {
     glBindTexture(GL_TEXTURE_2D, m_atlas.id);
     glUniform1i(m_uniformSampler, 0);
 
-    glBindVertexArray(m_vao);
-    GL_CHECK_ERROR("bind vao");
-
-    glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(u32), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(vec3i), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
     GL_CHECK_ERROR("bind ssbo");
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), nullptr);
     glVertexAttribDivisor(0, 0);
     glEnableVertexAttribArray(0);
     GL_CHECK_ERROR("bind vertex buffer");
 
     glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
     glBufferData(GL_ARRAY_BUFFER, m_attribArray.size() * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
-    glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(u32), (void*)0);
+    glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(u32), nullptr);
     glVertexAttribDivisor(1, 1);
     glEnableVertexAttribArray(1);
     GL_CHECK_ERROR("bind attrib buffer");
@@ -103,13 +104,11 @@ void draw() {
     glBufferData(GL_DRAW_INDIRECT_BUFFER, m_indirectCmds.size() * sizeof(IndirectCommand), m_indirectCmds.data(), GL_DYNAMIC_DRAW);
     GL_CHECK_ERROR("bind indirect buffer");
 
+    glBindBuffer(GL_ARRAY_BUFFER, m_indirectBuffer);
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
     GL_CHECK_ERROR("draw");
 
     glBindVertexArray(0);
-    
-    rlSetMatrixModelview(view);
-    rlSetMatrixProjection(proj);
 
     // bm->end();
 }

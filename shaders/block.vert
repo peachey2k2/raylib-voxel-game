@@ -7,6 +7,7 @@ uniform mat4 mvp;
 
 flat out ivec2 fragSize;
 out vec2 fragTexCoord;
+out vec3 debugColor;
 
 layout(std430, binding = 3) buffer ssbo {
     vec3 chunkPositions[];
@@ -44,6 +45,8 @@ void main() {
     );
 
     fragSize = size;
+    debugColor = pos / 16.0;
 
-    gl_Position = mvp*vec4(pos + (chunkPositions[gl_InstanceID] * 16), 1.0);
+    gl_Position = mvp*vec4(pos + (chunkPositions[gl_InstanceID] * 16.0), 1.0);
+    // gl_Position = mvp*vec4(gl_VertexID%2, gl_VertexID, 5-gl_InstanceID, 1.0);
 }
