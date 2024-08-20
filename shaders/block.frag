@@ -1,4 +1,4 @@
-#version 430
+#version 460
 
 flat in ivec2 fragSize;
 in vec2 fragTexCoord;

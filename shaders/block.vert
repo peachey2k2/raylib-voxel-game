@@ -1,4 +1,4 @@
-#version 430
+#version 460
 
 layout(location = 0) in vec3 vertPos;
 layout(location = 1) in ivec2 data;
@@ -10,7 +10,7 @@ out vec2 fragTexCoord;
 out vec3 debugColor;
 
 layout(std430, binding = 3) buffer ssbo {
-    vec3 chunkPositions[];
+    ivec3 chunkPositions[];
 };
 
 vec3 pos;
@@ -24,15 +24,18 @@ void unpack() {
         (data.x >> 4) & 0x0F,
         (data.x >> 8) & 0x0F
     );
-    normal = (data.x >> 12) & 0x07;
     size = ivec2(
-        ((data.x >> 15) & 0x0F) + 1,
-        ((data.x >> 19) & 0x0F) + 1
+        ((data.x >> 12) & 0x0F) + 1,
+        ((data.x >> 16) & 0x0F) + 1
     );
+    normal = (data.x >> 20) & 0x07;
     tex = vec2(
         (data.y & 0x0F) / 16.0,
         (data.y >> 4) / 16.0
     );
+    if (normal < 3) {
+        pos[normal] += 1;
+    }
 }
 
 void main() {
@@ -45,8 +48,33 @@ void main() {
     );
 
     fragSize = size;
-    debugColor = pos / 16.0;
+    // debugColor = vec3(normal&1, (normal>>1)&1, (normal>>2)&1);
+    debugColor = pos/16.0;
 
-    gl_Position = mvp*vec4(pos + (chunkPositions[gl_InstanceID] * 16.0), 1.0);
+    vec3 newVertPos = vec3(vertPos.x*size.x, vertPos.y*size.y, vertPos.z);
+    switch (normal) {
+        case 0:
+            newVertPos = newVertPos.zyx;
+            break;
+        case 1:
+            newVertPos = newVertPos.xzy;
+            break;
+        case 2:
+            newVertPos = newVertPos.yxz;
+            break;
+        case 3:
+            newVertPos = newVertPos.zxy;
+            break;
+        case 4:
+            newVertPos = newVertPos.yzx;
+            break;
+        case 5:
+            newVertPos = newVertPos.xyz;
+            break;
+    }
+
+    gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[gl_DrawID] * 16.0), 1.0);
+    // gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[0] * 16.0), 1.0);
+    // gl_Position = mvp*vec4(pos + vertPos + gl_InstanceID, 1.0);
     // gl_Position = mvp*vec4(gl_VertexID%2, gl_VertexID, 5-gl_InstanceID, 1.0);
 }

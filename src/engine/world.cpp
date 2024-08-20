@@ -14,6 +14,15 @@ void init() {
     m_noiseMap = new noise::module::Perlin();
     m_chunks.clear();
     generateChunksAt({0,0,0}, core::RENDER_DISTANCE);
+
+    generateChunk({0,0,0});
+    generateChunk({0,0,1});
+    // for (i32 i = 0; i < 16*16*16; i++)
+    //     (*m_chunks[{0,0,0}])[i] = 0;
+    // (*m_chunks[{0,0,0}])[0] = 1;
+    render::activateChunk({0,0,0});
+    render::activateChunk({0,0,1});
+
     bm->end();
 }
 
@@ -39,41 +48,44 @@ void generateChunk(vec3i p_pos) {
             }
         }
     }
-    m_chunks[p_pos] = &chunk;
+    m_chunks[p_pos] = chunkPtr;
 }
 
 void generateChunksAt(vec3i p_pos, u32 p_radius) {
-    i32 radius = scast<i32>(p_radius);
+    // i32 radius = scast<i32>(p_radius);
 
-    std::erase_if(m_chunks, [&](auto& p) {
-        auto& [pos, chunk] = p;
-        if (
-            abs(pos.x - p_pos.x) > radius ||
-            abs(pos.y - p_pos.y) > radius ||
-            abs(pos.z - p_pos.z) > radius
-        ) {
-            render::deactivateChunk(pos);
-            // tools::say(*chunk);
-            if (chunk != nullptr) {
-                delete chunk;
-                chunk = nullptr;
-            }
-            return true;
-        }
-        return false;
-    });
+    p_pos = p_pos;
+    p_radius = p_radius;
 
-    for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
-        for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
-            for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
-                vec3i pos = {x, y, z};
-                if (m_chunks.find(pos) == m_chunks.end()) {
-                    generateChunk(pos);
-                    render::activateChunk(pos);
-                }
-            }
-        }
-    }
+    // std::erase_if(m_chunks, [&](auto& p) {
+    //     auto& [pos, chunk] = p;
+    //     if (
+    //         abs(pos.x - p_pos.x) > radius ||
+    //         abs(pos.y - p_pos.y) > radius ||
+    //         abs(pos.z - p_pos.z) > radius
+    //     ) {
+    //         render::deactivateChunk(pos);
+    //         // tools::say(*chunk);
+    //         if (chunk != nullptr) {
+    //             delete chunk;
+    //             chunk = nullptr;
+    //         }
+    //         return true;
+    //     }
+    //     return false;
+    // });
+
+    // for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
+    //     for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
+    //         for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
+    //             vec3i pos = {x, y, z};
+    //             if (m_chunks.contains(pos) == false) {
+    //                 generateChunk(pos);
+    //                 render::activateChunk(pos);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 vec3i getChunkLoc(vec3i p_pos) {
@@ -103,7 +115,7 @@ ChunkPos getPosInChunk(vec3i p_pos) {
 void changeBlock(vec3i p_pos, u64 p_id) {
     vec3i chunkLoc = getChunkLoc(p_pos);
     
-    if (m_chunks.find(chunkLoc) == m_chunks.end()) {
+    if (m_chunks.contains(chunkLoc) == false) {
         tools::say("--Chunk not found");
         return;
     }

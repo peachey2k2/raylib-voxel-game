@@ -82,7 +82,7 @@ vec3 getMovementDelta() {
 }
 
 void draw3D() {
-    DrawGrid(20, 1.0f);
+    DrawGrid(32, 1.0f);
     render::draw();
 }
 

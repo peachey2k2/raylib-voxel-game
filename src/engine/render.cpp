@@ -17,10 +17,10 @@ const u32 TILE_SIZE = 32;
 const u32 TILE_PER_ROW = 16;
 
 const f32 QUAD_VERTICES[6*4] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.5f,  0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,
+    1, 0, 0,
+    0, 0, 0,
+    1, 1, 0,
+    0, 1, 0,
 };
 
 void initAtlas() {
@@ -95,7 +95,7 @@ void draw() {
 
     glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
     glBufferData(GL_ARRAY_BUFFER, m_attribArray.size() * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
-    glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(u32), nullptr);
+    glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(u64), nullptr);
     glVertexAttribDivisor(1, 1);
     glEnableVertexAttribArray(1);
     GL_CHECK_ERROR("bind attrib buffer");
@@ -107,6 +107,10 @@ void draw() {
     glBindBuffer(GL_ARRAY_BUFFER, m_indirectBuffer);
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
     GL_CHECK_ERROR("draw");
+    tools::say(m_indirectCmds.size(), m_attribArray.size(), m_shaderStorageArray[0], m_shaderStorageArray[1]);
+    for (auto& cmd : m_indirectCmds) {
+        tools::say(cmd.count, cmd.instanceCount, cmd.first, cmd.baseInstance);
+    }
 
     glBindVertexArray(0);
 
@@ -143,7 +147,6 @@ void activateChunk(vec3i p_pos) {
     u64* data;
     u32 dataSize = calculateVertexData(p_pos, data);
     editMesh(p_pos, data, dataSize);
-
     m_accum += dataSize;
 }
 
@@ -156,7 +159,7 @@ void updateChunk(vec3i p_pos) {
 }
 
 void deactivateChunk(vec3i p_pos) {
-    if (m_renderChunks.find(p_pos) != m_renderChunks.end()) {
+    if (m_renderChunks.contains(p_pos)) {
         u32 idx = m_renderChunks[p_pos] - m_indirectCmds.data();
         m_indirectCmds.erase(m_indirectCmds.begin() + idx);
         m_renderChunks.erase(p_pos);
@@ -229,9 +232,9 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                      *  0-3: x
                      *  4-7: y
                      *  8-11: z
-                     *  12-14: normal-ish
-                     *  15-18: size-u
-                     *  19-22: size-v
+                     *  12-15: size-u
+                     *  16-19: size-v
+                     *  20-23: normal
                      *  23-31: unused
                      *  32-47: tex-x
                      *  48-63: tex-y
@@ -240,19 +243,20 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                     // i32 du = w << (5*u);
                     // i32 dv = h << (5*v);
 
-                    u8 normal;
-                    switch (d + flip[n]*3) {
-                        case 0: normal = 0; break;
-                        case 1: normal = 1; break; // top
-                        case 2: normal = 3; break;
-                        case 3: normal = 0; break;
-                        case 4: normal = 1; break; // bottom
-                        case 5: normal = 1; break;
-                    }
+                    // u8 normal;
+                    // switch (d + flip[n]*3) {
+                    //     case 0: normal = 0; break;
+                    //     case 1: normal = 1; break; // top
+                    //     case 2: normal = 3; break;
+                    //     case 3: normal = 0; break;
+                    //     case 4: normal = 1; break; // bottom
+                    //     case 5: normal = 1; break;
+                    // }
+                    u8 normal = d + flip[n]*3;
 
                     i32 w2, h2;
 
-                    if (normal%2) {
+                    if (flip[n]) {
                         w2 = w;
                         h2 = h;
                     } else {
@@ -260,18 +264,27 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                         h2 = w;
                     }
 
-                    u64 p = 
-                        x[0] |
-                        (x[1]<<4) |
-                        (x[2]<<8) |
-                        (normal<<12) |
-                        ((w2-1)<<15) |
-                        ((h2-1)<<19) |
+                    // for (int m=0; m<3; m++) {
+                    //     if (x[m] > 15 || x[m] == 0) tools::say(x[0], x[1], x[2], w, h, scast<u32>(normal));
+                    // }
+
+                    vec3i pos = {
+                        x[0] - (normal == 0 ? 1 : 0),
+                        x[1] - (normal == 1 ? 1 : 0),
+                        x[2] - (normal == 2 ? 1 : 0),
+                    };
+
+                    u64 vertData = 
+                        pos.x |
+                        (pos.y<<4) |
+                        (pos.z<<8) |
+                        ((w2-1)<<12) |
+                        ((h2-1)<<16) |
+                        (normal<<20) |
                         (0UL << 32) |
                         (0UL << 48);
                     
-                    
-                    tmpVertBuffer[size++] = p;
+                    tmpVertBuffer[size++] = vertData;
 
                     for (l = 0; l < h; l++) {
                         for (k = 0; k < w; k++) {
@@ -290,7 +303,7 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
 }
 
 void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
-    if (m_renderChunks.find(p_chunkPos) == m_renderChunks.end()) {
+    if (m_renderChunks.contains(p_chunkPos) == false) {
         u32 idx = createCommand(m_renderChunks[p_chunkPos], p_size);
         m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idx, p_chunkPos);
     } else {
@@ -306,7 +319,10 @@ void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
         m_attribArray.resize(m_attribArraySize + 1024);
     }
 
-    u64* dataLoc = m_attribArray.data() + m_renderChunks[p_chunkPos]->first;
+    u64* dataLoc = m_attribArray.data() + (m_renderChunks[p_chunkPos]->first);
+    if (dataLoc > m_attribArray.data() + m_attribArraySize) {
+        tools::say("dataLoc is out of bounds");
+    }
     std::memcpy(dataLoc, p_data, p_size * sizeof(u64));
 }
 
@@ -417,11 +433,13 @@ u32 resizeCommand(IndirectCommand* &p_cmd, u32 p_newSize) {
     // if we're here, we couldn't find any gaps to fit the mesh,
     // so we need to move it to the end
     m_indirectCmds.erase(m_indirectCmds.begin() + (p_cmd - m_indirectCmds.data())); // iterator nonsense
-    u32 temp = m_attribArraySize;
-    m_attribArraySize = cmdCopy.first + cmdCopy.instanceCount;
-
-    cmdCopy.first = temp;
+    
+    // here lies a bug, six feet under.
+    // ripbozo, #packwatch, whatever
+    cmdCopy.first = m_indirectCmds.back().first + m_indirectCmds.back().instanceCount;
     cmdCopy.instanceCount = p_newSize;
+    m_attribArraySize = cmdCopy.first + cmdCopy.instanceCount;
+    
     m_indirectCmds.push_back(cmdCopy);
     p_cmd = m_indirectCmds.data() + m_indirectCmds.size() - 1;
     return m_indirectCmds.size() - 1;
