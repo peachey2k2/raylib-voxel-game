@@ -33,7 +33,7 @@ u32 m_vertexPosBuffer;
 
 // ssbo to send the chunk positions
 u32 m_shaderStorageBuffer;
-std::vector<vec3i> m_shaderStorageArray = {};
+std::vector<vec4i> m_shaderStorageArray = {};
 
 // actual per-quad data, sent as vertex attributes
 u32 m_attribBuffer;

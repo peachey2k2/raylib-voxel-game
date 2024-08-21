@@ -76,8 +76,8 @@ typedef struct vec4i {
 typedef  struct IndirectCommand {
     u32 count; // indices to render (4 for quad)
     u32 instanceCount; // data size
-    u32 first; // data start
-    u32 baseInstance; // base vertex index (0 for quad)
+    u32 first; // data start (0 for our case)
+    u32 baseInstance; // base vertex attribute index
 } IndirectCommand;
 
 typedef struct InitBlockInfo {

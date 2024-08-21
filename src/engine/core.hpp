@@ -11,10 +11,12 @@ inline const u32 HEIGHT = 600;
 inline const f32 SENSITIVITY = 0.1f;
 inline const f32 SPEED = 5.0f;
 
-inline const u32 RENDER_DISTANCE = 4;
+inline const u32 RENDER_DISTANCE = 2;
 
 #ifdef CORE_CPP
- 
+
+#include <GLFW/glfw3.h>
+GLFWwindow* m_window;
 Camera3D m_camera {
     .position = { 10.0f, 1.0f, 10.0f },
     .target = { 0.0f, 0.0f, 0.0f },

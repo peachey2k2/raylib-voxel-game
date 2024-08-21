@@ -42,9 +42,9 @@ void initMesh() {
     m_atlas = LoadTextureFromImage(m_atlasImage);
     // SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
 
-    glGenBuffers(1, &m_vertexPosBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
-    glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(u32), QUAD_VERTICES, GL_STATIC_DRAW);
+    // glGenBuffers(1, &m_vertexPosBuffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
+    // glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(u32), QUAD_VERTICES, GL_STATIC_DRAW);
 
     glGenBuffers(1, &m_attribBuffer);
 
@@ -83,15 +83,15 @@ void draw() {
     glUniform1i(m_uniformSampler, 0);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(vec3i), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(vec4i), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
     GL_CHECK_ERROR("bind ssbo");
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), nullptr);
-    glVertexAttribDivisor(0, 0);
-    glEnableVertexAttribArray(0);
-    GL_CHECK_ERROR("bind vertex buffer");
+    // glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), nullptr);
+    // glVertexAttribDivisor(0, 0);
+    // glEnableVertexAttribArray(0);
+    // GL_CHECK_ERROR("bind vertex buffer");
 
     glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
     glBufferData(GL_ARRAY_BUFFER, m_attribArray.size() * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
@@ -107,10 +107,6 @@ void draw() {
     glBindBuffer(GL_ARRAY_BUFFER, m_indirectBuffer);
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
     GL_CHECK_ERROR("draw");
-    tools::say(m_indirectCmds.size(), m_attribArray.size(), m_shaderStorageArray[0], m_shaderStorageArray[1]);
-    for (auto& cmd : m_indirectCmds) {
-        tools::say(cmd.count, cmd.instanceCount, cmd.first, cmd.baseInstance);
-    }
 
     glBindVertexArray(0);
 
@@ -146,6 +142,7 @@ u32 addTextureToAtlas(const char* p_texture) {
 void activateChunk(vec3i p_pos) {
     u64* data;
     u32 dataSize = calculateVertexData(p_pos, data);
+    if (dataSize == 0) return;
     editMesh(p_pos, data, dataSize);
     m_accum += dataSize;
 }
@@ -153,6 +150,10 @@ void activateChunk(vec3i p_pos) {
 void updateChunk(vec3i p_pos) {
     u64* data;
     u32 dataSize = calculateVertexData(p_pos, data);
+    if (dataSize == 0) {
+        deactivateChunk(p_pos);
+        return;
+    }
     editMesh(p_pos, data, dataSize);
 
     m_accum += dataSize;
@@ -303,15 +304,16 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
 }
 
 void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
+    vec4i ssboData = { p_chunkPos.x, p_chunkPos.y, p_chunkPos.z, 0 };
     if (m_renderChunks.contains(p_chunkPos) == false) {
         u32 idx = createCommand(m_renderChunks[p_chunkPos], p_size);
-        m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idx, p_chunkPos);
+        m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idx, ssboData);
     } else {
         u32 idxOld = m_renderChunks[p_chunkPos] - m_indirectCmds.data();
         u32 idxNew = resizeCommand(m_renderChunks[p_chunkPos], p_size);
         if (idxOld != idxNew) {
             m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idxOld);
-            m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idxNew, p_chunkPos);
+            m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idxNew, ssboData);
         }
     }
 
@@ -319,7 +321,7 @@ void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
         m_attribArray.resize(m_attribArraySize + 1024);
     }
 
-    u64* dataLoc = m_attribArray.data() + (m_renderChunks[p_chunkPos]->first);
+    u64* dataLoc = m_attribArray.data() + (m_renderChunks[p_chunkPos]->baseInstance);
     if (dataLoc > m_attribArray.data() + m_attribArraySize) {
         tools::say("dataLoc is out of bounds");
     }
@@ -330,8 +332,8 @@ u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {
     IndirectCommand cmd = {
         .count = 4,
         .instanceCount = p_size,
-        .first = 0, // we'll find the right place later
-        .baseInstance = 0,
+        .first = 0,
+        .baseInstance = 0, // we'll find the right place later
     };
 
     u32 i = 0;
@@ -345,7 +347,7 @@ u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {
     }
 
     // check the start
-    if (m_indirectCmds[0].first >= p_size) {
+    if (m_indirectCmds[0].baseInstance >= p_size) {
         m_indirectCmds.insert(m_indirectCmds.begin(), cmd);
         p_cmd = m_indirectCmds.data();
         return 0;
@@ -353,8 +355,8 @@ u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {
 
     // check any other gaps
     for (i = 1; i < m_indirectCmds.size(); i++) {
-        if (m_indirectCmds[i].first - (m_indirectCmds[i-1].first + m_indirectCmds[i-1].instanceCount) >= p_size) {
-            cmd.first = m_indirectCmds[i].first + m_indirectCmds[i].instanceCount;
+        if (m_indirectCmds[i].baseInstance - (m_indirectCmds[i-1].baseInstance + m_indirectCmds[i-1].instanceCount) >= p_size) {
+            cmd.baseInstance = m_indirectCmds[i-1].baseInstance + m_indirectCmds[i-1].instanceCount;
             m_indirectCmds.insert(m_indirectCmds.begin() + i, cmd);
             p_cmd = &(m_indirectCmds[i]);
             return i;
@@ -362,21 +364,27 @@ u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {
     }
 
     // place it in the end
-    cmd.first = m_indirectCmds.back().first + m_indirectCmds.back().instanceCount;
-    m_attribArraySize = cmd.first + p_size;
+    cmd.baseInstance = m_indirectCmds.back().baseInstance + m_indirectCmds.back().instanceCount;
+    if (m_attribArraySize > cmd.baseInstance + p_size){
+        tools::say("attribArraySize is too small");
+    }
+    m_attribArraySize = cmd.baseInstance + p_size;
     m_indirectCmds.push_back(cmd);
     p_cmd = &(m_indirectCmds.back());
     return m_indirectCmds.size() - 1;
 }
 
 u32 resizeCommand(IndirectCommand* &p_cmd, u32 p_newSize) {
-    // no shrinking, at least for now
-    if (p_cmd->instanceCount > p_newSize) return p_cmd - m_indirectCmds.data();
+    // if we're shrinking, we can just shrink
+    if (p_cmd->instanceCount >= p_newSize) {
+        p_cmd->instanceCount = p_newSize;
+        return p_cmd - m_indirectCmds.data();
+    }
 
     // if at the end, we mignt need to increase the buffer size
     if (p_cmd == m_indirectCmds.data() + m_indirectCmds.size() - 1) {
-        if (p_cmd->first + p_newSize > m_attribArraySize) {
-            m_attribArraySize = p_cmd->first + p_newSize;
+        if (p_cmd->baseInstance + p_newSize > m_attribArraySize) {
+            m_attribArraySize = p_cmd->baseInstance + p_newSize;
         }
         p_cmd->instanceCount = p_newSize;
         return p_cmd - m_indirectCmds.data();
@@ -387,7 +395,7 @@ u32 resizeCommand(IndirectCommand* &p_cmd, u32 p_newSize) {
     IndirectCommand* next = p_cmd + 1;
 
     // if we can expand, we expand
-    if (p_cmd->first + p_newSize <= next->first) {
+    if (p_cmd->baseInstance + p_newSize <= next->baseInstance) {
         p_cmd->instanceCount = p_newSize;
         return p_cmd - m_indirectCmds.data();
     }
@@ -395,7 +403,7 @@ u32 resizeCommand(IndirectCommand* &p_cmd, u32 p_newSize) {
     IndirectCommand cmdCopy = *p_cmd;
 
     // else, we move it. first check if it fits to the front
-    if (p_cmd->instanceCount <= m_indirectCmds[0].first) {
+    if (p_cmd->instanceCount <= m_indirectCmds[0].baseInstance) {
         for (auto cur = p_cmd; cur > m_indirectCmds.data(); cur--) {
             *cur = *(cur-1);
         }
@@ -407,8 +415,8 @@ u32 resizeCommand(IndirectCommand* &p_cmd, u32 p_newSize) {
 
     // if not, scan the rest of the array for a gap
     for (u32 i = 1; i < m_indirectCmds.size(); i++) {
-        if (m_indirectCmds[i].first - (m_indirectCmds[i-1].first + m_indirectCmds[i-1].instanceCount) >= p_newSize) {
-            p_cmd->first = m_indirectCmds[i].first + m_indirectCmds[i].instanceCount;
+        if (m_indirectCmds[i].baseInstance - (m_indirectCmds[i-1].baseInstance + m_indirectCmds[i-1].instanceCount) >= p_newSize) {
+            p_cmd->baseInstance = m_indirectCmds[i].baseInstance + m_indirectCmds[i].instanceCount;
             p_cmd->instanceCount = p_newSize;
 
             // we moved it, so we need to move it in the array to keep the order correct
@@ -436,9 +444,9 @@ u32 resizeCommand(IndirectCommand* &p_cmd, u32 p_newSize) {
     
     // here lies a bug, six feet under.
     // ripbozo, #packwatch, whatever
-    cmdCopy.first = m_indirectCmds.back().first + m_indirectCmds.back().instanceCount;
+    cmdCopy.baseInstance = m_indirectCmds.back().baseInstance + m_indirectCmds.back().instanceCount;
     cmdCopy.instanceCount = p_newSize;
-    m_attribArraySize = cmdCopy.first + cmdCopy.instanceCount;
+    m_attribArraySize = cmdCopy.baseInstance + cmdCopy.instanceCount;
     
     m_indirectCmds.push_back(cmdCopy);
     p_cmd = m_indirectCmds.data() + m_indirectCmds.size() - 1;

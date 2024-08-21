@@ -15,13 +15,17 @@ void init() {
     m_chunks.clear();
     generateChunksAt({0,0,0}, core::RENDER_DISTANCE);
 
-    generateChunk({0,0,0});
-    generateChunk({0,0,1});
     // for (i32 i = 0; i < 16*16*16; i++)
     //     (*m_chunks[{0,0,0}])[i] = 0;
     // (*m_chunks[{0,0,0}])[0] = 1;
-    render::activateChunk({0,0,0});
-    render::activateChunk({0,0,1});
+    // for (i32 x=0; x<=0; x++) {
+    //     for (i32 y=-3; y<=2; y++) {
+    //         for (i32 z=0; z<=0; z++) {
+    //             generateChunk({x, y, z});
+    //             render::activateChunk({x, y, z});
+    //         }
+    //     }
+    // }
 
     bm->end();
 }
@@ -52,40 +56,37 @@ void generateChunk(vec3i p_pos) {
 }
 
 void generateChunksAt(vec3i p_pos, u32 p_radius) {
-    // i32 radius = scast<i32>(p_radius);
+    i32 radius = scast<i32>(p_radius);
 
-    p_pos = p_pos;
-    p_radius = p_radius;
+    std::erase_if(m_chunks, [&](auto& p) {
+        auto& [pos, chunk] = p;
+        if (
+            abs(pos.x - p_pos.x) > radius ||
+            abs(pos.y - p_pos.y) > radius ||
+            abs(pos.z - p_pos.z) > radius
+        ) {
+            render::deactivateChunk(pos);
+            // tools::say(*chunk);
+            if (chunk != nullptr) {
+                delete chunk;
+                chunk = nullptr;
+            }
+            return true;
+        }
+        return false;
+    });
 
-    // std::erase_if(m_chunks, [&](auto& p) {
-    //     auto& [pos, chunk] = p;
-    //     if (
-    //         abs(pos.x - p_pos.x) > radius ||
-    //         abs(pos.y - p_pos.y) > radius ||
-    //         abs(pos.z - p_pos.z) > radius
-    //     ) {
-    //         render::deactivateChunk(pos);
-    //         // tools::say(*chunk);
-    //         if (chunk != nullptr) {
-    //             delete chunk;
-    //             chunk = nullptr;
-    //         }
-    //         return true;
-    //     }
-    //     return false;
-    // });
-
-    // for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
-    //     for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
-    //         for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
-    //             vec3i pos = {x, y, z};
-    //             if (m_chunks.contains(pos) == false) {
-    //                 generateChunk(pos);
-    //                 render::activateChunk(pos);
-    //             }
-    //         }
-    //     }
-    // }
+    for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
+        for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
+            for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
+                vec3i pos = {x, y, z};
+                if (m_chunks.contains(pos) == false) {
+                    generateChunk(pos);
+                    render::activateChunk(pos);
+                }
+            }
+        }
+    }
 }
 
 vec3i getChunkLoc(vec3i p_pos) {

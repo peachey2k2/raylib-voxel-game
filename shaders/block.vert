@@ -1,6 +1,6 @@
 #version 460
 
-layout(location = 0) in vec3 vertPos;
+// layout(location = 0) in vec3 vertPos;
 layout(location = 1) in ivec2 data;
 
 uniform mat4 mvp;
@@ -10,7 +10,7 @@ out vec2 fragTexCoord;
 out vec3 debugColor;
 
 layout(std430, binding = 3) buffer ssbo {
-    ivec3 chunkPositions[];
+    ivec4 chunkPositions[];
 };
 
 vec3 pos;
@@ -40,6 +40,18 @@ void unpack() {
 
 void main() {
     unpack();
+
+//     const f32 QUAD_VERTICES[6*4] = {
+//     1, 0, 0,
+//     0, 0, 0,
+//     1, 1, 0,
+//     0, 1, 0,
+// };
+    vec3 vertPos = vec3(
+        1-(gl_VertexID & 1),
+        (gl_VertexID>>1 & 1),
+        0
+    );
 
     int magic = gl_VertexID + normal;
     fragTexCoord = vec2(
@@ -73,8 +85,8 @@ void main() {
             break;
     }
 
-    gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[gl_DrawID] * 16.0), 1.0);
-    // gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[0] * 16.0), 1.0);
+    gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[gl_DrawID].xyz * 16.0), 1.0);
+    // gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[1].xyz * 16.0), 1.0);
     // gl_Position = mvp*vec4(pos + vertPos + gl_InstanceID, 1.0);
     // gl_Position = mvp*vec4(gl_VertexID%2, gl_VertexID, 5-gl_InstanceID, 1.0);
 }

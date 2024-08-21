@@ -17,19 +17,20 @@ void run() {
     init();
     while (!WindowShouldClose()) {
         update();
-        BeginDrawing(); {
+        BeginDrawing();
         ClearBackground(BLUE);
-            BeginMode3D(m_camera); {
+            BeginMode3D(m_camera);
                 draw3D();
-            } EndMode3D();
+            EndMode3D();
             drawUI();
-        } EndDrawing();
+        EndDrawing();
     }
     deinit();
 }
 
 void init() {
     initRaylib();
+    m_window = glfwGetCurrentContext();
     
     loader::loadMods();
     loader::initFunctions();
@@ -48,9 +49,11 @@ void initRaylib() {
     
     SetConfigFlags(
         // FLAG_WINDOW_RESIZABLE |
-        FLAG_BORDERLESS_WINDOWED_MODE    
+        FLAG_BORDERLESS_WINDOWED_MODE |
+        FLAG_VSYNC_HINT
     );
     InitWindow(WIDTH, HEIGHT, TITLE);
+    
     m_font = LoadFont("res/fonts/Miracode.ttf");
     DisableCursor();
     #if FPS > 0
