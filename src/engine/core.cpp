@@ -13,12 +13,26 @@ namespace wmac::core {
 
 #define FPS 0
 
+#ifdef _WIN32
+extern "C" {
+    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#elif __linux__
+    void setEnvVars() {
+        setenv("__NV_PRIME_RENDER_OFFLOAD", "1", 1);
+        setenv("__GLX_VENDOR_LIBRARY_NAME", "nvidia", 1);
+    }
+#elif __APPLE__
+// UNLUCKY :D
+#endif
+
 void run() {
     init();
     while (!WindowShouldClose()) {
         update();
         BeginDrawing();
-        ClearBackground(BLUE);
+            ClearBackground(BLUE);
             BeginMode3D(m_camera);
                 draw3D();
             EndMode3D();
@@ -30,6 +44,9 @@ void run() {
 }
 
 void init() {
+    #ifdef __linux__
+    setEnvVars();
+    #endif
     initRaylib();
     m_window = glfwGetCurrentContext();
     

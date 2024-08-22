@@ -11,7 +11,7 @@ inline const u32 HEIGHT = 600;
 inline const f32 SENSITIVITY = 0.1f;
 inline const f32 SPEED = 5.0f;
 
-inline const u32 RENDER_DISTANCE = 2;
+inline const u32 RENDER_DISTANCE = 10;
 
 #ifdef CORE_CPP
 
@@ -45,6 +45,5 @@ void run();
 
 std::string getAppDir();
 u64 getFrameCount();
-
 
 };

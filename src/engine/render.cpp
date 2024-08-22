@@ -16,12 +16,12 @@ namespace wmac::render {
 const u32 TILE_SIZE = 32;
 const u32 TILE_PER_ROW = 16;
 
-const f32 QUAD_VERTICES[6*4] = {
-    1, 0, 0,
-    0, 0, 0,
-    1, 1, 0,
-    0, 1, 0,
-};
+// const f32 QUAD_VERTICES[6*4] = {
+//     1, 0, 0,
+//     0, 0, 0,
+//     1, 1, 0,
+//     0, 1, 0,
+// };
 
 void initAtlas() {
     m_atlasImage = GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, WHITE);
@@ -29,9 +29,6 @@ void initAtlas() {
 
 void initMesh() {
     auto bm = new tools::Benchmark("initMesh");
-
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
 
     m_material = LoadMaterialDefault();
     m_material.shader = LoadShader("shaders/block.vert", "shaders/block.frag");
@@ -41,13 +38,16 @@ void initMesh() {
 
     m_atlas = LoadTextureFromImage(m_atlasImage);
 
+    glGenVertexArrays(1, &m_vao);
+    glBindVertexArray(m_vao);
+
     glGenBuffers(1, &m_attribBuffer);
 
     glGenBuffers(1, &m_indirectBuffer);
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
+    // glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
 
     glGenBuffers(1, &m_shaderStorageBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
+    // glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
 
     glBindVertexArray(0);
     GL_CHECK_ERROR("init mesh");
@@ -97,12 +97,7 @@ void draw() {
 
         m_updateAttribs = false;
 
-        for (auto& e : m_indirectCmds) {
-            if (e.instanceCount + e.baseInstance > m_attribArraySize)
-                tools::say(e.count, e.instanceCount, e.first, e.baseInstance);
-        }
-        tools::say("size:", m_attribArraySize, m_indirectCmds.back().baseInstance + m_indirectCmds.back().instanceCount);
-        tools::say(m_shaderStorageArray.size(), m_indirectCmds.size());
+        tools::say(m_indirectCmds.size());
     }
 
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
