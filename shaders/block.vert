@@ -1,13 +1,11 @@
 #version 460
 
-// layout(location = 0) in vec3 vertPos;
-layout(location = 1) in ivec2 data;
+layout(location = 0) in ivec2 data;
 
 uniform mat4 mvp;
 
 flat out ivec2 fragSize;
 out vec2 fragTexCoord;
-out vec3 debugColor;
 
 layout(std430, binding = 3) buffer ssbo {
     ivec4 chunkPositions[];
@@ -41,27 +39,18 @@ void unpack() {
 void main() {
     unpack();
 
-//     const f32 QUAD_VERTICES[6*4] = {
-//     1, 0, 0,
-//     0, 0, 0,
-//     1, 1, 0,
-//     0, 1, 0,
-// };
     vec3 vertPos = vec3(
         1-(gl_VertexID & 1),
         (gl_VertexID>>1 & 1),
         0
     );
-
-    int magic = gl_VertexID + normal;
+    
     fragTexCoord = vec2(
-        (magic & 2) != 0 ? tex.x : tex.x + 1,
-        ((magic & 3)%3) != 0 ? tex.y : tex.y + 1
+        (gl_VertexID & 1) != 0 ? tex.y : tex.y + 1,
+        (gl_VertexID & 2) != 0 ? tex.x : tex.x + 1
     );
 
     fragSize = size;
-    // debugColor = vec3(normal&1, (normal>>1)&1, (normal>>2)&1);
-    debugColor = pos/16.0;
 
     vec3 newVertPos = vec3(vertPos.x*size.x, vertPos.y*size.y, vertPos.z);
     switch (normal) {
@@ -86,7 +75,4 @@ void main() {
     }
 
     gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[gl_DrawID].xyz * 16.0), 1.0);
-    // gl_Position = mvp*vec4(pos + newVertPos + (chunkPositions[1].xyz * 16.0), 1.0);
-    // gl_Position = mvp*vec4(pos + vertPos + gl_InstanceID, 1.0);
-    // gl_Position = mvp*vec4(gl_VertexID%2, gl_VertexID, 5-gl_InstanceID, 1.0);
 }

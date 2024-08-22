@@ -43,6 +43,16 @@ namespace wmac {
 #define ccast const_cast
 #define rcast reinterpret_cast
 
+template<typename T>
+constexpr std::vector<T>::iterator findIn(std::vector<T>& vec, const T& val) {
+    return std::find(vec.begin(), vec.end(), val);
+}
+
+template<typename T>
+constexpr bool contains(std::vector<T>& vec, const T& val) {
+    return std::find(vec.begin(), vec.end(), val) != vec.end();
+}
+
 };
 
 inline const mat4 IDENTITY_MATRIX = {

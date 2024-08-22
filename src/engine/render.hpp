@@ -19,8 +19,8 @@ Material m_material;
 i32 m_uniformMVP;
 i32 m_uniformSampler;
 
-// std::unordered_map<vec3i, RenderChunk> m_renderChunks;
-std::unordered_map<vec3i, IndirectCommand*> m_renderChunks;
+// note to self: never EVER store pointers to elements in an std::vector. they can be invalidated.
+// std::unordered_map<vec3i, u32> m_renderChunks; // u32 is the index of the chunk in the indirect buffer
 
 Image m_atlasImage;
 Texture2D m_atlas;
@@ -43,6 +43,8 @@ u64 m_attribArraySize = 0;
 // indirect draw commands. specifically in ascending order.
 u32 m_indirectBuffer;
 std::vector<IndirectCommand> m_indirectCmds = {};
+
+bool m_updateAttribs = false;
 
 #endif
 

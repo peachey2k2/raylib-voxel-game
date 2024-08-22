@@ -47,6 +47,8 @@ void initMesh() {
     // glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(u32), QUAD_VERTICES, GL_STATIC_DRAW);
 
     glGenBuffers(1, &m_attribBuffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
+    // glBufferData(GL_ARRAY_BUFFER, 102400 * sizeof(u64), nullptr, GL_DYNAMIC_DRAW);
 
     glGenBuffers(1, &m_indirectBuffer);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
@@ -82,29 +84,33 @@ void draw() {
     glBindTexture(GL_TEXTURE_2D, m_atlas.id);
     glUniform1i(m_uniformSampler, 0);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(vec4i), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
-    GL_CHECK_ERROR("bind ssbo");
+    if (m_updateAttribs) {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(vec4i), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
+        GL_CHECK_ERROR("bind ssbo");
 
-    // glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), nullptr);
-    // glVertexAttribDivisor(0, 0);
-    // glEnableVertexAttribArray(0);
-    // GL_CHECK_ERROR("bind vertex buffer");
+        glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
+        glBufferData(GL_ARRAY_BUFFER, m_attribArraySize * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
+        glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(u64), nullptr);
+        glVertexAttribDivisor(0, 1);
+        glEnableVertexAttribArray(0);
+        GL_CHECK_ERROR("bind attrib buffer");
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
-    glBufferData(GL_ARRAY_BUFFER, m_attribArray.size() * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
-    glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(u64), nullptr);
-    glVertexAttribDivisor(1, 1);
-    glEnableVertexAttribArray(1);
-    GL_CHECK_ERROR("bind attrib buffer");
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, m_indirectCmds.size() * sizeof(IndirectCommand), m_indirectCmds.data(), GL_DYNAMIC_DRAW);
+        GL_CHECK_ERROR("bind indirect buffer");
 
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
-    glBufferData(GL_DRAW_INDIRECT_BUFFER, m_indirectCmds.size() * sizeof(IndirectCommand), m_indirectCmds.data(), GL_DYNAMIC_DRAW);
-    GL_CHECK_ERROR("bind indirect buffer");
+        m_updateAttribs = false;
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_indirectBuffer);
+        for (auto& e : m_indirectCmds) {
+            if (e.instanceCount + e.baseInstance > m_attribArraySize)
+                tools::say(e.count, e.instanceCount, e.first, e.baseInstance);
+        }
+        tools::say("size:", m_attribArraySize, m_indirectCmds.back().baseInstance + m_indirectCmds.back().instanceCount);
+        tools::say(m_shaderStorageArray.size(), m_indirectCmds.size());
+    }
+
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
     GL_CHECK_ERROR("draw");
 
@@ -144,7 +150,10 @@ void activateChunk(vec3i p_pos) {
     u32 dataSize = calculateVertexData(p_pos, data);
     if (dataSize == 0) return;
     editMesh(p_pos, data, dataSize);
+    // tools::say("added chunk at:", p_pos);
+
     m_accum += dataSize;
+    m_updateAttribs = true;
 }
 
 void updateChunk(vec3i p_pos) {
@@ -157,15 +166,26 @@ void updateChunk(vec3i p_pos) {
     editMesh(p_pos, data, dataSize);
 
     m_accum += dataSize;
+    m_updateAttribs = true;
 }
 
 void deactivateChunk(vec3i p_pos) {
-    if (m_renderChunks.contains(p_pos)) {
-        u32 idx = m_renderChunks[p_pos] - m_indirectCmds.data();
+
+    bool exists = false;
+    u32 idx = 0;
+    for (auto& e : m_shaderStorageArray) {
+        if (e.x == p_pos.x && e.y == p_pos.y && e.z == p_pos.z) {
+            exists = true;
+            idx = &e - m_shaderStorageArray.data();
+            break;
+        }
+    }
+
+    if (exists) {
         m_indirectCmds.erase(m_indirectCmds.begin() + idx);
-        m_renderChunks.erase(p_pos);
         m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idx);
     }
+    // tools::say("removed chunk at:", p_pos);
 }
 
 u64 tmpVertBuffer[6*16*16*16];
@@ -230,29 +250,17 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                     /*
                      * we use 64 bits for everything. here's the layout:
                      * 
-                     *  0-3: x
-                     *  4-7: y
-                     *  8-11: z
-                     *  12-15: size-u
-                     *  16-19: size-v
-                     *  20-23: normal
-                     *  23-31: unused
-                     *  32-47: tex-x
-                     *  48-63: tex-y
+                     * 0-3: pos-x
+                     * 4-7: pos-y
+                     * 8-11: pos-z
+                     * 12-15: size-u
+                     * 16-19: size-v
+                     * 20-23: normal
+                     * 23-31: unused
+                     * 32-47: tex-x
+                     * 48-63: tex-y
                      */
 
-                    // i32 du = w << (5*u);
-                    // i32 dv = h << (5*v);
-
-                    // u8 normal;
-                    // switch (d + flip[n]*3) {
-                    //     case 0: normal = 0; break;
-                    //     case 1: normal = 1; break; // top
-                    //     case 2: normal = 3; break;
-                    //     case 3: normal = 0; break;
-                    //     case 4: normal = 1; break; // bottom
-                    //     case 5: normal = 1; break;
-                    // }
                     u8 normal = d + flip[n]*3;
 
                     i32 w2, h2;
@@ -265,10 +273,7 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                         h2 = w;
                     }
 
-                    // for (int m=0; m<3; m++) {
-                    //     if (x[m] > 15 || x[m] == 0) tools::say(x[0], x[1], x[2], w, h, scast<u32>(normal));
-                    // }
-
+                    // to prevent an overflow, TODO: find a better way
                     vec3i pos = {
                         x[0] - (normal == 0 ? 1 : 0),
                         x[1] - (normal == 1 ? 1 : 0),
@@ -305,14 +310,29 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
 
 void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
     vec4i ssboData = { p_chunkPos.x, p_chunkPos.y, p_chunkPos.z, 0 };
-    if (m_renderChunks.contains(p_chunkPos) == false) {
-        u32 idx = createCommand(m_renderChunks[p_chunkPos], p_size);
+    IndirectCommand* cmd;
+
+    bool exists = false;
+    u32 idx = 0;
+    for (auto& e : m_shaderStorageArray) {
+        if (e.x == p_chunkPos.x && e.y == p_chunkPos.y && e.z == p_chunkPos.z) {
+            exists = true;
+            idx = &e - m_shaderStorageArray.data();
+            break;
+        }
+    }
+
+    // create if it doesn't exist
+    if (exists == false) {
+        idx = createCommand(cmd, p_size);
         m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idx, ssboData);
+
+    // resize and/or move if it does
     } else {
-        u32 idxOld = m_renderChunks[p_chunkPos] - m_indirectCmds.data();
-        u32 idxNew = resizeCommand(m_renderChunks[p_chunkPos], p_size);
-        if (idxOld != idxNew) {
-            m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idxOld);
+        cmd = &(m_indirectCmds[idx]);
+        u32 idxNew = resizeCommand(cmd, p_size);
+        if (idx != idxNew) {
+            m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idx);
             m_shaderStorageArray.insert(m_shaderStorageArray.begin() + idxNew, ssboData);
         }
     }
@@ -321,10 +341,8 @@ void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
         m_attribArray.resize(m_attribArraySize + 1024);
     }
 
-    u64* dataLoc = m_attribArray.data() + (m_renderChunks[p_chunkPos]->baseInstance);
-    if (dataLoc > m_attribArray.data() + m_attribArraySize) {
-        tools::say("dataLoc is out of bounds");
-    }
+    // despacito
+    u64* dataLoc = m_attribArray.data() + cmd->baseInstance;
     std::memcpy(dataLoc, p_data, p_size * sizeof(u64));
 }
 
@@ -365,9 +383,6 @@ u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {
 
     // place it in the end
     cmd.baseInstance = m_indirectCmds.back().baseInstance + m_indirectCmds.back().instanceCount;
-    if (m_attribArraySize > cmd.baseInstance + p_size){
-        tools::say("attribArraySize is too small");
-    }
     m_attribArraySize = cmd.baseInstance + p_size;
     m_indirectCmds.push_back(cmd);
     p_cmd = &(m_indirectCmds.back());
