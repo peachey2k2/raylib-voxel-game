@@ -57,6 +57,7 @@ void generateChunk(vec3i p_pos) {
 
 void generateChunksAt(vec3i p_pos, u32 p_radius) {
     i32 radius = scast<i32>(p_radius);
+    tools::say("Generating chunks at", p_pos, "at frame", core::getFrameCount());
 
     std::erase_if(m_chunks, [&](auto& p) {
         auto& [pos, chunk] = p;

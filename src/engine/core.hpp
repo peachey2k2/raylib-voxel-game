@@ -29,6 +29,8 @@ vec3& m_position = m_camera.position;
 std::string m_appDir;
 Font m_font;
 
+u64 frameCount = 0;
+
 void init();
     void initRaylib();
 void update();
@@ -42,6 +44,7 @@ void deinit();
 void run();
 
 std::string getAppDir();
+u64 getFrameCount();
 
 
 };

@@ -40,15 +40,8 @@ void initMesh() {
     m_uniformSampler = GetShaderLocation(m_material.shader, "texture0");
 
     m_atlas = LoadTextureFromImage(m_atlasImage);
-    // SetMaterialTexture(&m_material, MATERIAL_MAP_ALBEDO, m_atlas);
-
-    // glGenBuffers(1, &m_vertexPosBuffer);
-    // glBindBuffer(GL_ARRAY_BUFFER, m_vertexPosBuffer);
-    // glBufferData(GL_ARRAY_BUFFER, 6*4 * sizeof(u32), QUAD_VERTICES, GL_STATIC_DRAW);
 
     glGenBuffers(1, &m_attribBuffer);
-    // glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
-    // glBufferData(GL_ARRAY_BUFFER, 102400 * sizeof(u64), nullptr, GL_DYNAMIC_DRAW);
 
     glGenBuffers(1, &m_indirectBuffer);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
@@ -63,7 +56,6 @@ void initMesh() {
 }
 
 void draw() {
-    // auto bm = new tools::Benchmark("draw");
     glBindVertexArray(m_vao);
     GL_CHECK_ERROR("bind vao");
 
@@ -88,6 +80,7 @@ void draw() {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shaderStorageBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(vec4i), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         GL_CHECK_ERROR("bind ssbo");
 
         glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
@@ -95,6 +88,7 @@ void draw() {
         glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(u64), nullptr);
         glVertexAttribDivisor(0, 1);
         glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         GL_CHECK_ERROR("bind attrib buffer");
 
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
@@ -115,8 +109,6 @@ void draw() {
     GL_CHECK_ERROR("draw");
 
     glBindVertexArray(0);
-
-    // bm->end();
 }
 
 u32 addTextureToAtlas(const char* p_texture) {
@@ -150,7 +142,6 @@ void activateChunk(vec3i p_pos) {
     u32 dataSize = calculateVertexData(p_pos, data);
     if (dataSize == 0) return;
     editMesh(p_pos, data, dataSize);
-    // tools::say("added chunk at:", p_pos);
 
     m_accum += dataSize;
     m_updateAttribs = true;
@@ -170,7 +161,6 @@ void updateChunk(vec3i p_pos) {
 }
 
 void deactivateChunk(vec3i p_pos) {
-
     bool exists = false;
     u32 idx = 0;
     for (auto& e : m_shaderStorageArray) {
@@ -184,8 +174,9 @@ void deactivateChunk(vec3i p_pos) {
     if (exists) {
         m_indirectCmds.erase(m_indirectCmds.begin() + idx);
         m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idx);
+        m_updateAttribs = true;
     }
-    // tools::say("removed chunk at:", p_pos);
+
 }
 
 u64 tmpVertBuffer[6*16*16*16];

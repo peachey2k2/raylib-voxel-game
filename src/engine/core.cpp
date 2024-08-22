@@ -24,6 +24,7 @@ void run() {
             EndMode3D();
             drawUI();
         EndDrawing();
+        frameCount++;
     }
     deinit();
 }
@@ -116,6 +117,10 @@ void deinit() {
 
 std::string getAppDir() {
     return m_appDir;
+}
+
+u64 getFrameCount() {
+    return frameCount;
 }
 
 }
