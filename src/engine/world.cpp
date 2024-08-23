@@ -38,6 +38,7 @@ void deinit() {
 }
 
 void generateChunk(vec3i p_pos) {
+    auto bm = new tools::Benchmark("Generating chunk");
     Chunk* chunkPtr = rcast<Chunk*>(new Chunk());
     Chunk& chunk = *chunkPtr;
     for (i32 x = 0; x < 16; x++) {
@@ -53,6 +54,7 @@ void generateChunk(vec3i p_pos) {
         }
     }
     m_chunks[p_pos] = chunkPtr;
+    bm->end();
 }
 
 void generateChunksAt(vec3i p_pos, u32 p_radius) {
@@ -77,6 +79,7 @@ void generateChunksAt(vec3i p_pos, u32 p_radius) {
         return false;
     });
 
+    // #pragma omp parallel for
     for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
         for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
             for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {

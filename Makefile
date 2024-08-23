@@ -19,9 +19,9 @@ modsDir := $(buildDir)/mods
 sources := $(call rwildcard,src/,*.cpp)
 objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
-compileFlags := -std=c++20 -I./include -I./src -g
+compileFlags := -std=c++20 -I./include -I./src -fopenmp -O3
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
-linkFlags = -L ./lib/$(platform) -l raylib -l noise -l GLEW
+linkFlags = -L ./lib/$(platform) -l raylib -l noise -l GLEW -fopenmp
 
 # Check for Windows
 ifeq ($(OS), Windows_NT)

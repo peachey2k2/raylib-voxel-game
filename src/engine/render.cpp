@@ -176,21 +176,29 @@ void deactivateChunk(vec3i p_pos) {
 
 u64 tmpVertBuffer[6*16*16*16];
 u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
-    u32 size = 0;
+    // make everything static to gain a bit more performance
+    static i32 i, j, k, l, w, h, u, v, x[3], q[3], d, w2, h2;
+    static u32 n, size;
+    static u8 normal;
+    static bool mask[16*16], flip[16*16];
+    static vec3i pos;
+    static u64 vertData;
+
+    size = 0;
 
     auto& chunk = *(world::m_chunks[p_chunkPos]);
 
     #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
 
-    for (u32 d = 0; d < 3; d++) {
-        i32 i, j, k, l, w, h;
-        i32 u = (d+1) % 3;
-        i32 v = (d+2) % 3;
-        i32 x[3] = {0};
-        i32 q[3] = {0};
-
-        bool mask[16*16];
-        bool flip[16*16];
+    for (d = 0; d < 3; d++) {
+        u = (d+1) % 3;
+        v = (d+2) % 3;
+        x[0] = 0;
+        x[1] = 0;
+        x[2] = 0;
+        q[0] = 0;
+        q[1] = 0;
+        q[2] = 0;
 
         q[d] = 1;
         x[d] = -1;
@@ -198,7 +206,7 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
         while (x[d] < 16) {
 
             // cook le' mask
-            u32 n = 0;
+            n = 0;
             for (x[v] = 0; x[v] < 16; x[v]++) {
                 for (x[u] = 0; x[u] < 16; x[u]++) {
                     bool a = (x[d] >= 0) ? BLOCK(x[0],        x[1],        x[2]       ) > 0 : false;
@@ -247,9 +255,7 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                      * 48-63: tex-y
                      */
 
-                    u8 normal = d + flip[n]*3;
-
-                    i32 w2, h2;
+                    normal = d + flip[n]*3;
 
                     if (flip[n]) {
                         w2 = w;
@@ -260,13 +266,13 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                     }
 
                     // to prevent an overflow, TODO: find a better way
-                    vec3i pos = {
+                    pos = {
                         x[0] - (normal == 0 ? 1 : 0),
                         x[1] - (normal == 1 ? 1 : 0),
                         x[2] - (normal == 2 ? 1 : 0),
                     };
 
-                    u64 vertData = 
+                    vertData = 
                         pos.x |
                         (pos.y<<4) |
                         (pos.z<<8) |
@@ -278,6 +284,7 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
                     
                     tmpVertBuffer[size++] = vertData;
 
+                    #pragma omp simd // 20% improvement just with that? insane.
                     for (l = 0; l < h; l++) {
                         for (k = 0; k < w; k++) {
                             mask[n + k + l*16] = false;

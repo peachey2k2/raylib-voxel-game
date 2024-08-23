@@ -24,6 +24,8 @@ HATE. LET ME TELL YOU HOW MUCH I'VE COME TO HATE JAVASCRIPT SINCE I BEGAN TO LIV
 
 std::vector and pointers are like sulfuric acid and hydrogen peroxide. Be careful with them or you might lose time and sanity.
 
+I really have no idea where I would be if it wasn't for the genius gigachads at OpenMP, Literally doing god's work. 
+
 */
 
 
