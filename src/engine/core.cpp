@@ -29,7 +29,18 @@ extern "C" {
 
 void run() {
     init();
-    while (!WindowShouldClose()) {
+    m_renderThread = std::thread(renderLoop);
+    m_ticksThread = std::thread(ticks::checkLoop);
+    while (not WindowShouldClose()) {
+        // TODO: add more stuff here
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    deinit();
+}
+
+void renderLoop() {
+    initRenderer();
+    while (not WindowShouldClose()) {
         update();
         BeginDrawing();
             ClearBackground(BLUE);
@@ -40,7 +51,6 @@ void run() {
         EndDrawing();
         frameCount++;
     }
-    deinit();
 }
 
 void init() {
@@ -48,7 +58,7 @@ void init() {
     setEnvVars();
     #endif
     initRaylib();
-    m_window = glfwGetCurrentContext();
+    // m_window = glfwGetCurrentContext();
     
     loader::loadMods();
     loader::initFunctions();
@@ -57,7 +67,6 @@ void init() {
     // blocks::addDefaultBlocks();
     loader::initBlocks();
     
-    render::initMesh();
     world::init();
 }
 
@@ -82,8 +91,10 @@ void initRaylib() {
         FLAG_BORDERLESS_WINDOWED_MODE |
         // FLAG_MSAA_4X_HINT |
         // FLAG_INTERLACED_HINT |
-        0
-    );
+    0);
+}
+
+void initRenderer() {
     InitWindow(WIDTH, HEIGHT, TITLE);
     
     m_font = LoadFont("res/fonts/Miracode.ttf");
@@ -91,6 +102,7 @@ void initRaylib() {
     #if FPS > 0
     SetTargetFPS(FPS);
     #endif
+    render::initMesh();
 }
 
 void update() {
@@ -104,7 +116,7 @@ void update() {
         world::generateChunksAt(m_chunk, RENDER_DISTANCE);
     }
 
-    ticks::check();
+    // ticks::check();
 }
 
 vec3 getMovementDelta() {
@@ -117,8 +129,8 @@ vec3 getMovementDelta() {
 }
 
 void draw3D() {
-    DrawGrid(32, 1.0f);
-    render::draw();
+    DrawGrid(20, 1.0f);
+    render::update();
 }
 
 void drawUI() {
@@ -128,7 +140,10 @@ void drawUI() {
 }
 
 void deinit() {
+    m_tickWorld = false;
     world::deinit();
+    m_ticksThread.join();
+    m_renderThread.join();
     CloseWindow();
 }
 
@@ -138,6 +153,10 @@ std::string getAppDir() {
 
 u64 getFrameCount() {
     return frameCount;
+}
+
+bool worldShouldTick() {
+    return m_tickWorld;
 }
 
 }

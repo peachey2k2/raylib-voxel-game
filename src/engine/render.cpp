@@ -55,9 +55,24 @@ void initMesh() {
     bm->end();
 }
 
+void update() {
+    auto start = std::chrono::high_resolution_clock::now();
+    do {
+        if (m_chunksToUpdate.empty()) break;
+        if (world::m_chunks.contains({0,0,1})) {
+            tools::say("0,0,1:", (*world::m_chunks[{0,0,1}])[0]);
+        } 
+        vec3i chunkPos = m_chunksToUpdate.front();
+        m_chunksToUpdate.pop();
+        updateChunk(chunkPos);
+    } while (std::chrono::duration<f64>(std::chrono::high_resolution_clock::now() - start).count() < 0.005);
+
+    if (m_indirectCmds.size() > 0) draw();
+}
+
 void draw() {
     glBindVertexArray(m_vao);
-    GL_CHECK_ERROR("bind vao");
+    // GL_CHECK_ERROR("bind vao");
 
     glUseProgram(m_material.shader.id);
     
@@ -70,7 +85,7 @@ void draw() {
     view = rlGetMatrixTransform() * view;
     mat4 mvp = model * view * proj;
     glUniformMatrix4fv(m_uniformMVP, 1, GL_FALSE, rcast<f32*>(&mvp));
-    GL_CHECK_ERROR("set mvp");
+    // GL_CHECK_ERROR("set mvp");
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_atlas.id);
@@ -81,7 +96,7 @@ void draw() {
         glBufferData(GL_SHADER_STORAGE_BUFFER, m_shaderStorageArray.size() * sizeof(vec4i), m_shaderStorageArray.data(), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_shaderStorageBuffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        GL_CHECK_ERROR("bind ssbo");
+        // GL_CHECK_ERROR("bind ssbo");
 
         glBindBuffer(GL_ARRAY_BUFFER, m_attribBuffer);
         glBufferData(GL_ARRAY_BUFFER, m_attribArraySize * sizeof(u64), m_attribArray.data(), GL_DYNAMIC_DRAW);
@@ -89,7 +104,7 @@ void draw() {
         glVertexAttribDivisor(0, 1);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        GL_CHECK_ERROR("bind attrib buffer");
+        // GL_CHECK_ERROR("bind attrib buffer");
 
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
         glBufferData(GL_DRAW_INDIRECT_BUFFER, m_indirectCmds.size() * sizeof(IndirectCommand), m_indirectCmds.data(), GL_DYNAMIC_DRAW);
@@ -97,11 +112,12 @@ void draw() {
 
         m_updateAttribs = false;
 
-        tools::say(m_indirectCmds.size());
+        // tools::say(m_indirectCmds.size());
     }
 
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
     GL_CHECK_ERROR("draw");
+    // tools::say(m_indirectCmds.size(), m_attribArraySize);
 
     glBindVertexArray(0);
 }
@@ -138,7 +154,6 @@ void activateChunk(vec3i p_pos) {
     if (dataSize == 0) return;
     editMesh(p_pos, data, dataSize);
 
-    m_accum += dataSize;
     m_updateAttribs = true;
 }
 
@@ -151,7 +166,6 @@ void updateChunk(vec3i p_pos) {
     }
     editMesh(p_pos, data, dataSize);
 
-    m_accum += dataSize;
     m_updateAttribs = true;
 }
 
@@ -171,7 +185,6 @@ void deactivateChunk(vec3i p_pos) {
         m_shaderStorageArray.erase(m_shaderStorageArray.begin() + idx);
         m_updateAttribs = true;
     }
-
 }
 
 u64 tmpVertBuffer[6*16*16*16];
@@ -186,7 +199,12 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
 
     size = 0;
 
+    if (world::m_chunks.contains(p_chunkPos) == false) {
+        tools::say("Chunk at", p_chunkPos, "does not exist");
+    }
     auto& chunk = *(world::m_chunks[p_chunkPos]);
+
+    tools::say(chunk[0], chunk[1], chunk[2], chunk[3], chunk[4], chunk[5], p_chunkPos);
 
     #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
 

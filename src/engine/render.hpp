@@ -48,10 +48,12 @@ bool m_updateAttribs = false;
 
 #endif
 
-inline i64 m_accum;
+// inline std::vector<vec3i> m_chunksToUpdate = {};
+inline std::queue<vec3i> m_chunksToUpdate = {};
 
 void initAtlas();
 void initMesh();
+void update();
 void draw();
 u32 addTextureToAtlas(const char* p_texture);
 

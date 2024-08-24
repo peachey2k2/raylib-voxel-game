@@ -17,7 +17,7 @@ std::vector<void (*)()> m_tickCallbacks;
 
 #endif
 
-void check();
+void checkLoop();
 void update();
 
 void addCallback(void (*p_callback)());

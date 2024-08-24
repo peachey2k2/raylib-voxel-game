@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./utils.hpp"
-#include <chrono>
 
 namespace wmac::tools {
 

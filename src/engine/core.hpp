@@ -11,12 +11,14 @@ inline const u32 HEIGHT = 600;
 inline const f32 SENSITIVITY = 0.1f;
 inline const f32 SPEED = 5.0f;
 
-inline const u32 RENDER_DISTANCE = 10;
+inline const u32 RENDER_DISTANCE = 16;
 
 #ifdef CORE_CPP
 
-#include <GLFW/glfw3.h>
-GLFWwindow* m_window;
+bool m_tickWorld = true;
+
+// #include <GLFW/glfw3.h>
+// GLFWwindow* m_window;
 Camera3D m_camera {
     .position = { 10.0f, 1.0f, 10.0f },
     .target = { 0.0f, 0.0f, 0.0f },
@@ -31,12 +33,17 @@ Font m_font;
 
 u64 frameCount = 0;
 
+std::thread m_ticksThread;
+std::thread m_renderThread;
+
 void init();
     void initRaylib();
+void renderLoop();
+    void initRenderer();
+    void draw3D();
+    void drawUI();
 void update();
     vec3 getMovementDelta();
-void draw3D();
-void drawUI();
 void deinit();
 
 #endif
@@ -45,5 +52,6 @@ void run();
 
 std::string getAppDir();
 u64 getFrameCount();
+bool worldShouldTick();
 
 };

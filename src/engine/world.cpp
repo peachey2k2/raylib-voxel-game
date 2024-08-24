@@ -14,19 +14,6 @@ void init() {
     m_noiseMap = new noise::module::Perlin();
     m_chunks.clear();
     generateChunksAt({0,0,0}, core::RENDER_DISTANCE);
-
-    // for (i32 i = 0; i < 16*16*16; i++)
-    //     (*m_chunks[{0,0,0}])[i] = 0;
-    // (*m_chunks[{0,0,0}])[0] = 1;
-    // for (i32 x=0; x<=0; x++) {
-    //     for (i32 y=-3; y<=2; y++) {
-    //         for (i32 z=0; z<=0; z++) {
-    //             generateChunk({x, y, z});
-    //             render::activateChunk({x, y, z});
-    //         }
-    //     }
-    // }
-
     bm->end();
 }
 
@@ -38,14 +25,19 @@ void deinit() {
 }
 
 void generateChunk(vec3i p_pos) {
-    auto bm = new tools::Benchmark("Generating chunk");
+    // auto bm = new tools::Benchmark("Generating chunk");
     Chunk* chunkPtr = rcast<Chunk*>(new Chunk());
     Chunk& chunk = *chunkPtr;
+    #pragma omp parallel for
     for (i32 x = 0; x < 16; x++) {
         for (i32 z = 0; z < 16; z++) {
             i32 height = scast<i32>(m_noiseMap->GetValue((x + p_pos.x*16)/160.0, 0, (z + p_pos.z*16)/160.0) * 160);
+            if (height < p_pos.y*16) height = 0;
+            else if (height > (p_pos.y+1)*16) height = 16;
+            else {height %= 16;}
+            
             i32 y;
-            for (y = 0; (y < 16) && (y + p_pos.y*16 < height); y++) {
+            for (y = 0; y < height; y++) {
                 chunk[x + y*16 + z*16*16] = 1;
             }
             for (; y < 16; y++) {
@@ -54,12 +46,13 @@ void generateChunk(vec3i p_pos) {
         }
     }
     m_chunks[p_pos] = chunkPtr;
-    bm->end();
+    // bm->end();
 }
 
 void generateChunksAt(vec3i p_pos, u32 p_radius) {
+    auto bm = new tools::Benchmark("Generating chunks");
     i32 radius = scast<i32>(p_radius);
-    tools::say("Generating chunks at", p_pos, "at frame", core::getFrameCount());
+    // tools::say("Generating chunks at", p_pos, "at frame", core::getFrameCount());
 
     std::erase_if(m_chunks, [&](auto& p) {
         auto& [pos, chunk] = p;
@@ -69,8 +62,8 @@ void generateChunksAt(vec3i p_pos, u32 p_radius) {
             abs(pos.z - p_pos.z) > radius
         ) {
             render::deactivateChunk(pos);
-            // tools::say(*chunk);
             if (chunk != nullptr) {
+                tools::say("Deleting chunk at", pos);
                 delete chunk;
                 chunk = nullptr;
             }
@@ -79,18 +72,20 @@ void generateChunksAt(vec3i p_pos, u32 p_radius) {
         return false;
     });
 
-    // #pragma omp parallel for
     for (i32 x = p_pos.x-radius; x <= p_pos.x+radius; x++) {
-        for (i32 y = p_pos.y-radius; y <= p_pos.y+radius; y++) {
+        for (i32 y = max(p_pos.y-radius, 0); y <= max(p_pos.y+radius, 0); y++) {
             for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
                 vec3i pos = {x, y, z};
-                if (m_chunks.contains(pos) == false) {
+                if (not m_chunks.contains(pos)) {
                     generateChunk(pos);
-                    render::activateChunk(pos);
+                    // render::activateChunk(pos);
+                    render::m_chunksToUpdate.push(pos);
                 }
             }
         }
     }
+    tools::say("uhhh", (*m_chunks[{0, 0, 1}])[0]);
+    bm->end();
 }
 
 vec3i getChunkLoc(vec3i p_pos) {

@@ -79,7 +79,8 @@
         "shared_mutex": "cpp",
         "cfenv": "cpp",
         "complex": "cpp",
-        "*.m": "cpp"
+        "*.m": "cpp",
+        "queue": "cpp"
     },
     "makefile.launchConfigurations": [
         {

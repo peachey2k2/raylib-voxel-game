@@ -11,6 +11,9 @@
 #include <unordered_map>
 #include <functional>
 #include <algorithm>
+#include <thread>
+#include <chrono>
+#include <queue>
 
 #include "./types.hpp"
 
@@ -51,6 +54,16 @@ constexpr std::vector<T>::iterator findIn(std::vector<T>& vec, const T& val) {
 template<typename T>
 constexpr bool contains(std::vector<T>& vec, const T& val) {
     return std::find(vec.begin(), vec.end(), val) != vec.end();
+}
+
+template<typename T>
+inline T min(const T& a, const T& b) {
+    return a < b ? a : b;
+}
+
+template<typename T>
+inline T max(const T& a, const T& b) {
+    return a > b ? a : b;
 }
 
 };
@@ -127,29 +140,29 @@ inline std::ostream& operator<<(std::ostream& os, const vec4& vec) {
 
 constexpr mat4 operator*(const mat4& a, const mat4& b) {
     return {
-        a.m0 * b.m0 + a.m1 * b.m4 + a.m2 * b.m8 + a.m3 * b.m12,
-        a.m0 * b.m1 + a.m1 * b.m5 + a.m2 * b.m9 + a.m3 * b.m13,
-        a.m0 * b.m2 + a.m1 * b.m6 + a.m2 * b.m10 + a.m3 * b.m14,
-        a.m0 * b.m3 + a.m1 * b.m7 + a.m2 * b.m11 + a.m3 * b.m15,
-        a.m4 * b.m0 + a.m5 * b.m4 + a.m6 * b.m8 + a.m7 * b.m12,
-        a.m4 * b.m1 + a.m5 * b.m5 + a.m6 * b.m9 + a.m7 * b.m13,
-        a.m4 * b.m2 + a.m5 * b.m6 + a.m6 * b.m10 + a.m7 * b.m14,
-        a.m4 * b.m3 + a.m5 * b.m7 + a.m6 * b.m11 + a.m7 * b.m15,
-        a.m8 * b.m0 + a.m9 * b.m4 + a.m10 * b.m8 + a.m11 * b.m12,
-        a.m8 * b.m1 + a.m9 * b.m5 + a.m10 * b.m9 + a.m11 * b.m13,
-        a.m8 * b.m2 + a.m9 * b.m6 + a.m10 * b.m10 + a.m11 * b.m14,
-        a.m8 * b.m3 + a.m9 * b.m7 + a.m10 * b.m11 + a.m11 * b.m15,
-        a.m12 * b.m0 + a.m13 * b.m4 + a.m14 * b.m8 + a.m15 * b.m12,
-        a.m12 * b.m1 + a.m13 * b.m5 + a.m14 * b.m9 + a.m15 * b.m13,
+        a.m0  * b.m0 + a.m1  * b.m4 + a.m2  * b.m8  + a.m3  * b.m12,
+        a.m0  * b.m1 + a.m1  * b.m5 + a.m2  * b.m9  + a.m3  * b.m13,
+        a.m0  * b.m2 + a.m1  * b.m6 + a.m2  * b.m10 + a.m3  * b.m14,
+        a.m0  * b.m3 + a.m1  * b.m7 + a.m2  * b.m11 + a.m3  * b.m15,
+        a.m4  * b.m0 + a.m5  * b.m4 + a.m6  * b.m8  + a.m7  * b.m12,
+        a.m4  * b.m1 + a.m5  * b.m5 + a.m6  * b.m9  + a.m7  * b.m13,
+        a.m4  * b.m2 + a.m5  * b.m6 + a.m6  * b.m10 + a.m7  * b.m14,
+        a.m4  * b.m3 + a.m5  * b.m7 + a.m6  * b.m11 + a.m7  * b.m15,
+        a.m8  * b.m0 + a.m9  * b.m4 + a.m10 * b.m8  + a.m11 * b.m12,
+        a.m8  * b.m1 + a.m9  * b.m5 + a.m10 * b.m9  + a.m11 * b.m13,
+        a.m8  * b.m2 + a.m9  * b.m6 + a.m10 * b.m10 + a.m11 * b.m14,
+        a.m8  * b.m3 + a.m9  * b.m7 + a.m10 * b.m11 + a.m11 * b.m15,
+        a.m12 * b.m0 + a.m13 * b.m4 + a.m14 * b.m8  + a.m15 * b.m12,
+        a.m12 * b.m1 + a.m13 * b.m5 + a.m14 * b.m9  + a.m15 * b.m13,
         a.m12 * b.m2 + a.m13 * b.m6 + a.m14 * b.m10 + a.m15 * b.m14,
         a.m12 * b.m3 + a.m13 * b.m7 + a.m14 * b.m11 + a.m15 * b.m15
     };
 }
 
 inline std::ostream& operator<<(std::ostream& os, const mat4& mat) {
-    os << '[' << mat.m0 << ", " << mat.m1 << ", " << mat.m2 << ", " << mat.m3 << '\n';
-    os << ' ' << mat.m4 << ", " << mat.m5 << ", " << mat.m6 << ", " << mat.m7 << '\n';
-    os << ' ' << mat.m8 << ", " << mat.m9 << ", " << mat.m10 << ", " << mat.m11 << '\n';
+    os << '[' << mat.m0  << ", " << mat.m1  << ", " << mat.m2  << ", " << mat.m3  << '\n';
+    os << ' ' << mat.m4  << ", " << mat.m5  << ", " << mat.m6  << ", " << mat.m7  << '\n';
+    os << ' ' << mat.m8  << ", " << mat.m9  << ", " << mat.m10 << ", " << mat.m11 << '\n';
     os << ' ' << mat.m12 << ", " << mat.m13 << ", " << mat.m14 << ", " << mat.m15 << ']';
     return os;
 }
