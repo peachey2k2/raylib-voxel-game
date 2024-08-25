@@ -2,6 +2,8 @@
 
 #include "./core.hpp"
 
+#include "utils/tools.hpp"
+
 #include "./blocks.hpp"
 #include "./render.hpp"
 #include "./ticks.hpp"
@@ -40,6 +42,7 @@ void run() {
 
 void renderLoop() {
     initRenderer();
+    world::init(); // temporary, we need to wait for the window before this (for some reason)
     while (not WindowShouldClose()) {
         update();
         BeginDrawing();
@@ -59,7 +62,6 @@ void init() {
     #endif
     initRaylib();
     // m_window = glfwGetCurrentContext();
-    
     loader::loadMods();
     loader::initFunctions();
 
@@ -67,7 +69,8 @@ void init() {
     // blocks::addDefaultBlocks();
     loader::initBlocks();
     
-    world::init();
+    // world::init();
+    m_worldThread = std::thread(world::threadLoop);
 }
 
 void initRaylib() {
@@ -113,7 +116,8 @@ void update() {
     vec3i newChunk = world::getChunkLoc(m_position);
     if (newChunk != m_chunk) {
         m_chunk = newChunk;
-        world::generateChunksAt(m_chunk, RENDER_DISTANCE);
+        // world::generateChunksAt(m_chunk, RENDER_DISTANCE);
+        world::m_chunksToGenerateAt.push(m_chunk);
     }
 
     // ticks::check();
@@ -159,4 +163,9 @@ bool worldShouldTick() {
     return m_tickWorld;
 }
 
+bool terrainShouldGenerate() {
+    return m_generateTerrain;
 }
+
+};
+

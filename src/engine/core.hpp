@@ -16,6 +16,7 @@ inline const u32 RENDER_DISTANCE = 16;
 #ifdef CORE_CPP
 
 bool m_tickWorld = true;
+bool m_generateTerrain = true;
 
 // #include <GLFW/glfw3.h>
 // GLFWwindow* m_window;
@@ -33,8 +34,9 @@ Font m_font;
 
 u64 frameCount = 0;
 
-std::thread m_ticksThread;
-std::thread m_renderThread;
+std::thread m_ticksThread; // for per-tick callbacks
+std::thread m_renderThread; // for rendering and mesh updates
+std::thread m_worldThread; // for world generation
 
 void init();
     void initRaylib();
@@ -53,5 +55,6 @@ void run();
 std::string getAppDir();
 u64 getFrameCount();
 bool worldShouldTick();
+bool terrainShouldGenerate();
 
 };

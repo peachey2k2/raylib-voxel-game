@@ -13,8 +13,33 @@ void init() {
     auto bm = new tools::Benchmark("World init");
     m_noiseMap = new noise::module::Perlin();
     m_chunks.clear();
-    generateChunksAt({0,0,0}, core::RENDER_DISTANCE);
+    queueGenerationsAt({0,0,0}, core::RENDER_DISTANCE);
     bm->end();
+}
+
+void threadLoop() {
+    while (core::terrainShouldGenerate()) {
+        restartLoop:
+        while (not m_chunksToGenerateAt.empty()) {
+            vec3i chunkPos = m_chunksToGenerateAt.front();
+            m_chunksToGenerateAt.pop();
+            queueGenerationsAt(chunkPos, core::RENDER_DISTANCE);
+        }
+        while (not m_chunksToGenerate.empty()) {
+            if (not m_chunksToGenerateAt.empty()) goto restartLoop;
+            vec3i chunkPos = m_chunksToGenerate.front();
+            m_chunksToGenerate.pop();
+            generateChunk(chunkPos);
+        }
+        while (not m_chunksToRemove.empty()) {
+            if (not m_chunksToGenerateAt.empty()) goto restartLoop;
+            vec3i chunkPos = m_chunksToRemove.front();
+            m_chunksToRemove.pop();
+            removeChunk(chunkPos);
+        }
+        i64 sleepTime = 5;
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+    }
 }
 
 void deinit() {
@@ -33,7 +58,7 @@ void generateChunk(vec3i p_pos) {
         for (i32 z = 0; z < 16; z++) {
             i32 height = scast<i32>(m_noiseMap->GetValue((x + p_pos.x*16)/160.0, 0, (z + p_pos.z*16)/160.0) * 160);
             if (height < p_pos.y*16) height = 0;
-            else if (height > (p_pos.y+1)*16) height = 16;
+            else if (height >= (p_pos.y+1)*16) height = 16;
             else {height %= 16;}
             
             i32 y;
@@ -46,10 +71,16 @@ void generateChunk(vec3i p_pos) {
         }
     }
     m_chunks[p_pos] = chunkPtr;
+    render::m_chunksToUpdate.push(p_pos);
     // bm->end();
 }
 
-void generateChunksAt(vec3i p_pos, u32 p_radius) {
+void removeChunk(vec3i p_pos) {
+    // TODO: implement
+    p_pos = p_pos;
+}
+
+void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
     auto bm = new tools::Benchmark("Generating chunks");
     i32 radius = scast<i32>(p_radius);
     // tools::say("Generating chunks at", p_pos, "at frame", core::getFrameCount());
@@ -63,7 +94,6 @@ void generateChunksAt(vec3i p_pos, u32 p_radius) {
         ) {
             render::deactivateChunk(pos);
             if (chunk != nullptr) {
-                tools::say("Deleting chunk at", pos);
                 delete chunk;
                 chunk = nullptr;
             }
@@ -77,14 +107,12 @@ void generateChunksAt(vec3i p_pos, u32 p_radius) {
             for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
                 vec3i pos = {x, y, z};
                 if (not m_chunks.contains(pos)) {
-                    generateChunk(pos);
-                    // render::activateChunk(pos);
-                    render::m_chunksToUpdate.push(pos);
+                    // generateChunk(pos);
+                    m_chunksToGenerate.push(pos);
                 }
             }
         }
     }
-    tools::say("uhhh", (*m_chunks[{0, 0, 1}])[0]);
     bm->end();
 }
 

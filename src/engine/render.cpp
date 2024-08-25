@@ -16,13 +16,6 @@ namespace wmac::render {
 const u32 TILE_SIZE = 32;
 const u32 TILE_PER_ROW = 16;
 
-// const f32 QUAD_VERTICES[6*4] = {
-//     1, 0, 0,
-//     0, 0, 0,
-//     1, 1, 0,
-//     0, 1, 0,
-// };
-
 void initAtlas() {
     m_atlasImage = GenImageColor(TILE_SIZE*TILE_PER_ROW, TILE_SIZE*TILE_PER_ROW, WHITE);
 }
@@ -59,9 +52,6 @@ void update() {
     auto start = std::chrono::high_resolution_clock::now();
     do {
         if (m_chunksToUpdate.empty()) break;
-        if (world::m_chunks.contains({0,0,1})) {
-            tools::say("0,0,1:", (*world::m_chunks[{0,0,1}])[0]);
-        } 
         vec3i chunkPos = m_chunksToUpdate.front();
         m_chunksToUpdate.pop();
         updateChunk(chunkPos);
@@ -108,7 +98,7 @@ void draw() {
 
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectBuffer);
         glBufferData(GL_DRAW_INDIRECT_BUFFER, m_indirectCmds.size() * sizeof(IndirectCommand), m_indirectCmds.data(), GL_DYNAMIC_DRAW);
-        GL_CHECK_ERROR("bind indirect buffer");
+        // GL_CHECK_ERROR("bind indirect buffer");
 
         m_updateAttribs = false;
 
@@ -200,11 +190,12 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
     size = 0;
 
     if (world::m_chunks.contains(p_chunkPos) == false) {
-        tools::say("Chunk at", p_chunkPos, "does not exist");
+        // tools::say("Chunk at", p_chunkPos, "does not exist");
+        return 0; // if it's removed, don't bother
     }
-    auto& chunk = *(world::m_chunks[p_chunkPos]);
+    // TODO: add a signal system for you know what
 
-    tools::say(chunk[0], chunk[1], chunk[2], chunk[3], chunk[4], chunk[5], p_chunkPos);
+    auto& chunk = *(world::m_chunks[p_chunkPos]);
 
     #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
 

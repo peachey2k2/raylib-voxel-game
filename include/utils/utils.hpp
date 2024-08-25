@@ -46,6 +46,11 @@ namespace wmac {
 #define ccast const_cast
 #define rcast reinterpret_cast
 
+#define MAX_8BIT 255
+#define MAX_16BIT 65535
+#define MAX_32BIT 4294967295
+#define MAX_64BIT 18446744073709551615
+
 template<typename T>
 constexpr std::vector<T>::iterator findIn(std::vector<T>& vec, const T& val) {
     return std::find(vec.begin(), vec.end(), val);

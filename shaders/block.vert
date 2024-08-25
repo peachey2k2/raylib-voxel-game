@@ -45,12 +45,20 @@ void main() {
         0
     );
     
-    fragTexCoord = vec2(
-        (gl_VertexID & 1) != 0 ? tex.y : tex.y + 1,
-        (gl_VertexID & 2) != 0 ? tex.x : tex.x + 1
-    );
+    if (normal < 2 || normal == 5) {
+        fragTexCoord = vec2(
+            (gl_VertexID & 1) != 0 ? tex.y : tex.y + 1,
+            (gl_VertexID & 2) != 0 ? tex.x : tex.x + 1
+        );
+        fragSize = size;
+    } else {
+        fragTexCoord = vec2(
+            (gl_VertexID & 2) != 0 ? tex.x : tex.x + 1,
+            (gl_VertexID & 1) != 1 ? tex.y : tex.y + 1
+        );
+        fragSize = size.yx;
+    }
 
-    fragSize = size;
 
     vec3 newVertPos = vec3(vertPos.x*size.x, vertPos.y*size.y, vertPos.z);
     switch (normal) {
