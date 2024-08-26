@@ -50,6 +50,7 @@ bool m_updateAttribs = false;
 
 // inline std::vector<vec3i> m_chunksToUpdate = {};
 inline std::queue<vec3i> m_chunksToUpdate = {};
+inline std::queue<vec3i> m_chunksToRemove = {};
 
 void initAtlas();
 void initMesh();

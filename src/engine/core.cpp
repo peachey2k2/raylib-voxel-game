@@ -33,7 +33,7 @@ void run() {
     init();
     m_renderThread = std::thread(renderLoop);
     m_ticksThread = std::thread(ticks::checkLoop);
-    while (not WindowShouldClose()) {
+    while (m_isRunning) {
         // TODO: add more stuff here
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -54,6 +54,7 @@ void renderLoop() {
         EndDrawing();
         frameCount++;
     }
+    m_isRunning = false;
 }
 
 void init() {
@@ -133,7 +134,6 @@ vec3 getMovementDelta() {
 }
 
 void draw3D() {
-    DrawGrid(20, 1.0f);
     render::update();
 }
 
@@ -145,9 +145,11 @@ void drawUI() {
 
 void deinit() {
     m_tickWorld = false;
-    world::deinit();
+    m_generateTerrain = false;
     m_ticksThread.join();
     m_renderThread.join();
+    m_worldThread.join();
+    world::deinit();
     CloseWindow();
 }
 

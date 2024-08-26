@@ -51,7 +51,7 @@ void loadMod(const char* p_modPath, ModID p_id) {
 
     Mod mod = initFunc(p_id);
     mod.path = modAbsPath.substr(0, modAbsPath.find_last_of('/') + 1);
-    modList.push_back(mod);modList.push_back(mod);
+    modList.push_back(mod);
 }
 
 void initFunctions() {

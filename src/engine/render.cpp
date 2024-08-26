@@ -50,11 +50,19 @@ void initMesh() {
 
 void update() {
     auto start = std::chrono::high_resolution_clock::now();
+    
     do {
         if (m_chunksToUpdate.empty()) break;
         vec3i chunkPos = m_chunksToUpdate.front();
         m_chunksToUpdate.pop();
         updateChunk(chunkPos);
+    } while (std::chrono::duration<f64>(std::chrono::high_resolution_clock::now() - start).count() < 0.005);
+
+    do {
+        if (m_chunksToRemove.empty()) break;
+        vec3i chunkPos = m_chunksToRemove.front();
+        m_chunksToRemove.pop();
+        deactivateChunk(chunkPos);
     } while (std::chrono::duration<f64>(std::chrono::high_resolution_clock::now() - start).count() < 0.005);
 
     if (m_indirectCmds.size() > 0) draw();
@@ -118,7 +126,7 @@ u32 addTextureToAtlas(const char* p_texture) {
     Image image = LoadImage(p_texture);
     ASSERT(image.data != nullptr, "Failed to load image " + std::string(p_texture) + ", is it in the right place?");
     if (image.width != TILE_SIZE || image.height != TILE_SIZE) {
-        tools::say("[WARNING] Image " + std::string(p_texture) + " is not " + std::to_string(TILE_SIZE) + "x" + std::to_string(TILE_SIZE) + " pixels. Resizing.");
+        tools::say("[WARNING] Image", p_texture, "is not", TILE_SIZE, "x", TILE_SIZE, " pixels. Resizing.");
         ImageResize(&image, TILE_SIZE, TILE_SIZE);
     }
     ImageAlphaClear(&image, WHITE, 0.0f);
@@ -126,7 +134,7 @@ u32 addTextureToAtlas(const char* p_texture) {
         &m_atlasImage,
         image,
         {
-            0, 0, 
+            0, 0,
             (f32)image.width, (f32)image.height
         }, {
             (f32)(idx % TILE_PER_ROW) * TILE_SIZE, (f32)(idx / TILE_PER_ROW) * TILE_SIZE,
@@ -191,6 +199,7 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
 
     if (world::m_chunks.contains(p_chunkPos) == false) {
         // tools::say("Chunk at", p_chunkPos, "does not exist");
+        // idk if this works 100% of the time, TODO: make sure it does
         return 0; // if it's removed, don't bother
     }
     // TODO: add a signal system for you know what
@@ -202,12 +211,12 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
     for (d = 0; d < 3; d++) {
         u = (d+1) % 3;
         v = (d+2) % 3;
-        x[0] = 0;
-        x[1] = 0;
-        x[2] = 0;
-        q[0] = 0;
-        q[1] = 0;
-        q[2] = 0;
+        
+        #pragma omp simd
+        for (i = 0; i < 3; i++) {
+            x[i] = 0;
+            q[i] = 0;
+        }
 
         q[d] = 1;
         x[d] = -1;

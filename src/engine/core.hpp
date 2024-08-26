@@ -15,6 +15,7 @@ inline const u32 RENDER_DISTANCE = 16;
 
 #ifdef CORE_CPP
 
+bool m_isRunning = true;
 bool m_tickWorld = true;
 bool m_generateTerrain = true;
 

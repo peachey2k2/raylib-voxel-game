@@ -13,26 +13,28 @@ void init() {
     auto bm = new tools::Benchmark("World init");
     m_noiseMap = new noise::module::Perlin();
     m_chunks.clear();
-    queueGenerationsAt({0,0,0}, core::RENDER_DISTANCE);
+    // queueGenerationsAt({0,0,0}, core::RENDER_DISTANCE);
+    m_chunksToGenerateAt.push({0,0,0});
     bm->end();
 }
 
 void threadLoop() {
     while (core::terrainShouldGenerate()) {
-        restartLoop:
+        // restartLoop:
         while (not m_chunksToGenerateAt.empty()) {
+            if (not (m_chunksToGenerate.empty() && m_chunksToRemove.empty() && render::m_chunksToUpdate.empty())) break;
             vec3i chunkPos = m_chunksToGenerateAt.front();
             m_chunksToGenerateAt.pop();
             queueGenerationsAt(chunkPos, core::RENDER_DISTANCE);
         }
         while (not m_chunksToGenerate.empty()) {
-            if (not m_chunksToGenerateAt.empty()) goto restartLoop;
+            // if (not m_chunksToGenerateAt.empty()) goto restartLoop;
             vec3i chunkPos = m_chunksToGenerate.front();
             m_chunksToGenerate.pop();
             generateChunk(chunkPos);
         }
         while (not m_chunksToRemove.empty()) {
-            if (not m_chunksToGenerateAt.empty()) goto restartLoop;
+            // if (not m_chunksToGenerateAt.empty()) goto restartLoop;
             vec3i chunkPos = m_chunksToRemove.front();
             m_chunksToRemove.pop();
             removeChunk(chunkPos);
@@ -78,6 +80,7 @@ void generateChunk(vec3i p_pos) {
 void removeChunk(vec3i p_pos) {
     // TODO: implement
     p_pos = p_pos;
+    render::m_chunksToRemove.push(p_pos);
 }
 
 void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
@@ -92,7 +95,7 @@ void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
             abs(pos.y - p_pos.y) > radius ||
             abs(pos.z - p_pos.z) > radius
         ) {
-            render::deactivateChunk(pos);
+            m_chunksToRemove.push(pos);           
             if (chunk != nullptr) {
                 delete chunk;
                 chunk = nullptr;
@@ -107,7 +110,6 @@ void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
             for (i32 z = p_pos.z-radius; z <= p_pos.z+radius; z++) {
                 vec3i pos = {x, y, z};
                 if (not m_chunks.contains(pos)) {
-                    // generateChunk(pos);
                     m_chunksToGenerate.push(pos);
                 }
             }
@@ -134,6 +136,7 @@ vec3i getChunkLoc(vec3 p_pos) {
 
 ChunkPos getPosInChunk(vec3i p_pos) {
     return {
+        // not a real error, just vscode tripping. it still compiles.
         scast<u16>((p_pos.x & 0x0F) << 0) |
         scast<u16>((p_pos.y & 0x0F) << 4) |
         scast<u16>((p_pos.z & 0x0F) << 8)
