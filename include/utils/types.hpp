@@ -112,7 +112,7 @@ typedef struct ChunkPos {
 
 // takes up 8 + 2 = 10 bytes
 // actually it takes up 12 bytes because of alignment
-typedef struct BlcokFew {
+typedef struct BlockFew {
     u64 id;
     ChunkPos position;
 } BlockFew;
