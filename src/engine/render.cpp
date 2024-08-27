@@ -50,12 +50,14 @@ void initMesh() {
 
 void update() {
     auto start = std::chrono::high_resolution_clock::now();
-    
+
+    int i = 0;
     do {
         if (m_chunksToUpdate.empty()) break;
         vec3i chunkPos = m_chunksToUpdate.front();
         m_chunksToUpdate.pop();
         updateChunk(chunkPos);
+        i++;
     } while (std::chrono::duration<f64>(std::chrono::high_resolution_clock::now() - start).count() < 0.005);
 
     do {
@@ -109,13 +111,11 @@ void draw() {
         // GL_CHECK_ERROR("bind indirect buffer");
 
         m_updateAttribs = false;
-
-        // tools::say(m_indirectCmds.size());
+        tools::say(m_indirectCmds.size(), m_attribArraySize);
     }
 
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
     GL_CHECK_ERROR("draw");
-    // tools::say(m_indirectCmds.size(), m_attribArraySize);
 
     glBindVertexArray(0);
 }
@@ -198,13 +198,16 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
     size = 0;
 
     if (world::m_chunks.contains(p_chunkPos) == false) {
-        // tools::say("Chunk at", p_chunkPos, "does not exist");
+        tools::say("Chunk at", p_chunkPos, "does not exist");
         // idk if this works 100% of the time, TODO: make sure it does
         return 0; // if it's removed, don't bother
     }
+    // auto bm = new tools::Benchmark("greedy mesher");
     // TODO: add a signal system for you know what
 
     auto& chunk = *(world::m_chunks[p_chunkPos]);
+
+    // TODO: make this work wit the new chunk layout
 
     #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
 
@@ -316,10 +319,13 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
         }
     }
     p_data = tmpVertBuffer;
+
+    // bm->end();
     return size;
 }
 
 void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
+    // auto bm = new tools::Benchmark("adding the mesh");
     vec4i ssboData = { p_chunkPos.x, p_chunkPos.y, p_chunkPos.z, 0 };
     IndirectCommand* cmd;
 
@@ -355,6 +361,8 @@ void editMesh(vec3i p_chunkPos, u64* p_data, u32 p_size) {
     // despacito
     u64* dataLoc = m_attribArray.data() + cmd->baseInstance;
     std::memcpy(dataLoc, p_data, p_size * sizeof(u64));
+
+    // bm->end();
 }
 
 u32 createCommand(IndirectCommand* &p_cmd, u32 p_size) {

@@ -51,10 +51,9 @@ void deinit() {
     }
 }
 
+ChunkLayout chunkLayout; // used for chunk gen, easier to work with.
 void generateChunk(vec3i p_pos) {
     // auto bm = new tools::Benchmark("Generating chunk");
-    Chunk* chunkPtr = rcast<Chunk*>(new Chunk());
-    Chunk& chunk = *chunkPtr;
     #pragma omp parallel for
     for (i32 x = 0; x < 16; x++) {
         for (i32 z = 0; z < 16; z++) {
@@ -65,16 +64,69 @@ void generateChunk(vec3i p_pos) {
             
             i32 y;
             for (y = 0; y < height; y++) {
-                chunk[x + y*16 + z*16*16] = 1;
+                chunkLayout[x + y*16 + z*16*16] = 1;
             }
             for (; y < 16; y++) {
-                chunk[x + y*16 + z*16*16] = 0;
+                chunkLayout[x + y*16 + z*16*16] = 0;
             }
         }
     }
-    m_chunks[p_pos] = chunkPtr;
+    m_chunks[p_pos] = constructChunk(chunkLayout);;
     render::m_chunksToUpdate.push(p_pos);
     // bm->end();
+}
+
+Chunk* constructChunk(ChunkLayout& p_layout) {
+    static std::unordered_map<u64, u32> blockCounts = {};
+    Chunk* chunk;
+    if (m_chunkPool.empty()) {
+        chunk = new Chunk();
+    } else {
+        chunk = &m_chunkPool.back();
+        m_chunkPool.pop_back();
+    }
+
+    blockCounts.clear();
+    for (auto& block : p_layout) {
+        if (blockCounts.contains(block)) {
+            blockCounts[block]++;
+        } else {
+            blockCounts[block] = 1;
+        }
+    }
+
+    for (auto& [id, count] : blockCounts) {
+        if (count < 20) {
+            for (u16 i = 0; i < 16*16*16; i++) {
+                if (p_layout[i] == id) {
+                    chunk->few.push_front(BlockFew{id, i});
+                }
+            }
+        } else {
+            BlockMany many;
+            #pragma omp simd
+            for (u16 i = 0; i < 16*16; i++) {
+                many.map[i] = 
+                    (p_layout[i*16] == id) << 0 |
+                    (p_layout[i*16+1] == id) << 1 |
+                    (p_layout[i*16+2] == id) << 2 |
+                    (p_layout[i*16+3] == id) << 3 |
+                    (p_layout[i*16+4] == id) << 4 |
+                    (p_layout[i*16+5] == id) << 5 |
+                    (p_layout[i*16+6] == id) << 6 |
+                    (p_layout[i*16+7] == id) << 7 |
+                    (p_layout[i*16+8] == id) << 8 |
+                    (p_layout[i*16+9] == id) << 9 |
+                    (p_layout[i*16+10] == id) << 10 |
+                    (p_layout[i*16+11] == id) << 11 |
+                    (p_layout[i*16+12] == id) << 12 |
+                    (p_layout[i*16+13] == id) << 13 |
+                    (p_layout[i*16+14] == id) << 14 |
+                    (p_layout[i*16+15] == id) << 15;
+            }
+        }
+    }
+    return chunk;
 }
 
 void removeChunk(vec3i p_pos) {
@@ -145,6 +197,8 @@ ChunkPos getPosInChunk(vec3i p_pos) {
 
 void changeBlock(vec3i p_pos, u64 p_id) {
     vec3i chunkLoc = getChunkLoc(p_pos);
+
+    static bool removed = false, added = false;
     
     if (m_chunks.contains(chunkLoc) == false) {
         tools::say("--Chunk not found");
@@ -154,7 +208,30 @@ void changeBlock(vec3i p_pos, u64 p_id) {
     ChunkPos posInChunk = getPosInChunk(p_pos);
 
     Chunk& chunk = *m_chunks[chunkLoc];
-    chunk[posInChunk.xyz] = p_id;
+
+    for (auto& many : chunk.many) {
+        if (not removed && (many.map[posInChunk.xyz >> 4] & (1 << posInChunk.x()))) {
+            many.map[posInChunk.xyz >> 4] ^= (1 << posInChunk.x());
+            removed = true;
+        }
+        if (not added && many.id == p_id) {
+            many.map[posInChunk.xyz >> 4] |= 1 << posInChunk.x();
+            added = true;
+        }
+        if (removed && added) break;
+    }
+
+    for (auto& few : chunk.few) {
+        if (not removed && (few.position == posInChunk)) {
+            chunk.few.remove(few);
+            removed = true;
+        }
+        if (not added && few.position == posInChunk) {
+            few.id = p_id;
+            added = true;
+        }
+        if (removed && added) break;
+    }
 }
 
 

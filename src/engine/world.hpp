@@ -12,6 +12,8 @@ inline std::unordered_map<vec3i, Chunk*> m_chunks;
 
 noise::module::Perlin* m_noiseMap = nullptr;
 
+std::vector<Chunk> m_chunkPool = {};
+
 #endif
 
 inline std::queue<vec3i> m_chunksToGenerate = {};
@@ -23,6 +25,7 @@ void threadLoop();
 void deinit();
 
 void generateChunk(vec3i p_pos);
+Chunk* constructChunk(ChunkLayout& p_layout);
 void removeChunk(vec3i p_pos);
 void queueGenerationsAt(vec3i p_pos, u32 p_radius);
 

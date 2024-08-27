@@ -110,25 +110,27 @@ typedef struct ChunkPos {
 // these could be a more optimized alternative
 // but i cba to implement everything for them
 
-// // takes up 8 + 2 = 10 bytes
-// typedef struct BlcokFew {
-//     u64 id;
-//     ChunkPos position;
-// } BlockFew;
+// takes up 8 + 2 = 10 bytes
+// actually it takes up 12 bytes because of alignment
+typedef struct BlcokFew {
+    u64 id;
+    ChunkPos position;
+} BlockFew;
 
-// // takes up 8 + 16*16*2 = 520 bytes
-// typedef struct BlockMany {
-//     u64 id;
-//     u16 map[16*16];
-// } BlockMany;
+// takes up 8 + 16*16*2 = 520 bytes
+typedef struct BlockMany {
+    u64 id;
+    u16 map[16*16];
+} BlockMany;
 
-// typedef struct Chunk {
-//     std::vector<BlockFew> few;
-//     std::vector<BlockMany> many;
-// } Chunk;
+// 96 bytes
+typedef struct Chunk {
+    std::forward_list<BlockFew> few;
+    std::forward_list<BlockMany> many;
+} Chunk;
 
 // takes up 16*16*16*8 = 32KB
-typedef u64 Chunk[16*16*16];
+typedef u64 ChunkLayout[16*16*16];
 
 // typedef struct RenderChunk {
 //     Chunk* chunk;

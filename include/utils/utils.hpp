@@ -14,6 +14,8 @@
 #include <thread>
 #include <chrono>
 #include <queue>
+#include <list>
+#include <forward_list>
 
 #include "./types.hpp"
 
@@ -257,19 +259,23 @@ inline std::ostream& operator<<(std::ostream& os, const vec4i& vec) {
 
 
 
-inline std::ostream& operator<<(std::ostream& os, const Chunk& chunk) {
-    os << "Chunk:\n";
-    for (i32 y = 0; y < 16; y++) {
-        os << "-----[ Layer " << y << " ]-----\n";
-        for (i32 z = 0; z < 16; z++) {
-            for (i32 x = 0; x < 16; x++) {
-                os << chunk[x + y*16 + z*16*16] << ' ';
-            }
-            os << '\n';
-        }
-        os << '\n';
-    }
-    return os;
+// inline std::ostream& operator<<(std::ostream& os, const Chunk& chunk) {
+//     os << "Chunk:\n";
+//     for (i32 y = 0; y < 16; y++) {
+//         os << "-----[ Layer " << y << " ]-----\n";
+//         for (i32 z = 0; z < 16; z++) {
+//             for (i32 x = 0; x < 16; x++) {
+//                 os << chunk[x + y*16 + z*16*16] << ' ';
+//             }
+//             os << '\n';
+//         }
+//         os << '\n';
+//     }
+//     return os;
+// }
+
+inline bool operator==(const ChunkPos& a, const ChunkPos& b) {
+    return a.xyz == b.xyz;
 }
 
 inline i32 pow(i32 base, i32 exp) {
