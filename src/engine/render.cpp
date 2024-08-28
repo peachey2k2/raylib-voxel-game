@@ -111,7 +111,7 @@ void draw() {
         // GL_CHECK_ERROR("bind indirect buffer");
 
         m_updateAttribs = false;
-        tools::say(m_indirectCmds.size(), m_attribArraySize);
+        // tools::say(m_indirectCmds.size(), m_attribArraySize);
     }
 
     glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, nullptr, m_indirectCmds.size(), 0);
@@ -191,7 +191,7 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
     static i32 i, j, k, l, w, h, u, v, x[3], q[3], d, w2, h2;
     static u32 n, size;
     static u8 normal;
-    static bool mask[16*16], flip[16*16];
+    static bool mask[16*16], flip[16*16], isSmall;
     static vec3i pos;
     static u64 vertData;
 
@@ -203,13 +203,22 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
         return 0; // if it's removed, don't bother
     }
     // auto bm = new tools::Benchmark("greedy mesher");
+    
     // TODO: add a signal system for you know what
+    // i wonder what i meant by the above comment, seriously i forgot
 
-    auto& chunk = *(world::m_chunks[p_chunkPos]);
+    auto& chunk = world::m_chunks[p_chunkPos];
+    void* chunkData;
+    if (chunk.small != nullptr) {
+        isSmall = true;
+        chunkData = &(chunk.small->data);
+    } else {
+        isSmall = false;
+        chunkData = &(chunk.large->data);
+    }
 
-    // TODO: make this work wit the new chunk layout
-
-    #define BLOCK(x, y, z) chunk[16*16*(z) + 16*(y) + (x)]
+    #define S_BLOCK(x, y, z) (*rcast<u8(*)[]>(chunkData))[16*16*(z) + 16*(y) + (x)]
+    #define L_BLOCK(x, y, z) (*rcast<u64(*)[]>(chunkData))[16*16*(z) + 16*(y) + (x)]
 
     for (d = 0; d < 3; d++) {
         u = (d+1) % 3;
@@ -228,14 +237,27 @@ u32 calculateVertexData(vec3i p_chunkPos, u64* &p_data) {
 
             // cook le' mask
             n = 0;
-            for (x[v] = 0; x[v] < 16; x[v]++) {
-                for (x[u] = 0; x[u] < 16; x[u]++) {
-                    bool a = (x[d] >= 0) ? BLOCK(x[0],        x[1],        x[2]       ) > 0 : false;
-                    bool b = (x[d] < 15) ? BLOCK(x[0] + q[0], x[1] + q[1], x[2] + q[2]) > 0 : false;
+            if (isSmall) {
+                for (x[v] = 0; x[v] < 16; x[v]++) {
+                    for (x[u] = 0; x[u] < 16; x[u]++) {
+                        bool a = (x[d] >= 0) ? S_BLOCK(x[0],        x[1],        x[2]       ) > 0 : false;
+                        bool b = (x[d] < 15) ? S_BLOCK(x[0] + q[0], x[1] + q[1], x[2] + q[2]) > 0 : false;
 
-                    mask[n] = a != b;
-                    flip[n] = b;
-                    n++;
+                        mask[n] = a != b;
+                        flip[n] = b;
+                        n++;
+                    }
+                }
+            } else {
+                for (x[v] = 0; x[v] < 16; x[v]++) {
+                    for (x[u] = 0; x[u] < 16; x[u]++) {
+                        bool a = (x[d] >= 0) ? L_BLOCK(x[0],        x[1],        x[2]       ) > 0 : false;
+                        bool b = (x[d] < 15) ? L_BLOCK(x[0] + q[0], x[1] + q[1], x[2] + q[2]) > 0 : false;
+
+                        mask[n] = a != b;
+                        flip[n] = b;
+                        n++;
+                    }
                 }
             }
 

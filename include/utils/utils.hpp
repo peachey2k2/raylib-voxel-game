@@ -16,6 +16,7 @@
 #include <queue>
 #include <list>
 #include <forward_list>
+#include <bit>
 
 #include "./types.hpp"
 
@@ -53,9 +54,11 @@ namespace wmac {
 #define MAX_32BIT 4294967295
 #define MAX_64BIT 18446744073709551615
 
+#define NOT_FOUND MAX_32BIT
 template<typename T>
-constexpr std::vector<T>::iterator findIn(std::vector<T>& vec, const T& val) {
-    return std::find(vec.begin(), vec.end(), val);
+constexpr u32 findIn(std::vector<T>& vec, const T& val) {
+    auto it = std::find(vec.begin(), vec.end(), val);
+    return it == vec.end() ? NOT_FOUND : it - vec.begin();
 }
 
 template<typename T>

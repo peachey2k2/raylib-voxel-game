@@ -47,7 +47,8 @@ void threadLoop() {
 void deinit() {
     delete m_noiseMap;
     for (auto& [pos, chunk] : m_chunks) {
-        delete chunk;
+        delete chunk.small;
+        delete chunk.large;
     }
 }
 
@@ -76,15 +77,9 @@ void generateChunk(vec3i p_pos) {
     // bm->end();
 }
 
-Chunk* constructChunk(ChunkLayout& p_layout) {
+Chunk constructChunk(ChunkLayout& p_layout) {
     static std::unordered_map<u64, u32> blockCounts = {};
-    Chunk* chunk;
-    if (m_chunkPool.empty()) {
-        chunk = new Chunk();
-    } else {
-        chunk = &m_chunkPool.back();
-        m_chunkPool.pop_back();
-    }
+    Chunk chunk;
 
     blockCounts.clear();
     for (auto& block : p_layout) {
@@ -95,35 +90,42 @@ Chunk* constructChunk(ChunkLayout& p_layout) {
         }
     }
 
-    for (auto& [id, count] : blockCounts) {
-        if (count < 20) {
-            for (u16 i = 0; i < 16*16*16; i++) {
-                if (p_layout[i] == id) {
-                    chunk->few.push_front(BlockFew{id, i});
-                }
-            }
+    if (blockCounts.size() > MAX_8BIT) {
+        if (m_largeChunkPool.empty()) {
+            chunk.large = new LargeChunk();
         } else {
-            BlockMany many;
-            #pragma omp simd
-            for (u16 i = 0; i < 16*16; i++) {
-                many.map[i] = 
-                    (p_layout[i*16] == id) << 0 |
-                    (p_layout[i*16+1] == id) << 1 |
-                    (p_layout[i*16+2] == id) << 2 |
-                    (p_layout[i*16+3] == id) << 3 |
-                    (p_layout[i*16+4] == id) << 4 |
-                    (p_layout[i*16+5] == id) << 5 |
-                    (p_layout[i*16+6] == id) << 6 |
-                    (p_layout[i*16+7] == id) << 7 |
-                    (p_layout[i*16+8] == id) << 8 |
-                    (p_layout[i*16+9] == id) << 9 |
-                    (p_layout[i*16+10] == id) << 10 |
-                    (p_layout[i*16+11] == id) << 11 |
-                    (p_layout[i*16+12] == id) << 12 |
-                    (p_layout[i*16+13] == id) << 13 |
-                    (p_layout[i*16+14] == id) << 14 |
-                    (p_layout[i*16+15] == id) << 15;
-            }
+            chunk.large = m_largeChunkPool.back();
+            m_largeChunkPool.pop_back();
+        }
+        chunk.small = nullptr;
+
+        std::memcpy(chunk.large->data, p_layout, sizeof(u64) * 16*16*16);
+        return chunk;
+    }
+
+    if (m_smallChunkPool.empty()) {
+        chunk.small = new SmallChunk();
+    } else {
+        chunk.small = m_smallChunkPool.back();
+        m_smallChunkPool.pop_back();
+    }
+    chunk.large = nullptr;
+
+    u32 i = 1;
+    for (auto& [id, count] : blockCounts) {
+        // chunk.small->blocks[i++] = id;
+        chunk.small->blocks.push_back(id);
+        // small->blocks is only a 1-way conversion, so we do this instead
+        count = i++; // keep in mind this starts from 1, 0 is reserved for air.
+    }
+
+    #pragma omp simd
+    for (i = 0; i < 16*16*16; i++) {
+        u32 idx = p_layout[i];
+        if (idx == 0) {
+            chunk.small->data[i] = 0;
+        } else {
+            chunk.small->data[i] = blockCounts[idx];
         }
     }
     return chunk;
@@ -132,7 +134,6 @@ Chunk* constructChunk(ChunkLayout& p_layout) {
 void removeChunk(vec3i p_pos) {
     // TODO: implement
     p_pos = p_pos;
-    render::m_chunksToRemove.push(p_pos);
 }
 
 void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
@@ -140,7 +141,7 @@ void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
     i32 radius = scast<i32>(p_radius);
     // tools::say("Generating chunks at", p_pos, "at frame", core::getFrameCount());
 
-    std::erase_if(m_chunks, [&](auto& p) {
+    std::erase_if(m_chunks, [&](std::pair<const vec3i, Chunk>& p) {
         auto& [pos, chunk] = p;
         if (
             abs(pos.x - p_pos.x) > radius ||
@@ -148,10 +149,10 @@ void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
             abs(pos.z - p_pos.z) > radius
         ) {
             m_chunksToRemove.push(pos);           
-            if (chunk != nullptr) {
-                delete chunk;
-                chunk = nullptr;
-            }
+            // if (chunk != nullptr) {
+            //     delete chunk;
+            //     chunk = nullptr;
+            // }
             return true;
         }
         return false;
@@ -198,8 +199,6 @@ ChunkPos getPosInChunk(vec3i p_pos) {
 void changeBlock(vec3i p_pos, u64 p_id) {
     vec3i chunkLoc = getChunkLoc(p_pos);
 
-    static bool removed = false, added = false;
-    
     if (m_chunks.contains(chunkLoc) == false) {
         tools::say("--Chunk not found");
         return;
@@ -207,30 +206,38 @@ void changeBlock(vec3i p_pos, u64 p_id) {
 
     ChunkPos posInChunk = getPosInChunk(p_pos);
 
-    Chunk& chunk = *m_chunks[chunkLoc];
+    Chunk& chunk = m_chunks[chunkLoc];
 
-    for (auto& many : chunk.many) {
-        if (not removed && (many.map[posInChunk.xyz >> 4] & (1 << posInChunk.x()))) {
-            many.map[posInChunk.xyz >> 4] ^= (1 << posInChunk.x());
-            removed = true;
-        }
-        if (not added && many.id == p_id) {
-            many.map[posInChunk.xyz >> 4] |= 1 << posInChunk.x();
-            added = true;
-        }
-        if (removed && added) break;
-    }
+    if (chunk.large != nullptr) {
+        chunk.large->data[posInChunk.xyz] = p_id;
+    } else {
+        auto& [data, blocks] = *chunk.small;
+        u32 idx = findIn(blocks, p_id);
 
-    for (auto& few : chunk.few) {
-        if (not removed && (few.position == posInChunk)) {
-            chunk.few.remove(few);
-            removed = true;
+        if (idx != NOT_FOUND) {
+            data[posInChunk.xyz] = idx+1;
+        } else {
+            if (blocks.size() >= MAX_8BIT) {
+                if (m_largeChunkPool.empty()) {
+                    chunk.large = new LargeChunk();
+                } else {
+                    chunk.large = m_largeChunkPool.back();
+                    m_largeChunkPool.pop_back();
+                }
+                
+                auto& [oldData, oldBlocks] = *chunk.small;
+                auto& newData = chunk.large->data;
+                #pragma omp simd
+                for (i32 i = 0; i < 16*16*16; i++) {
+                    newData[i] = oldBlocks[oldData[i]-1];
+                }
+
+                m_smallChunkPool.push_back(chunk.small);
+                chunk.small = nullptr;
+            } 
+            blocks.push_back(p_id);
+            data[posInChunk.xyz] = blocks.size();
         }
-        if (not added && few.position == posInChunk) {
-            few.id = p_id;
-            added = true;
-        }
-        if (removed && added) break;
     }
 }
 

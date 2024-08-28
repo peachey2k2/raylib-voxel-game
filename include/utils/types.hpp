@@ -107,35 +107,25 @@ typedef struct ChunkPos {
     constexpr void z(u8 z) { xyz = (xyz & 0xF0FF) | (z << 8); }
 } ChunkPos;
 
-// these could be a more optimized alternative
-// but i cba to implement everything for them
 
-// takes up 8 + 2 = 10 bytes
-// actually it takes up 12 bytes because of alignment
-typedef struct BlockFew {
-    u64 id;
-    ChunkPos position;
-} BlockFew;
+// takes up 16*16*16 + 256 * 8 = 4KB + 2KB = 6KB for worst case
+typedef struct SmallChunk {
+    u8 data[16*16*16];
+    std::vector<u64> blocks;
+} SmallChunk;
 
-// takes up 8 + 16*16*2 = 520 bytes
-typedef struct BlockMany {
-    u64 id;
-    u16 map[16*16];
-} BlockMany;
+// takes up 16*16*16*8 = 32KB, used for when there are more than 256 unique blocks
+typedef struct LargeChunk {
+    u64 data[16*16*16];
+} LargeChunk;
 
-// 96 bytes
 typedef struct Chunk {
-    std::forward_list<BlockFew> few;
-    std::forward_list<BlockMany> many;
+    SmallChunk* small;
+    LargeChunk* large;
 } Chunk;
 
-// takes up 16*16*16*8 = 32KB
+// easier to work with for generation
 typedef u64 ChunkLayout[16*16*16];
-
-// typedef struct RenderChunk {
-//     Chunk* chunk;
-//     Mesh* mesh;
-// } RenderChunk;
 
 WMAC_API typedef struct ApiFunctions {
     void (*blocks__add)(InitBlockInfo &p_block);
