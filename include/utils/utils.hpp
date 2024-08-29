@@ -76,6 +76,50 @@ inline T max(const T& a, const T& b) {
     return a > b ? a : b;
 }
 
+template<typename... Args>
+class Signal {
+
+public:
+    using Slot = std::function<Args...>;
+
+private:
+    std::vector<Slot> m_slots;
+    static std::unordered_map<std::string, Signal<Args...>*> m_signals;
+
+public:
+
+    static Signal* create(const std::string& name) {
+        if (m_signals.find(name) != m_signals.end()) {
+            return m_signals[name];
+        }
+        m_signals[name] = new Signal();
+        return m_signals[name];
+    }
+
+    static Signal* get(const std::string& name) {
+        if (m_signals.find(name) == m_signals.end()) {
+            return nullptr;
+        }
+        return m_signals[name];
+    }
+
+    void connect(Slot slot) {
+        m_slots.push_back(slot);
+    }
+
+    void disconnect(Slot slot) {
+        m_slots.erase(std::remove(m_slots.begin(), m_slots.end(), slot), m_slots.end());
+    }
+
+    void emit(Args... args) {
+        for (auto& slot : m_slots) {
+            slot(args...);
+        }
+    }
+
+};
+    
+
 };
 
 inline const mat4 IDENTITY_MATRIX = {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/utils.hpp"
+#include "utils/tools.hpp"
 
 namespace wmac::core {
 
@@ -35,7 +35,7 @@ Font m_font;
 
 u64 frameCount = 0;
 
-std::thread m_ticksThread; // for per-tick callbacks
+std::thread m_ticksThread; // for per-tick callbacks and physics
 std::thread m_renderThread; // for rendering and mesh updates
 std::thread m_worldThread; // for world generation
 

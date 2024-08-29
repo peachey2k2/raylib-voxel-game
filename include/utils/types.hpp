@@ -73,18 +73,30 @@ typedef struct vec4i {
     i32 w;
 } vec4i;
 
+typedef struct vec2d {
+    f64 x;
+    f64 y;
+} vec2d;
+
+typedef struct vec3d {
+    f64 x;
+    f64 y;
+    f64 z;
+} vec3d;
+
+typedef struct vec4d {
+    f64 x;
+    f64 y;
+    f64 z;
+    f64 w;
+} vec4d;
+
 typedef struct IndirectCommand {
     u32 count; // indices to render (4 for quad)
     u32 instanceCount; // data size
     u32 first; // data start (0 for our case)
     u32 baseInstance; // base vertex attribute index
 } IndirectCommand;
-
-typedef struct InitBlockInfo {
-    const char* name;
-    const char* tooltip;
-    const char* texture;
-} InitBlockInfo;
 
 typedef struct Block {
     u64 itemId;
@@ -107,7 +119,6 @@ typedef struct ChunkPos {
     constexpr void z(u8 z) { xyz = (xyz & 0xF0FF) | (z << 8); }
 } ChunkPos;
 
-
 // takes up 16*16*16 + 256 * 8 = 4KB + 2KB = 6KB for worst case
 typedef struct SmallChunk {
     u8 data[16*16*16];
@@ -127,8 +138,19 @@ typedef struct Chunk {
 // easier to work with for generation
 typedef u64 ChunkLayout[16*16*16];
 
+WMAC_API typedef struct InitBlockInfo {
+    const char* name;
+    const char* tooltip;
+    const char* texture;
+} InitBlockInfo;
+
+WMAC_API typedef struct InitEntityInfo {
+    
+}
+
 WMAC_API typedef struct ApiFunctions {
     void (*blocks__add)(InitBlockInfo &p_block);
+    void (*entities__add)(InitEntityInfo &p_entity);
 } ApiFunctions;
 
 WMAC_API typedef struct ModInfo {

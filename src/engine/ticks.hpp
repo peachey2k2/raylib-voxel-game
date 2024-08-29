@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/utils.hpp"
+#include "utils/tools.hpp"
 
 namespace wmac {
 
@@ -13,7 +13,7 @@ extern const f64 TICK_RATE;
 #ifdef TICKS_CPP
 
 f64 m_tickDesync = 0.0;
-std::vector<void (*)()> m_tickCallbacks;
+// std::vector<void (*)()> m_tickCallbacks;
 
 #endif
 
