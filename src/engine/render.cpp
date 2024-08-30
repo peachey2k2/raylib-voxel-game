@@ -86,7 +86,6 @@ void draw() {
     mat4 mvp = model * view * proj;
     glUniformMatrix4fv(m_uniformMVP, 1, GL_FALSE, rcast<f32*>(&mvp));
     // GL_CHECK_ERROR("set mvp");
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_atlas.id);
     glUniform1i(m_uniformSampler, 0);

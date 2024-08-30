@@ -41,6 +41,7 @@ std::thread m_worldThread; // for world generation
 
 void init();
     void initRaylib();
+    void doChecks();
 void renderLoop();
     void initRenderer();
     void draw3D();
@@ -49,9 +50,15 @@ void update();
     vec3 getMovementDelta();
 void deinit();
 
+void initItems();
+void initBlocks();
+void initEntities();
+
 #endif
 
 void run();
+
+void loadCoreMod();
 
 std::string getAppDir();
 u64 getFrameCount();

@@ -6,7 +6,7 @@ namespace wmac {
 
 class Entity {
 
-private:
+protected:
     bool m_active = true;
     vec3d m_pos;
 

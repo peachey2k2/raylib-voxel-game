@@ -9,6 +9,9 @@
 #include "./ticks.hpp"
 #include "./world.hpp"
 
+#include "gl/glad.h"
+#include <GL/gl.h>
+
 #include "mod-loader/loader.hpp"
 
 namespace wmac::core {
@@ -42,6 +45,7 @@ void run() {
 
 void renderLoop() {
     initRenderer();
+    doChecks();
     world::init(); // temporary, we need to wait for the window before this (for some reason)
     while (not WindowShouldClose()) {
         update();
@@ -98,6 +102,21 @@ void initRaylib() {
     0);
 }
 
+const std::string CHECK = "[✓]";
+const std::string CROSS = "[✗]";
+void doChecks() {
+    i32 temp_i32;
+    bool res;
+
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &temp_i32);
+    res = temp_i32 >= 4096;
+    tools::say(res ? CHECK : CROSS, "Max texture size:", temp_i32, "(needs to be at least 4096)");
+    if (not res) {
+        tools::say("Please update your graphics drivers.");
+        exit(1);
+    }
+}
+
 void initRenderer() {
     InitWindow(WIDTH, HEIGHT, TITLE);
     
@@ -107,6 +126,39 @@ void initRenderer() {
     SetTargetFPS(FPS);
     #endif
     render::initMesh();
+}
+
+void loadCoreMod() {
+    ModInfo coreModInfo = {
+        .name = "core",
+        .version = "0.1",
+        .author = "peachey2k2",
+        .description = "The core mod",
+    };
+    Mod coreMod = {
+        .info = coreModInfo,
+        .initFunctions = nullptr,
+        .initItems = initItems,
+        .initBlocks = initBlocks,
+        .initEntities = initEntities,
+    };
+}
+
+void initItems() {
+
+}
+
+void initBlocks() {
+    InitBlockInfo block {
+        .name = "grass",
+        .tooltip = "Grass",
+        .texture = "res/blocks/grass.png",
+    };
+    wmac::blocks::add(block);
+}
+
+void initEntities() {
+
 }
 
 void update() {

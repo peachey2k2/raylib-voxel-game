@@ -10,9 +10,11 @@ namespace wmac::entities {
 
 #endif
 
-inline std::vector<Entity*> m_entities;
+inline std::vector<Entity*> m_activeEntities;
+inline std::vector<Entity*> m_inactiveEntities;
 
 void init();
 void add(InitEntityInfo &p_entity);
+// void spawnRandomly(EntityID &p_id);
 
 }

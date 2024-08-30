@@ -48,7 +48,12 @@ typedef double f64;
 typedef __SIZE_TYPE__ size_t;
 #endif
 
-typedef u32 ModID;
+WMAC_API typedef u32 ModID;
+WMAC_API typedef u64 ItemID;
+WMAC_API typedef u32 EntityID;
+WMAC_API typedef u32 BlockID;
+
+WMAC_API typedef u64 EntityToken;
 
 typedef Vector2 vec2;
 typedef Vector3 vec3;
@@ -138,15 +143,48 @@ typedef struct Chunk {
 // easier to work with for generation
 typedef u64 ChunkLayout[16*16*16];
 
+WMAC_API typedef struct MobStats {
+    f64 health;
+    f64 speed;
+    f64 attack;
+    f64 defense;
+    f64 attackSpeed;
+    f64 attackRange;
+} MobStats;
+
+WMAC_API typedef struct InitItemInfo {
+    const char* name;
+    const char* tooltip;
+    const char* texture;
+    const char* model;
+} InitItemInfo;
+
 WMAC_API typedef struct InitBlockInfo {
     const char* name;
     const char* tooltip;
     const char* texture;
+    const char* model;
 } InitBlockInfo;
 
 WMAC_API typedef struct InitEntityInfo {
-    
-}
+    const char* name;
+    const char* texture;
+    const char* model;
+    const void (*spawnCallback)(EntityToken &p_token);
+    MobStats stats;
+} InitEntityInfo;
+
+WMAC_API typedef struct EntityData {
+    vec3d position;
+    vec3d velocity;
+    MobStats stats;
+} EntityData;
+
+WMAC_API typedef struct PlayerData {
+    vec3d position;
+    vec3d velocity;
+    MobStats stats;
+} PlayerData;
 
 WMAC_API typedef struct ApiFunctions {
     void (*blocks__add)(InitBlockInfo &p_block);
@@ -162,7 +200,7 @@ WMAC_API typedef struct ModInfo {
     const char* source;
     const char* dependencies;
     const char* conflicts;
-    const int loadPriority;
+    const i32 loadPriority;
 } ModInfo;
 
 WMAC_API typedef struct Mod {
@@ -171,5 +209,6 @@ WMAC_API typedef struct Mod {
     void (*initFunctions)(ApiFunctions &p_api);
     void (*initItems)();
     void (*initBlocks)();
+    void (*initEntities)();
 } Mod;
 
