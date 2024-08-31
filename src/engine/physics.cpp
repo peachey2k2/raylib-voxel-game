@@ -1,6 +1,8 @@
 #define PHYSICS_CPP
 #include "./physics.hpp"
 
+#include "engine/entities.hpp"
+
 namespace wmac::physics {
 
 void init() {
@@ -18,7 +20,9 @@ void accelerate() {
 }
 
 void move() {
-
+    for (auto& entity : entities::m_activeEntities) {
+        
+    }
 }
 
 void worldCollision() {

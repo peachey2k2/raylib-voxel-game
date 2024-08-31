@@ -47,7 +47,7 @@ void renderLoop();
     void draw3D();
     void drawUI();
 void update();
-    vec3 getMovementDelta();
+    vec3d getMovementDelta();
 void deinit();
 
 void initItems();

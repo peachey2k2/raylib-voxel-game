@@ -17,6 +17,7 @@
 #include <list>
 #include <forward_list>
 #include <bit>
+#include <mutex>
 
 #include "./types.hpp"
 
@@ -221,14 +222,6 @@ inline std::ostream& operator<<(std::ostream& os, const mat4& mat) {
     return os;
 }
 
-constexpr vec3 VEC3(const vec2& a, f32 w) {
-    return { a.x, a.y, w };
-}
-
-constexpr vec4 VEC4(const vec3& a, f32 w) {
-    return { a.x, a.y, a.z, w };
-}
-
 constexpr vec2i operator+(const vec2i& a, const vec2i& b) {
     return { a.x + b.x, a.y + b.y };
 }
@@ -304,7 +297,404 @@ inline std::ostream& operator<<(std::ostream& os, const vec4i& vec) {
     return os;
 }
 
+constexpr vec2d operator+(const vec2d& a, const vec2d& b) {
+    return { a.x + b.x, a.y + b.y };
+}
 
+constexpr vec2d operator-(const vec2d& a, const vec2d& b) {
+    return { a.x - b.x, a.y - b.y };
+}
+
+constexpr vec2d operator*(const vec2d& a, const f64& b) {
+    return { a.x * b, a.y * b };
+}
+
+constexpr vec2d operator/(const vec2d& a, const f64& b) {
+    return { a.x / b, a.y / b };
+}
+
+inline std::ostream& operator<<(std::ostream& os, const vec2d& vec) {
+    os << '[' << vec.x << ", " << vec.y << ']';
+    return os;
+}
+
+constexpr vec3d operator+(const vec3d& a, const vec3d& b) {
+    return { a.x + b.x, a.y + b.y, a.z + b.z };
+}
+
+constexpr vec3d operator-(const vec3d& a, const vec3d& b) {
+    return { a.x - b.x, a.y - b.y, a.z - b.z };
+}
+
+constexpr vec3d operator*(const vec3d& a, const f64& b) {
+    return { a.x * b, a.y * b, a.z * b };
+}
+
+constexpr vec3d operator/(const vec3d& a, const f64& b) {
+    return { a.x / b, a.y / b, a.z / b };
+}
+
+inline std::ostream& operator<<(std::ostream& os, const vec3d& vec) {
+    os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ']';
+    return os;
+}
+
+constexpr vec4d operator+(const vec4d& a, const vec4d& b) {
+    return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
+}
+
+constexpr vec4d operator-(const vec4d& a, const vec4d& b) {
+    return { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
+}
+
+constexpr vec4d operator*(const vec4d& a, const f64& b) {
+    return { a.x * b, a.y * b, a.z * b, a.w * b };
+}
+
+constexpr vec4d operator/(const vec4d& a, const f64& b) {
+    return { a.x / b, a.y / b, a.z / b, a.w / b };
+}
+
+inline std::ostream& operator<<(std::ostream& os, const vec4d& vec) {
+    os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ']';
+    return os;
+}
+
+constexpr vec2d operator+(const vec2d& a, const vec2& b) {
+    return { a.x + b.x, a.y + b.y };
+}
+
+constexpr vec2d operator+(const vec2& a, const vec2d& b) {
+    return { a.x + b.x, a.y + b.y };
+}
+
+constexpr vec3d operator+(const vec3d& a, const vec3& b) {
+    return { a.x + b.x, a.y + b.y, a.z + b.z };
+}
+
+constexpr vec3d operator+(const vec3& a, const vec3d& b) {
+    return { a.x + b.x, a.y + b.y, a.z + b.z };
+}
+
+constexpr vec4d operator+(const vec4d& a, const vec4& b) {
+    return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
+}
+
+constexpr vec4d operator+(const vec4& a, const vec4d& b) {
+    return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
+}
+
+constexpr vec2d operator-(const vec2d& a, const vec2& b) {
+    return { a.x - b.x, a.y - b.y };
+}
+
+constexpr vec2d operator-(const vec2& a, const vec2d& b) {
+    return { a.x - b.x, a.y - b.y };
+}
+
+constexpr vec3d operator-(const vec3d& a, const vec3& b) {
+    return { a.x - b.x, a.y - b.y, a.z - b.z };
+}
+
+constexpr vec3d operator-(const vec3& a, const vec3d& b) {
+    return { a.x - b.x, a.y - b.y, a.z - b.z };
+}
+
+constexpr vec4d operator-(const vec4d& a, const vec4& b) {
+    return { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
+}
+
+constexpr vec4d operator-(const vec4& a, const vec4d& b) {
+    return { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
+}
+
+constexpr vec2d operator*(const vec2d& a, const f32& b) {
+    return { a.x * b, a.y * b };
+}
+
+constexpr vec2d operator*(const f32& a, const vec2d& b) {
+    return { a * b.x, a * b.y };
+}
+
+constexpr vec3d operator*(const vec3d& a, const f32& b) {
+    return { a.x * b, a.y * b, a.z * b };
+}
+
+constexpr vec3d operator*(const f32& a, const vec3d& b) {
+    return { a * b.x, a * b.y, a * b.z };
+}
+
+constexpr vec4d operator*(const vec4d& a, const f32& b) {
+    return { a.x * b, a.y * b, a.z * b, a.w * b };
+}
+
+constexpr vec4d operator*(const f32& a, const vec4d& b) {
+    return { a * b.x, a * b.y, a * b.z, a * b.w };
+}
+
+constexpr vec2d operator/(const vec2d& a, const f32& b) {
+    return { a.x / b, a.y / b };
+}
+
+constexpr vec2d operator/(const f32& a, const vec2d& b) {
+    return { a / b.x, a / b.y };
+}
+
+constexpr vec3d operator/(const vec3d& a, const f32& b) {
+    return { a.x / b, a.y / b, a.z / b };
+}
+
+constexpr vec3d operator/(const f32& a, const vec3d& b) {
+    return { a / b.x, a / b.y, a / b.z };
+}
+
+constexpr vec4d operator/(const vec4d& a, const f32& b) {
+    return { a.x / b, a.y / b, a.z / b, a.w / b };
+}
+
+constexpr vec4d operator/(const f32& a, const vec4d& b) {
+    return { a / b.x, a / b.y, a / b.z, a / b.w };
+}
+
+constexpr vec2d operator*(const vec2i& a, const f64& b) {
+    return { a.x * b, a.y * b };
+}
+
+constexpr vec2d operator*(const f64& a, const vec2i& b) {
+    return { a * b.x, a * b.y };
+}
+
+constexpr vec3d operator*(const vec3i& a, const f64& b) {
+    return { a.x * b, a.y * b, a.z * b };
+}
+
+constexpr vec3d operator*(const f64& a, const vec3i& b) {
+    return { a * b.x, a * b.y, a * b.z };
+}
+
+constexpr vec4d operator*(const vec4i& a, const f64& b) {
+    return { a.x * b, a.y * b, a.z * b, a.w * b };
+}
+
+constexpr vec4d operator*(const f64& a, const vec4i& b) {
+    return { a * b.x, a * b.y, a * b.z, a * b.w };
+}
+
+constexpr void operator+=(vec2& a, const vec2& b) {
+    a.x += b.x;
+    a.y += b.y;
+}
+
+constexpr void operator-=(vec2& a, const vec2& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+}
+
+constexpr void operator*=(vec2& a, const f32& b) {
+    a.x *= b;
+    a.y *= b;
+}
+
+constexpr void operator/=(vec2& a, const f32& b) {
+    a.x /= b;
+    a.y /= b;
+}
+
+constexpr void operator+=(vec3& a, const vec3& b) {
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+}
+
+constexpr void operator-=(vec3& a, const vec3& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    a.z -= b.z;
+}
+
+constexpr void operator*=(vec3& a, const f32& b) {
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
+}
+
+constexpr void operator/=(vec3& a, const f32& b) {
+    a.x /= b;
+    a.y /= b;
+    a.z /= b;
+}
+
+constexpr void operator+=(vec4& a, const vec4& b) {
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    a.w += b.w;
+}
+
+constexpr void operator-=(vec4& a, const vec4& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    a.z -= b.z;
+    a.w -= b.w;
+}
+
+constexpr void operator*=(vec4& a, const f32& b) {
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
+    a.w *= b;
+}
+
+constexpr void operator/=(vec4& a, const f32& b) {
+    a.x /= b;
+    a.y /= b;
+    a.z /= b;
+    a.w /= b;
+}
+
+constexpr void operator+=(vec2i& a, const vec2i& b) {
+    a.x += b.x;
+    a.y += b.y;
+}
+
+constexpr void operator-=(vec2i& a, const vec2i& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+}
+
+constexpr void operator*=(vec2i& a, const i32& b) {
+    a.x *= b;
+    a.y *= b;
+}
+
+constexpr void operator/=(vec2i& a, const i32& b) {
+    a.x /= b;
+    a.y /= b;
+}
+
+constexpr void operator+=(vec3i& a, const vec3i& b) {
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+}
+
+constexpr void operator-=(vec3i& a, const vec3i& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    a.z -= b.z;
+}
+
+constexpr void operator*=(vec3i& a, const i32& b) {
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
+}
+
+constexpr void operator/=(vec3i& a, const i32& b) {
+    a.x /= b;
+    a.y /= b;
+    a.z /= b;
+}
+
+constexpr void operator+=(vec4i& a, const vec4i& b) {
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    a.w += b.w;
+}
+
+constexpr void operator-=(vec4i& a, const vec4i& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    a.z -= b.z;
+    a.w -= b.w;
+}
+
+constexpr void operator*=(vec4i& a, const i32& b) {
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
+    a.w *= b;
+}
+
+constexpr void operator/=(vec4i& a, const i32& b) {
+    a.x /= b;
+    a.y /= b;
+    a.z /= b;
+    a.w /= b;
+}
+
+constexpr void operator+=(vec2d& a, const vec2d& b) {
+    a.x += b.x;
+    a.y += b.y;
+}
+
+constexpr void operator-=(vec2d& a, const vec2d& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+}
+
+constexpr void operator*=(vec2d& a, const f64& b) {
+    a.x *= b;
+    a.y *= b;
+}
+
+constexpr void operator/=(vec2d& a, const f64& b) {
+    a.x /= b;
+    a.y /= b;
+}
+
+constexpr void operator+=(vec3d& a, const vec3d& b) {
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+}
+
+constexpr void operator-=(vec3d& a, const vec3d& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    a.z -= b.z;
+}
+
+constexpr void operator*=(vec3d& a, const f64& b) {
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
+}
+
+constexpr void operator/=(vec3d& a, const f64& b) {
+    a.x /= b;
+    a.y /= b;
+    a.z /= b;
+}
+
+constexpr void operator+=(vec4d& a, const vec4d& b) {
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    a.w += b.w;
+}
+
+constexpr void operator-=(vec4d& a, const vec4d& b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    a.z -= b.z;
+    a.w -= b.w;
+}
+
+constexpr void operator*=(vec4d& a, const f64& b) {
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
+    a.w *= b;
+}
+
+constexpr void operator/=(vec4d& a, const f64& b) {
+    a.x /= b;
+    a.y /= b;
+    a.z /= b;
+    a.w /= b;
+}
 
 // inline std::ostream& operator<<(std::ostream& os, const Chunk& chunk) {
 //     os << "Chunk:\n";

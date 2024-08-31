@@ -55,10 +55,55 @@ WMAC_API typedef u32 BlockID;
 
 WMAC_API typedef u64 EntityToken;
 
-typedef Vector2 vec2;
-typedef Vector3 vec3;
-typedef Vector4 vec4;
+// typedef Vector2 vec2;
+// typedef Vector3 vec3;
+// typedef Vector4 vec4;
 typedef Matrix mat4;
+
+typedef struct vec2 {
+    f32 x;
+    f32 y;
+
+    constexpr vec2() : x(0), y(0) {}
+    constexpr vec2(f32 p_x, f32 p_y) : x(p_x), y(p_y) {}
+    constexpr vec2(Vector2 p_vec) : x(p_vec.x), y(p_vec.y) {}
+    constexpr operator Vector2() const { return { x, y }; }
+    constexpr operator vec2i() const { return { (i32)x, (i32)y }; }
+    constexpr operator vec2d() const { return { (f64)x, (f64)y }; }
+    vec3 toVec3(f32 z) const { return { x, y, z }; }
+    vec4 toVec4(f32 z, f32 w) const { return { x, y, z, w }; }
+} vec2;
+
+typedef struct vec3 {
+    f32 x;
+    f32 y;
+    f32 z;
+
+    constexpr vec3() : x(0), y(0), z(0) {}
+    constexpr vec3(f32 p_x, f32 p_y, f32 p_z) : x(p_x), y(p_y), z(p_z) {}
+    constexpr vec3(Vector2 p_vec, f32 p_z) : x(p_vec.x), y(p_vec.y), z(p_z) {}
+    constexpr vec3(Vector3 p_vec) : x(p_vec.x), y(p_vec.y), z(p_vec.z) {}
+    constexpr operator Vector3() const { return { x, y, z }; }
+    constexpr operator vec3i() const { return { (i32)x, (i32)y, (i32)z }; }
+    constexpr operator vec3d() const { return { (f64)x, (f64)y, (f64)z }; }
+    vec4 toVec4(f32 w) const { return { x, y, z, w }; }
+} vec3;
+
+typedef struct vec4 {
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 w;
+
+    constexpr vec4() : x(0), y(0), z(0), w(0) {}
+    constexpr vec4(f32 p_x, f32 p_y, f32 p_z, f32 p_w) : x(p_x), y(p_y), z(p_z), w(p_w) {}
+    constexpr vec4(Vector2 p_vec, f32 p_z, f32 p_w) : x(p_vec.x), y(p_vec.y), z(p_z), w(p_w) {}
+    constexpr vec4(Vector3 p_vec, f32 p_w) : x(p_vec.x), y(p_vec.y), z(p_vec.z), w(p_w) {}
+    constexpr vec4(Vector4 p_vec) : x(p_vec.x), y(p_vec.y), z(p_vec.z), w(p_vec.w) {}
+    constexpr operator Vector4() const { return { x, y, z, w }; }
+    constexpr operator vec4i() const { return { (i32)x, (i32)y, (i32)z, (i32)w }; }
+    constexpr operator vec4d() const { return { (f64)x, (f64)y, (f64)z, (f64)w }; }
+} vec4;
 
 typedef struct vec2i {
     i32 x;
@@ -81,12 +126,24 @@ typedef struct vec4i {
 typedef struct vec2d {
     f64 x;
     f64 y;
+
+    constexpr vec2d() : x(0), y(0) {}
+    constexpr vec2d(f64 p_x, f64 p_y) : x(p_x), y(p_y) {}
+    constexpr operator Vector2() const { return { (f32)x, (f32)y }; }
+    constexpr operator vec2i() const { return { (i32)x, (i32)y }; }
+    constexpr operator vec2() const { return { (f32)x, (f32)y }; }
 } vec2d;
 
 typedef struct vec3d {
     f64 x;
     f64 y;
     f64 z;
+
+    constexpr vec3d() : x(0), y(0), z(0) {}
+    constexpr vec3d(f64 p_x, f64 p_y, f64 p_z) : x(p_x), y(p_y), z(p_z) {}
+    constexpr operator Vector3() const { return { (f32)x, (f32)y, (f32)z }; }
+    constexpr operator vec3i() const { return { (i32)x, (i32)y, (i32)z }; }
+    constexpr operator vec3() const { return { (f32)x, (f32)y, (f32)z }; }
 } vec3d;
 
 typedef struct vec4d {
@@ -94,6 +151,12 @@ typedef struct vec4d {
     f64 y;
     f64 z;
     f64 w;
+
+    constexpr vec4d() : x(0), y(0), z(0), w(0) {}
+    constexpr vec4d(f64 p_x, f64 p_y, f64 p_z, f64 p_w) : x(p_x), y(p_y), z(p_z), w(p_w) {}
+    constexpr operator Vector4() const { return { (f32)x, (f32)y, (f32)z, (f32)w }; }
+    constexpr operator vec4i() const { return { (i32)x, (i32)y, (i32)z, (i32)w }; }
+    constexpr operator vec4() const { return { (f32)x, (f32)y, (f32)z, (f32)w }; }
 } vec4d;
 
 typedef struct IndirectCommand {

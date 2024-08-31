@@ -8,6 +8,7 @@
 #include "./render.hpp"
 #include "./ticks.hpp"
 #include "./world.hpp"
+#include "classes/player.hpp"
 
 #include "gl/glad.h"
 #include <GL/gl.h>
@@ -162,8 +163,9 @@ void initEntities() {
 }
 
 void update() {
-    vec3 movementDelta = getMovementDelta();
-    vec3 rotationDelta = VEC3(GetMouseDelta(), 0.0f) * SENSITIVITY;
+    vec3d movementDelta = getMovementDelta();
+    vec3 rotationDelta = vec3(GetMouseDelta(), 0.0) * SENSITIVITY;
+    Player::getMainPlayer()->updateMovementDelta(movementDelta, rotationDelta);
     UpdateCameraPro(&m_camera, movementDelta, rotationDelta, 0.0f);
 
     vec3i newChunk = world::getChunkLoc(m_position);
@@ -176,13 +178,13 @@ void update() {
     // ticks::check();
 }
 
-vec3 getMovementDelta() {
-    vec3 movementDelta = {
-        (f32)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
-        (f32)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
-        (f32)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
+vec3d getMovementDelta() {
+    vec3i movementDelta = {
+        (i32)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
+        (i32)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
+        (i32)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
     };
-    return movementDelta * (IsKeyDown(KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * GetFrameTime();;
+    return movementDelta * (IsKeyDown(KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * GetFrameTime();
 }
 
 void draw3D() {
