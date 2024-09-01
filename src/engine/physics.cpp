@@ -20,8 +20,9 @@ void accelerate() {
 }
 
 void move() {
+    #pragma omp parallel for
     for (auto& entity : entities::m_activeEntities) {
-        
+        entity->applyMovement();
     }
 }
 

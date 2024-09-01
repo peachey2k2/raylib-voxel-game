@@ -13,8 +13,6 @@ private:
 public:
     Player(const bool p_active, const vec3d& p_pos, const PlayerData* p_data);
 
-    vec3 updateMovementDelta(const vec3d p_deltaMovement, const vec3 p_deltaRotation);
-
     static Player* getMainPlayer() { return m_mainPlayer; }
 
 };

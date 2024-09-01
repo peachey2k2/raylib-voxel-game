@@ -14,4 +14,21 @@ Entity::Entity(const bool p_active, const vec3d& p_pos, const u64 p_id, const vo
 
 }
 
+void Entity::updateRotation(const vec3 p_dir) {
+    m_dir = p_dir;
+}
+
+void Entity::updateMovementDelta(const vec3d p_deltaMovement) {
+    m_movementMutex.lock();
+    m_nextMovement += p_deltaMovement;
+    m_movementMutex.unlock();
+}
+
+vec3d Entity::applyMovement() {
+    m_movementMutex.lock();
+    m_nextPos += m_nextMovement;
+    m_nextMovement = { 0, 0, 0 };
+    m_movementMutex.unlock();
+}
+
 }
