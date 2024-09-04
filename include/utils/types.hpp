@@ -72,6 +72,13 @@ typedef struct vec2 {
     constexpr operator vec2d() const { return { (f64)x, (f64)y }; }
     vec3 toVec3(f32 z) const { return { x, y, z }; }
     vec4 toVec4(f32 z, f32 w) const { return { x, y, z, w }; }
+    constexpr f32 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec2;
 
 typedef struct vec3 {
@@ -87,6 +94,14 @@ typedef struct vec3 {
     constexpr operator vec3i() const { return { (i32)x, (i32)y, (i32)z }; }
     constexpr operator vec3d() const { return { (f64)x, (f64)y, (f64)z }; }
     vec4 toVec4(f32 w) const { return { x, y, z, w }; }
+    constexpr f32 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec3;
 
 typedef struct vec4 {
@@ -103,17 +118,49 @@ typedef struct vec4 {
     constexpr operator Vector4() const { return { x, y, z, w }; }
     constexpr operator vec4i() const { return { (i32)x, (i32)y, (i32)z, (i32)w }; }
     constexpr operator vec4d() const { return { (f64)x, (f64)y, (f64)z, (f64)w }; }
+    constexpr f32 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            case 3: return w;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec4;
 
 typedef struct vec2i {
     i32 x;
     i32 y;
+
+    constexpr vec2i() : x(0), y(0) {}
+    constexpr vec2i(i32 p_x, i32 p_y) : x(p_x), y(p_y) {}
+    constexpr operator Vector2() const { return { (f32)x, (f32)y }; }
+    constexpr i32 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec2i;
 
 typedef struct vec3i {
     i32 x;
     i32 y;
     i32 z;
+
+    constexpr vec3i() : x(0), y(0), z(0) {}
+    constexpr vec3i(i32 p_x, i32 p_y, i32 p_z) : x(p_x), y(p_y), z(p_z) {}
+    constexpr operator Vector3() const { return { (f32)x, (f32)y, (f32)z }; }
+    constexpr i32 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec3i;
 
 typedef struct vec4i {
@@ -121,6 +168,19 @@ typedef struct vec4i {
     i32 y;
     i32 z;
     i32 w;
+
+    constexpr vec4i() : x(0), y(0), z(0), w(0) {}
+    constexpr vec4i(i32 p_x, i32 p_y, i32 p_z, i32 p_w) : x(p_x), y(p_y), z(p_z), w(p_w) {}
+    constexpr operator Vector4() const { return { (f32)x, (f32)y, (f32)z, (f32)w }; }
+    constexpr i32 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            case 3: return w;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec4i;
 
 typedef struct vec2d {
@@ -132,6 +192,13 @@ typedef struct vec2d {
     constexpr operator Vector2() const { return { (f32)x, (f32)y }; }
     constexpr operator vec2i() const { return { (i32)x, (i32)y }; }
     constexpr operator vec2() const { return { (f32)x, (f32)y }; }
+    constexpr f64 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec2d;
 
 typedef struct vec3d {
@@ -144,6 +211,14 @@ typedef struct vec3d {
     constexpr operator Vector3() const { return { (f32)x, (f32)y, (f32)z }; }
     constexpr operator vec3i() const { return { (i32)x, (i32)y, (i32)z }; }
     constexpr operator vec3() const { return { (f32)x, (f32)y, (f32)z }; }
+    constexpr f64 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec3d;
 
 typedef struct vec4d {
@@ -157,7 +232,22 @@ typedef struct vec4d {
     constexpr operator Vector4() const { return { (f32)x, (f32)y, (f32)z, (f32)w }; }
     constexpr operator vec4i() const { return { (i32)x, (i32)y, (i32)z, (i32)w }; }
     constexpr operator vec4() const { return { (f32)x, (f32)y, (f32)z, (f32)w }; }
+    constexpr f64 operator[] (u32 p_index) const {
+        switch (p_index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            case 3: return w;
+            default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
+        }
+    }
 } vec4d;
+
+template <typename T>
+struct Range {
+    T start;
+    T end;
+};
 
 typedef struct IndirectCommand {
     u32 count; // indices to render (4 for quad)
@@ -205,6 +295,12 @@ typedef struct Chunk {
 
 // easier to work with for generation
 typedef u64 ChunkLayout[16*16*16];
+
+WMAC_API typedef enum Axis {
+    AXIS_X,
+    AXIS_Y,
+    AXIS_Z
+} Axis;
 
 WMAC_API typedef struct MobStats {
     f64 health;

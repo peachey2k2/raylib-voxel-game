@@ -173,17 +173,17 @@ void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
 
 vec3i getChunkLoc(vec3i p_pos) {
     return {
-        .x = scast<i32>(floor(p_pos.x / 16.0)),
-        .y = scast<i32>(floor(p_pos.y / 16.0)),
-        .z = scast<i32>(floor(p_pos.z / 16.0)),
+        scast<i32>(floor(p_pos.x / 16.0)),
+        scast<i32>(floor(p_pos.y / 16.0)),
+        scast<i32>(floor(p_pos.z / 16.0)),
     };
 }
 
 vec3i getChunkLoc(vec3 p_pos) {
     return {
-        .x = scast<i32>(floor(p_pos.x / 16.0)),
-        .y = scast<i32>(floor(p_pos.y / 16.0)),
-        .z = scast<i32>(floor(p_pos.z / 16.0)),
+        scast<i32>(floor(p_pos.x / 16.0)),
+        scast<i32>(floor(p_pos.y / 16.0)),
+        scast<i32>(floor(p_pos.z / 16.0)),
     };
 }
 
@@ -239,6 +239,72 @@ void changeBlock(vec3i p_pos, u64 p_id) {
             data[posInChunk.xyz] = blocks.size();
         }
     }
+}
+
+BlockID getBlock(vec3i p_pos) {
+    vec3i chunk = getChunkLoc(p_pos);
+    ChunkPos pos = getPosInChunk(p_pos);
+    
+    if (m_chunks.contains(chunk) == false) {
+        return 0;
+    }
+
+    if (m_chunks[chunk].large != nullptr) {
+        return m_chunks[chunk].large->data[pos.xyz];
+    } else {
+        auto& [data, blocks] = *m_chunks[chunk].small;
+        return blocks[data[pos.xyz]-1];
+    }
+}
+
+Range<vec3d> findExtremes(Range<vec3d> p_range) {
+    return findExtremes({
+        vec3i(floor(p_range.start)),
+        vec3i(floor(p_range.end)),
+    });
+}
+
+Range<vec3d> findExtremes(Range<vec3i> p_range) {
+    Range<vec3d> extremes = {
+        .start = { INFINITY, INFINITY, INFINITY },
+        .end = { -INFINITY, -INFINITY, -INFINITY },
+    };
+    for (i32 x = p_range.start.x; x <= p_range.end.x; x++) {
+        for (i32 y = p_range.start.y; y <= p_range.end.y; y++) {
+            for (i32 z = p_range.start.z; z <= p_range.end.z; z++) {
+                vec3d pos = {x, y, z};
+
+                if (getBlock(pos) != 0) {
+                    extremes.start.x = min(extremes.start.x, pos.x);
+                    extremes.start.y = min(extremes.start.y, pos.y);
+                    extremes.start.z = min(extremes.start.z, pos.z);
+
+                    extremes.end.x = max(extremes.end.x, pos.x);
+                    extremes.end.y = max(extremes.end.y, pos.y);
+                    extremes.end.z = max(extremes.end.z, pos.z);
+                }
+            }
+        }
+    }
+}
+
+f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_max) {
+    f64 extreme = p_max ? -INFINITY : INFINITY;
+    for (i32 x = p_range.start.x; x <= p_range.end.x; x++) {
+        for (i32 y = p_range.start.y; y <= p_range.end.y; y++) {
+            for (i32 z = p_range.start.z; z <= p_range.end.z; z++) {
+                vec3d pos = {x, y, z};
+                if (getBlock(pos) != 0) {
+                    if (p_max) {
+                        extreme = max(extreme, pos[p_axis]);
+                    } else {
+                        extreme = min(extreme, pos[p_axis]);
+                    }
+                }
+            }
+        }
+    }
+    return extreme;
 }
 
 

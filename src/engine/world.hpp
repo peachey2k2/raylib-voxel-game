@@ -34,5 +34,10 @@ vec3i getChunkLoc(vec3i p_pos);
 vec3i getChunkLoc(vec3 p_pos);
 ChunkPos getPosInChunk(vec3i p_pos);
 void changeBlock(vec3i p_pos, u64 p_id);
+BlockID getBlock(vec3i p_pos);
+
+Range<vec3d> findExtremes(Range<vec3d> p_range);
+Range<vec3d> findExtremes(Range<vec3i> p_range);
+f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_max);
 
 }

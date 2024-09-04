@@ -24,11 +24,12 @@ void Entity::updateMovementDelta(const vec3d p_deltaMovement) {
     m_movementMutex.unlock();
 }
 
-vec3d Entity::applyMovement() {
+vec3d Entity::resetMovementDelta() {
     m_movementMutex.lock();
-    m_nextPos += m_nextMovement;
+    vec3d delta = m_nextMovement;
     m_nextMovement = { 0, 0, 0 };
     m_movementMutex.unlock();
+    return delta;
 }
 
 }

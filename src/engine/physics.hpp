@@ -15,7 +15,5 @@ void update();
 
 void accelerate();
 void move();
-void aabbCollision();
-void worldCollision();
 
 }

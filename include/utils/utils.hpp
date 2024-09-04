@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring> // memcpy
+#include <cmath>
 
 #include <stdexcept>
 #include <iostream>
@@ -694,6 +695,50 @@ constexpr void operator/=(vec4d& a, const f64& b) {
     a.y /= b;
     a.z /= b;
     a.w /= b;
+}
+
+constexpr vec2 floor(const vec2& vec) {
+    return { std::floor(vec.x), std::floor(vec.y) };
+}
+
+constexpr vec3 floor(const vec3& vec) {
+    return { std::floor(vec.x), std::floor(vec.y), std::floor(vec.z) };
+}
+
+constexpr vec4 floor(const vec4& vec) {
+    return { std::floor(vec.x), std::floor(vec.y), std::floor(vec.z), std::floor(vec.w) };
+}
+
+constexpr vec2d floor(const vec2d& vec) {
+    return { std::floor(vec.x), std::floor(vec.y) };
+}
+
+constexpr vec3d floor(const vec3d& vec) {
+    return { std::floor(vec.x), std::floor(vec.y), std::floor(vec.z) };
+}
+
+constexpr vec4d floor(const vec4d& vec) {
+    return { std::floor(vec.x), std::floor(vec.y), std::floor(vec.z), std::floor(vec.w) };
+}
+
+template <typename T>
+constexpr Range<T> operator+(const Range<T>& a, const T& b) {
+    return { a.min + b, a.max + b };
+}
+
+template <typename T>
+constexpr Range<T> operator-(const Range<T>& a, const T& b) {
+    return { a.min - b, a.max - b };
+}
+
+template <typename T>
+constexpr Range<T> operator*(const Range<T>& a, const T& b) {
+    return { a.min * b, a.max * b };
+}
+
+template <typename T>
+constexpr Range<T> operator/(const Range<T>& a, const T& b) {
+    return { a.min / b, a.max / b };
 }
 
 // inline std::ostream& operator<<(std::ostream& os, const Chunk& chunk) {

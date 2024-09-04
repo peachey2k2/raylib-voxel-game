@@ -8,6 +8,8 @@ class Entity {
 
 protected:
     bool m_active = true;
+    Range<vec3d> m_collisionBox;
+
     vec3d m_pos, m_nextPos;
     vec3 m_dir;
 
@@ -23,7 +25,10 @@ public:
     void updateRotation(const vec3 p_dir);
     void updateMovementDelta(const vec3d p_deltaMovement);
 
-    vec3d applyMovement();
+    vec3d resetMovementDelta();
+
+    Range<vec3d> getCollisionBox() { return m_collisionBox; };
+    vec3d getPos() { return m_pos; };
 };
     
 }
