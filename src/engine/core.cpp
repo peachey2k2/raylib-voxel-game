@@ -165,7 +165,7 @@ void initEntities() {
 void update() {
     vec3d movementDelta = getMovementDelta();
     vec3 rotationDelta = vec3(GetMouseDelta(), 0.0) * SENSITIVITY;
-    Player::getMainPlayer()->updateMovementDelta(movementDelta, rotationDelta);
+    Player::getMainPlayer()->updateMovementDelta(movementDelta);
     UpdateCameraPro(&m_camera, movementDelta, rotationDelta, 0.0f);
 
     vec3i newChunk = world::getChunkLoc(m_position);

@@ -259,47 +259,44 @@ BlockID getBlock(vec3i p_pos) {
 
 Range<vec3d> findExtremes(Range<vec3d> p_range) {
     return findExtremes({
-        vec3i(floor(p_range.start)),
-        vec3i(floor(p_range.end)),
+        vec3i(floor(p_range.min)),
+        vec3i(ceil(p_range.max)),
     });
 }
 
 Range<vec3d> findExtremes(Range<vec3i> p_range) {
     Range<vec3d> extremes = {
-        .start = { INFINITY, INFINITY, INFINITY },
-        .end = { -INFINITY, -INFINITY, -INFINITY },
+        .min = { INFINITY, INFINITY, INFINITY },
+        .max = { -INFINITY, -INFINITY, -INFINITY },
     };
-    for (i32 x = p_range.start.x; x <= p_range.end.x; x++) {
-        for (i32 y = p_range.start.y; y <= p_range.end.y; y++) {
-            for (i32 z = p_range.start.z; z <= p_range.end.z; z++) {
+    for (i32 x = p_range.min.x; x <= p_range.max.x; x++) {
+        for (i32 y = p_range.min.y; y <= p_range.max.y; y++) {
+            for (i32 z = p_range.min.z; z <= p_range.max.z; z++) {
                 vec3d pos = {x, y, z};
 
                 if (getBlock(pos) != 0) {
-                    extremes.start.x = min(extremes.start.x, pos.x);
-                    extremes.start.y = min(extremes.start.y, pos.y);
-                    extremes.start.z = min(extremes.start.z, pos.z);
+                    extremes.min.x = min(extremes.min.x, pos.x);
+                    extremes.min.y = min(extremes.min.y, pos.y);
+                    extremes.min.z = min(extremes.min.z, pos.z);
 
-                    extremes.end.x = max(extremes.end.x, pos.x);
-                    extremes.end.y = max(extremes.end.y, pos.y);
-                    extremes.end.z = max(extremes.end.z, pos.z);
+                    extremes.max.x = max(extremes.max.x, pos.x);
+                    extremes.max.y = max(extremes.max.y, pos.y);
+                    extremes.max.z = max(extremes.max.z, pos.z);
                 }
             }
         }
     }
 }
 
-f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_max) {
-    f64 extreme = p_max ? -INFINITY : INFINITY;
-    for (i32 x = p_range.start.x; x <= p_range.end.x; x++) {
-        for (i32 y = p_range.start.y; y <= p_range.end.y; y++) {
-            for (i32 z = p_range.start.z; z <= p_range.end.z; z++) {
+Range<f64> findExtreme(Range<vec3d> p_range, Axis p_axis) {
+    Range<f64> extreme = {-INFINITY, INFINITY};
+    for (i32 x = p_range.min.x; x <= p_range.max.x; x++) {
+        for (i32 y = p_range.min.y; y <= p_range.max.y; y++) {
+            for (i32 z = p_range.min.z; z <= p_range.max.z; z++) {
                 vec3d pos = {x, y, z};
                 if (getBlock(pos) != 0) {
-                    if (p_max) {
-                        extreme = max(extreme, pos[p_axis]);
-                    } else {
-                        extreme = min(extreme, pos[p_axis]);
-                    }
+                    extreme.min = min(extreme.min, pos[p_axis]);
+                    extreme.max = max(extreme.max, pos[p_axis]);
                 }
             }
         }

@@ -25,10 +25,12 @@ public:
     void updateRotation(const vec3 p_dir);
     void updateMovementDelta(const vec3d p_deltaMovement);
 
-    vec3d resetMovementDelta();
-
     Range<vec3d> getCollisionBox() { return m_collisionBox; };
     vec3d getPos() { return m_pos; };
+
+    // IMPORTANT: these are only meant to be used for the physics engine.
+    vec3d resetMovementDelta();
+    void setPosition(const vec3d p_pos) { m_pos = p_pos; };
 };
     
 }

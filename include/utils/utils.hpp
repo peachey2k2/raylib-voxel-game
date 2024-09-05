@@ -721,6 +721,30 @@ constexpr vec4d floor(const vec4d& vec) {
     return { std::floor(vec.x), std::floor(vec.y), std::floor(vec.z), std::floor(vec.w) };
 }
 
+constexpr vec2 ceil(const vec2& vec) {
+    return { std::ceil(vec.x), std::ceil(vec.y) };
+}
+
+constexpr vec3 ceil(const vec3& vec) {
+    return { std::ceil(vec.x), std::ceil(vec.y), std::ceil(vec.z) };
+}
+
+constexpr vec4 ceil(const vec4& vec) {
+    return { std::ceil(vec.x), std::ceil(vec.y), std::ceil(vec.z), std::ceil(vec.w) };
+}
+
+constexpr vec2d ceil(const vec2d& vec) {
+    return { std::ceil(vec.x), std::ceil(vec.y) };
+}
+
+constexpr vec3d ceil(const vec3d& vec) {
+    return { std::ceil(vec.x), std::ceil(vec.y), std::ceil(vec.z) };
+}
+
+constexpr vec4d ceil(const vec4d& vec) {
+    return { std::ceil(vec.x), std::ceil(vec.y), std::ceil(vec.z), std::ceil(vec.w) };
+}
+
 template <typename T>
 constexpr Range<T> operator+(const Range<T>& a, const T& b) {
     return { a.min + b, a.max + b };
@@ -739,6 +763,26 @@ constexpr Range<T> operator*(const Range<T>& a, const T& b) {
 template <typename T>
 constexpr Range<T> operator/(const Range<T>& a, const T& b) {
     return { a.min / b, a.max / b };
+}
+
+template <typename T>
+constexpr Range<T> operator+(const Range<T>& a, const Range<T>& b) {
+    return { a.min + b.min, a.max + b.max };
+}
+
+template <typename T>
+constexpr Range<T> operator-(const Range<T>& a, const Range<T>& b) {
+    return { a.min - b.min, a.max - b.max };
+}
+
+template <typename T>
+constexpr Range<T> operator*(const Range<T>& a, const Range<T>& b) {
+    return { a.min * b.min, a.max * b.max };
+}
+
+template <typename T>
+constexpr Range<T> operator/(const Range<T>& a, const Range<T>& b) {
+    return { a.min / b.min, a.max / b.max };
 }
 
 // inline std::ostream& operator<<(std::ostream& os, const Chunk& chunk) {

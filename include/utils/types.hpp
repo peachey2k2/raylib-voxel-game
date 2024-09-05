@@ -245,8 +245,8 @@ typedef struct vec4d {
 
 template <typename T>
 struct Range {
-    T start;
-    T end;
+    T min;
+    T max;
 };
 
 typedef struct IndirectCommand {
