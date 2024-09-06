@@ -20,7 +20,7 @@ const char* SHARED_LIB_EXT =
 #endif
 
 void loadMods() {
-    loadCoreMod();
+    core::loadCoreMod();
     FilePathList modsPaths = LoadDirectoryFilesEx(MODS_DIR, SHARED_LIB_EXT, true);
     for (u32 i = 0; i < modsPaths.count; i++) {
         ModID id = modList.size();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils/tools.hpp"
-#include "classes/entity.hpp"
+#include "./entity.hpp"
 
 namespace wmac {
 

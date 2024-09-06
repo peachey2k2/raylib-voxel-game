@@ -11,6 +11,7 @@ Entity::Entity(const bool p_active, const vec3d& p_pos, const u64 p_id, const vo
     
     (m_active ? entities::m_activeEntities : entities::m_inactiveEntities).push_back(this);
     // TODO: implement
+    if (p_data != nullptr) {}
 
 }
 

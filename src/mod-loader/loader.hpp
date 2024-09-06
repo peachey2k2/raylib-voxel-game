@@ -20,7 +20,6 @@ void loadMod(const char* modFile, ModID id);
 inline auto modList = std::vector<Mod>();
 
 void loadMods();
-
 void initFunctions();
 void initItems();
 void initBlocks();

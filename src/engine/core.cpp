@@ -163,10 +163,7 @@ void initEntities() {
 }
 
 void update() {
-    vec3d movementDelta = getMovementDelta();
-    vec3 rotationDelta = vec3(GetMouseDelta(), 0.0) * SENSITIVITY;
-    Player::getMainPlayer()->updateMovementDelta(movementDelta);
-    UpdateCameraPro(&m_camera, movementDelta, rotationDelta, 0.0f);
+    updatePlayer();
 
     vec3i newChunk = world::getChunkLoc(m_position);
     if (newChunk != m_chunk) {
@@ -176,6 +173,20 @@ void update() {
     }
 
     // ticks::check();
+}
+
+void updatePlayer() {
+    Player* player = Player::getMainPlayer();
+    if (player == nullptr) {
+        Player(true, {0, 0, 0}, nullptr);
+        updatePlayer();
+        return;
+    }
+
+    vec3d movementDelta = getMovementDelta();
+    vec3 rotationDelta = vec3(GetMouseDelta(), 0.0) * SENSITIVITY;
+    Player::getMainPlayer()->updateMovementDelta(movementDelta);
+    UpdateCameraPro(&m_camera, movementDelta, rotationDelta, 0.0f);
 }
 
 vec3d getMovementDelta() {

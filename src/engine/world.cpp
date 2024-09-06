@@ -286,6 +286,7 @@ Range<vec3d> findExtremes(Range<vec3i> p_range) {
             }
         }
     }
+    return extremes;
 }
 
 Range<f64> findExtreme(Range<vec3d> p_range, Axis p_axis) {

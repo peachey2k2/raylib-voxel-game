@@ -29,7 +29,7 @@ Camera3D m_camera {
     .projection = CAMERA_PERSPECTIVE,
 };
 vec3i m_chunk;
-vec3& m_position = m_camera.position;
+Vector3& m_position = m_camera.position;
 std::string m_appDir;
 Font m_font;
 
@@ -47,6 +47,7 @@ void renderLoop();
     void draw3D();
     void drawUI();
 void update();
+    void updatePlayer();
     vec3d getMovementDelta();
 void deinit();
 
