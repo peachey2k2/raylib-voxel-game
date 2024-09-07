@@ -58,6 +58,7 @@ void renderLoop() {
             drawUI();
         EndDrawing();
         frameCount++;
+        tools::say(frameCount);
     }
     m_isRunning = false;
 }

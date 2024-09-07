@@ -14,8 +14,10 @@ protected:
     vec3 m_dir;
 
     vec3d m_velocity;
-    vec3d m_nextMovement;
-    std::mutex m_movementMutex;
+    std::mutex m_movementMutex1;
+    std::mutex m_movementMutex2;
+    vec3d m_nextMovement[2] = { {0, 0, 0}, {0, 0, 0} };
+    i32 m_movementIndex = 0;
     
     u64 m_id;
 

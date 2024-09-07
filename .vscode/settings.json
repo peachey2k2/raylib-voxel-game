@@ -80,7 +80,8 @@
         "cfenv": "cpp",
         "complex": "cpp",
         "*.m": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "*.inc": "cpp"
     },
     "makefile.launchConfigurations": [
         {

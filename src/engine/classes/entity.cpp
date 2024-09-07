@@ -20,16 +20,15 @@ void Entity::updateRotation(const vec3 p_dir) {
 }
 
 void Entity::updateMovementDelta(const vec3d p_deltaMovement) {
-    m_movementMutex.lock();
-    m_nextMovement += p_deltaMovement;
-    m_movementMutex.unlock();
+    const std::lock_guard<std::mutex> lock(m_movementMutex1);
+    m_nextMovement[m_movementIndex] += p_deltaMovement;
 }
 
 vec3d Entity::resetMovementDelta() {
-    m_movementMutex.lock();
-    vec3d delta = m_nextMovement;
-    m_nextMovement = { 0, 0, 0 };
-    m_movementMutex.unlock();
+    const std::lock_guard<std::mutex> lock(m_movementMutex2);
+    m_movementIndex = 1 - m_movementIndex;
+    vec3d delta = m_nextMovement[1 - m_movementIndex];
+    m_nextMovement[1 - m_movementIndex] = { 0, 0, 0 };
     return delta;
 }
 
