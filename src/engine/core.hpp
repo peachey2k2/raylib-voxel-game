@@ -48,6 +48,7 @@ void renderLoop();
     void drawUI();
 void update();
     void updatePlayer();
+    void updateVision();
     vec3d getMovementDelta();
 void deinit();
 

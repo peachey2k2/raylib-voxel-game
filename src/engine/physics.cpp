@@ -48,7 +48,7 @@ void move() {
         nextPos.x = std::clamp(nextPos.x, extX.min, extX.max);
         nextPos.z = std::clamp(nextPos.z, extZ.min, extZ.max);
 
-        entity->setPosition(nextPos);
+        entity->setPos(nextPos);
     }
 }
 

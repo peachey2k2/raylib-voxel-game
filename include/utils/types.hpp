@@ -55,9 +55,6 @@ WMAC_API typedef u32 BlockID;
 
 WMAC_API typedef u64 EntityToken;
 
-// typedef Vector2 vec2;
-// typedef Vector3 vec3;
-// typedef Vector4 vec4;
 typedef Matrix mat4;
 
 typedef struct vec2i {
@@ -74,7 +71,10 @@ typedef struct vec2i {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    static const vec2i zero;
 } vec2i;
+
+inline const vec2i vec2i::zero = { 0, 0 };
 
 typedef struct vec2d {
     f64 x;
@@ -91,7 +91,14 @@ typedef struct vec2d {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    constexpr vec2d normalize() const {
+        f64 len = sqrt(x*x + y*y);
+        return { x / len, y / len };
+    }
+    static const vec2d zero;
 } vec2d;
+
+inline const vec2d vec2d::zero = { 0, 0 };
 
 typedef struct vec2 {
     f32 x;
@@ -111,7 +118,14 @@ typedef struct vec2 {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    constexpr vec2 normalize() const {
+        f32 len = sqrtf(x*x + y*y);
+        return { x / len, y / len };
+    }
+    static const vec2 zero;
 } vec2;
+
+inline const vec2 vec2::zero = { 0, 0 };
 
 typedef struct vec3i {
     i32 x;
@@ -129,7 +143,10 @@ typedef struct vec3i {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    static const vec3i zero;
 } vec3i;
+
+inline const vec3i vec3i::zero = { 0, 0, 0 };
 
 typedef struct vec3d {
     f64 x;
@@ -148,7 +165,14 @@ typedef struct vec3d {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    constexpr vec3d normalize() const {
+        f64 len = sqrt(x*x + y*y + z*z);
+        return { x / len, y / len, z / len };
+    }
+    static const vec3d zero;
 } vec3d;
+
+inline const vec3d vec3d::zero = { 0, 0, 0 };
 
 typedef struct vec3 {
     f32 x;
@@ -171,7 +195,14 @@ typedef struct vec3 {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    constexpr vec3 normalize() const {
+        f32 len = sqrtf(x*x + y*y + z*z);
+        return { x / len, y / len, z / len };
+    }
+    static const vec3 zero;
 } vec3;
+
+inline const vec3 vec3::zero = { 0, 0, 0 };
 
 typedef struct vec4i {
     i32 x;
@@ -191,7 +222,10 @@ typedef struct vec4i {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    static const vec4i zero;
 } vec4i;
+
+inline const vec4i vec4i::zero = { 0, 0, 0, 0 };
 
 typedef struct vec4d {
     f64 x;
@@ -212,7 +246,14 @@ typedef struct vec4d {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    constexpr vec4d normalize() const {
+        f64 len = sqrt(x*x + y*y + z*z + w*w);
+        return { x / len, y / len, z / len, w / len };
+    }
+    static const vec4d zero;
 } vec4d;
+
+inline const vec4d vec4d::zero = { 0, 0, 0, 0 };
 
 typedef struct vec4 {
     f32 x;
@@ -238,7 +279,14 @@ typedef struct vec4 {
             default: throw std::out_of_range("Index " + std::to_string(p_index) + " is out of bounds");
         }
     }
+    constexpr vec4 normalize() const {
+        f32 len = sqrtf(x*x + y*y + z*z + w*w);
+        return { x / len, y / len, z / len, w / len };
+    }
+    static const vec4 zero;
 } vec4;
+
+inline const vec4 vec4::zero = { 0, 0, 0, 0 };
 
 template <typename T>
 struct Range {

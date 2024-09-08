@@ -496,9 +496,19 @@ constexpr void operator*=(vec2& a, const f32& b) {
     a.y *= b;
 }
 
+constexpr void operator*=(vec2& a, const vec2& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+}
+
 constexpr void operator/=(vec2& a, const f32& b) {
     a.x /= b;
     a.y /= b;
+}
+
+constexpr void operator/=(vec2& a, const vec2& b) {
+    a.x /= b.x;
+    a.y /= b.y;
 }
 
 constexpr void operator+=(vec3& a, const vec3& b) {
@@ -519,10 +529,22 @@ constexpr void operator*=(vec3& a, const f32& b) {
     a.z *= b;
 }
 
+constexpr void operator*=(vec3& a, const vec3& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    a.z *= b.z;
+}
+
 constexpr void operator/=(vec3& a, const f32& b) {
     a.x /= b;
     a.y /= b;
     a.z /= b;
+}
+
+constexpr void operator/=(vec3& a, const vec3& b) {
+    a.x /= b.x;
+    a.y /= b.y;
+    a.z /= b.z;
 }
 
 constexpr void operator+=(vec4& a, const vec4& b) {
@@ -546,11 +568,25 @@ constexpr void operator*=(vec4& a, const f32& b) {
     a.w *= b;
 }
 
+constexpr void operator*=(vec4& a, const vec4& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    a.z *= b.z;
+    a.w *= b.w;
+}
+
 constexpr void operator/=(vec4& a, const f32& b) {
     a.x /= b;
     a.y /= b;
     a.z /= b;
     a.w /= b;
+}
+
+constexpr void operator/=(vec4& a, const vec4& b) {
+    a.x /= b.x;
+    a.y /= b.y;
+    a.z /= b.z;
+    a.w /= b.w;
 }
 
 constexpr void operator+=(vec2i& a, const vec2i& b) {
@@ -568,9 +604,19 @@ constexpr void operator*=(vec2i& a, const i32& b) {
     a.y *= b;
 }
 
+constexpr void operator*=(vec2i& a, const vec2i& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+}
+
 constexpr void operator/=(vec2i& a, const i32& b) {
     a.x /= b;
     a.y /= b;
+}
+
+constexpr void operator/=(vec2i& a, const vec2i& b) {
+    a.x /= b.x;
+    a.y /= b.y;
 }
 
 constexpr void operator+=(vec3i& a, const vec3i& b) {
@@ -591,10 +637,22 @@ constexpr void operator*=(vec3i& a, const i32& b) {
     a.z *= b;
 }
 
+constexpr void operator*=(vec3i& a, const vec3i& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    a.z *= b.z;
+}
+
 constexpr void operator/=(vec3i& a, const i32& b) {
     a.x /= b;
     a.y /= b;
     a.z /= b;
+}
+
+constexpr void operator/=(vec3i& a, const vec3i& b) {
+    a.x /= b.x;
+    a.y /= b.y;
+    a.z /= b.z;
 }
 
 constexpr void operator+=(vec4i& a, const vec4i& b) {
@@ -618,11 +676,25 @@ constexpr void operator*=(vec4i& a, const i32& b) {
     a.w *= b;
 }
 
+constexpr void operator*=(vec4i& a, const vec4i& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    a.z *= b.z;
+    a.w *= b.w;
+}
+
 constexpr void operator/=(vec4i& a, const i32& b) {
     a.x /= b;
     a.y /= b;
     a.z /= b;
     a.w /= b;
+}
+
+constexpr void operator/=(vec4i& a, const vec4i& b) {
+    a.x /= b.x;
+    a.y /= b.y;
+    a.z /= b.z;
+    a.w /= b.w;
 }
 
 constexpr void operator+=(vec2d& a, const vec2d& b) {
@@ -640,9 +712,19 @@ constexpr void operator*=(vec2d& a, const f64& b) {
     a.y *= b;
 }
 
+constexpr void operator*=(vec2d& a, const vec2d& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+}
+
 constexpr void operator/=(vec2d& a, const f64& b) {
     a.x /= b;
     a.y /= b;
+}
+
+constexpr void operator/=(vec2d& a, const vec2d& b) {
+    a.x /= b.x;
+    a.y /= b.y;
 }
 
 constexpr void operator+=(vec3d& a, const vec3d& b) {
@@ -663,10 +745,22 @@ constexpr void operator*=(vec3d& a, const f64& b) {
     a.z *= b;
 }
 
+constexpr void operator*=(vec3d& a, const vec3d& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    a.z *= b.z;
+}
+
 constexpr void operator/=(vec3d& a, const f64& b) {
     a.x /= b;
     a.y /= b;
     a.z /= b;
+}
+
+constexpr void operator/=(vec3d& a, const vec3d& b) {
+    a.x /= b.x;
+    a.y /= b.y;
+    a.z /= b.z;
 }
 
 constexpr void operator+=(vec4d& a, const vec4d& b) {
@@ -690,11 +784,25 @@ constexpr void operator*=(vec4d& a, const f64& b) {
     a.w *= b;
 }
 
+constexpr void operator*=(vec4d& a, const vec4d& b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    a.z *= b.z;
+    a.w *= b.w;
+}
+
 constexpr void operator/=(vec4d& a, const f64& b) {
     a.x /= b;
     a.y /= b;
     a.z /= b;
     a.w /= b;
+}
+
+constexpr void operator/=(vec4d& a, const vec4d& b) {
+    a.x /= b.x;
+    a.y /= b.y;
+    a.z /= b.z;
+    a.w /= b.w;
 }
 
 constexpr vec2 floor(const vec2& vec) {

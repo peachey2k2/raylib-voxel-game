@@ -10,14 +10,14 @@ protected:
     bool m_active = true;
     Range<vec3d> m_collisionBox;
 
-    vec3d m_pos, m_nextPos;
-    vec3 m_dir;
+    vec3d m_pos = {0, 0, 0}, m_nextPos;
+    vec3 m_dir = {1, 0, 0};
 
     vec3d m_velocity;
     std::mutex m_movementMutex1;
     std::mutex m_movementMutex2;
     vec3d m_nextMovement[2] = { {0, 0, 0}, {0, 0, 0} };
-    i32 m_movementIndex = 0;
+    std::atomic<i32> m_movementIndex = 0;
     
     u64 m_id;
 
@@ -29,10 +29,12 @@ public:
 
     Range<vec3d> getCollisionBox() { return m_collisionBox; };
     vec3d getPos() { return m_pos; };
+    vec3 getDir() { return m_dir; };
 
     // IMPORTANT: these are only meant to be used for the physics engine.
     vec3d resetMovementDelta();
-    void setPosition(const vec3d p_pos) { m_pos = p_pos; };
+    void setPos(const vec3d p_pos) { m_pos = p_pos; };
+    void setDir(const vec3 p_dir) { m_dir = p_dir; };
 };
     
 }

@@ -12,11 +12,10 @@ Entity::Entity(const bool p_active, const vec3d& p_pos, const u64 p_id, const vo
     (m_active ? entities::m_activeEntities : entities::m_inactiveEntities).push_back(this);
     // TODO: implement
     if (p_data != nullptr) {}
-
 }
 
 void Entity::updateRotation(const vec3 p_dir) {
-    m_dir = p_dir;
+    m_dir = p_dir.normalize();
 }
 
 void Entity::updateMovementDelta(const vec3d p_deltaMovement) {

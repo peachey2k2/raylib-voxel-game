@@ -58,9 +58,9 @@ void renderLoop() {
             drawUI();
         EndDrawing();
         frameCount++;
-        tools::say(frameCount);
     }
     m_isRunning = false;
+    CloseWindow();
 }
 
 void init() {
@@ -179,7 +179,7 @@ void update() {
 void updatePlayer() {
     Player* player = Player::getMainPlayer();
     if (player == nullptr) {
-        Player(true, {0, 0, 0}, nullptr);
+        new Player(true, {0, 0, 0}, nullptr);
         updatePlayer();
         return;
     }
@@ -187,15 +187,34 @@ void updatePlayer() {
     vec3d movementDelta = getMovementDelta();
     vec3 rotationDelta = vec3(GetMouseDelta(), 0.0) * SENSITIVITY;
     Player::getMainPlayer()->updateMovementDelta(movementDelta);
-    UpdateCameraPro(&m_camera, movementDelta, rotationDelta, 0.0f);
+
+    UpdateCameraPro(&m_camera, vec3::zero, rotationDelta, 0.0f);
+    Player::getMainPlayer()->updateRotation(m_camera.target - m_camera.position);
+
+    m_camera.position = player->getPos();
+    m_camera.target = player->getPos() + player->getDir();
+}
+
+void updateVision() {
 }
 
 vec3d getMovementDelta() {
-    vec3i movementDelta = {
-        (i32)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
-        (i32)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
-        (i32)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
+    // vec3i movementDelta = {
+    //     (i32)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
+    //     (i32)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A)),
+    //     (i32)(IsKeyDown(KEY_SPACE) - IsKeyDown(KEY_LEFT_SHIFT)),
+    // };
+    vec2 inputDir = {
+        (f32)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S)),
+        (f32)(IsKeyDown(KEY_A) - IsKeyDown(KEY_D)),
     };
+    vec3 lookDir = Player::getMainPlayer()->getDir();
+    vec3 movementDelta = {
+        inputDir.x * lookDir.x + inputDir.y * lookDir.z,
+        0,
+        inputDir.x * lookDir.z - inputDir.y * lookDir.x,
+    };
+
     return movementDelta * (IsKeyDown(KEY_LEFT_CONTROL) ? 4.0f : 1.0f) * SPEED * GetFrameTime();
 }
 
@@ -216,7 +235,6 @@ void deinit() {
     m_renderThread.join();
     m_worldThread.join();
     world::deinit();
-    CloseWindow();
 }
 
 std::string getAppDir() {
