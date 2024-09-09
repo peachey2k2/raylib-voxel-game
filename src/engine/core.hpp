@@ -67,4 +67,6 @@ u64 getFrameCount();
 bool worldShouldTick();
 bool terrainShouldGenerate();
 
+void moveCamera(vec3 p_pos);
+void moveCameraAbsolute(vec3 p_pos);
 };

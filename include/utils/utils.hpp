@@ -147,6 +147,10 @@ constexpr vec2 operator/(const vec2& a, const f32& b) {
     return { a.x / b, a.y / b };
 }
 
+constexpr bool operator==(const vec2& a, const vec2& b) {
+    return a.x == b.x && a.y == b.y;
+}
+
 inline std::ostream& operator<<(std::ostream& os, const vec2& vec) {
     os << '[' << vec.x << ", " << vec.y << ", " << ']';
     return os;
@@ -168,6 +172,10 @@ constexpr vec3 operator/(const vec3& a, const f32& b) {
     return { a.x / b, a.y / b, a.z / b };
 }
 
+constexpr bool operator==(const vec3& a, const vec3& b) {
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
 inline std::ostream& operator<<(std::ostream& os, const vec3& vec) {
     os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ']';
     return os;
@@ -187,6 +195,10 @@ constexpr vec4 operator*(const vec4& a, const f32& b) {
 
 constexpr vec4 operator/(const vec4& a, const f32& b) {
     return { a.x / b, a.y / b, a.z / b, a.w / b };
+}
+
+constexpr bool operator==(const vec4& a, const vec4& b) {
+    return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w;
 }
 
 inline std::ostream& operator<<(std::ostream& os, const vec4& vec) {
@@ -314,6 +326,10 @@ constexpr vec2d operator/(const vec2d& a, const f64& b) {
     return { a.x / b, a.y / b };
 }
 
+constexpr bool operator==(const vec2d& a, const vec2d& b) {
+    return (a.x == b.x) && (a.y == b.y);
+}
+
 inline std::ostream& operator<<(std::ostream& os, const vec2d& vec) {
     os << '[' << vec.x << ", " << vec.y << ']';
     return os;
@@ -335,6 +351,10 @@ constexpr vec3d operator/(const vec3d& a, const f64& b) {
     return { a.x / b, a.y / b, a.z / b };
 }
 
+constexpr bool operator==(const vec3d& a, const vec3d& b) {
+    return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
+}
+
 inline std::ostream& operator<<(std::ostream& os, const vec3d& vec) {
     os << '[' << vec.x << ", " << vec.y << ", " << vec.z << ']';
     return os;
@@ -354,6 +374,10 @@ constexpr vec4d operator*(const vec4d& a, const f64& b) {
 
 constexpr vec4d operator/(const vec4d& a, const f64& b) {
     return { a.x / b, a.y / b, a.z / b, a.w / b };
+}
+
+constexpr bool operator==(const vec4d& a, const vec4d& b) {
+    return (a.x == b.x) && (a.y == b.y) && (a.z == b.z) && (a.w == b.w);
 }
 
 inline std::ostream& operator<<(std::ostream& os, const vec4d& vec) {
@@ -891,6 +915,12 @@ constexpr Range<T> operator*(const Range<T>& a, const Range<T>& b) {
 template <typename T>
 constexpr Range<T> operator/(const Range<T>& a, const Range<T>& b) {
     return { a.min / b.min, a.max / b.max };
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, const Range<T>& range) {
+    os << '[' << range.min << ", " << range.max << ']';
+    return os;
 }
 
 // inline std::ostream& operator<<(std::ostream& os, const Chunk& chunk) {

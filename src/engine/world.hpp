@@ -38,6 +38,8 @@ BlockID getBlock(vec3i p_pos);
 
 Range<vec3d> findExtremes(Range<vec3d> p_range);
 Range<vec3d> findExtremes(Range<vec3i> p_range);
-Range<f64> findExtreme(Range<vec3d> p_range, Axis p_axis);
+f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest);
+
+
 
 }

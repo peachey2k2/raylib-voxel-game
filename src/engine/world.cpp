@@ -289,15 +289,16 @@ Range<vec3d> findExtremes(Range<vec3i> p_range) {
     return extremes;
 }
 
-Range<f64> findExtreme(Range<vec3d> p_range, Axis p_axis) {
-    Range<f64> extreme = {-INFINITY, INFINITY};
+f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest) {
+    f64 extreme = p_highest ? -INFINITY : +INFINITY;
     for (i32 x = p_range.min.x; x <= p_range.max.x; x++) {
         for (i32 y = p_range.min.y; y <= p_range.max.y; y++) {
             for (i32 z = p_range.min.z; z <= p_range.max.z; z++) {
                 vec3d pos = {x, y, z};
                 if (getBlock(pos) != 0) {
-                    extreme.min = min(extreme.min, pos[p_axis]);
-                    extreme.max = max(extreme.max, pos[p_axis]);
+                    // extreme.min = max(extreme.min, pos[p_axis]);
+                    // extreme.max = min(extreme.max, pos[p_axis]);
+                    extreme = p_highest ? max(extreme, pos[p_axis]) : min(extreme, pos[p_axis]);
                 }
             }
         }

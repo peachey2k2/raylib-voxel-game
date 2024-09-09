@@ -172,7 +172,6 @@ void update() {
         // world::generateChunksAt(m_chunk, RENDER_DISTANCE);
         world::m_chunksToGenerateAt.push(m_chunk);
     }
-
     // ticks::check();
 }
 
@@ -180,6 +179,7 @@ void updatePlayer() {
     Player* player = Player::getMainPlayer();
     if (player == nullptr) {
         new Player(true, {0, 0, 0}, nullptr);
+        Player::getMainPlayer()->updateMovementDelta({0, 20, 0});
         updatePlayer();
         return;
     }
@@ -190,9 +190,12 @@ void updatePlayer() {
 
     UpdateCameraPro(&m_camera, vec3::zero, rotationDelta, 0.0f);
     Player::getMainPlayer()->updateRotation(m_camera.target - m_camera.position);
+}
 
-    m_camera.position = player->getPos();
-    m_camera.target = player->getPos() + player->getDir();
+void moveCamera(vec3 p_pos) {
+    vec3 delta = p_pos - m_camera.position;
+    m_camera.position = p_pos;
+    m_camera.target = m_camera.target + delta;
 }
 
 void updateVision() {
@@ -209,6 +212,8 @@ vec3d getMovementDelta() {
         (f32)(IsKeyDown(KEY_A) - IsKeyDown(KEY_D)),
     };
     vec3 lookDir = Player::getMainPlayer()->getDir();
+    lookDir.y = 0;
+    lookDir = lookDir.normalize();
     vec3 movementDelta = {
         inputDir.x * lookDir.x + inputDir.y * lookDir.z,
         0,

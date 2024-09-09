@@ -15,5 +15,6 @@ void update();
 
 void accelerate();
 void move();
+    vec3d collideMove(const vec3d& p_curPos, const vec3d& p_deltaMovement, const Range<vec3d>& p_collider);
 
 }

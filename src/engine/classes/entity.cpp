@@ -1,8 +1,12 @@
 #include "./entity.hpp"
 
 #include "engine/entities.hpp"
+#include "engine/core.hpp"
+#include "engine/physics.hpp"
 
 namespace wmac {
+
+Entity* Entity::m_cameraAttachedEntity = nullptr;
 
 Entity::Entity(const bool p_active, const vec3d& p_pos, const u64 p_id, const void* p_data) {
     m_active = p_active;
@@ -20,7 +24,11 @@ void Entity::updateRotation(const vec3 p_dir) {
 
 void Entity::updateMovementDelta(const vec3d p_deltaMovement) {
     const std::lock_guard<std::mutex> lock(m_movementMutex1);
-    m_nextMovement[m_movementIndex] += p_deltaMovement;
+    vec3d moveSum = m_nextMovement[m_movementIndex] + p_deltaMovement;
+    m_nextMovement[m_movementIndex] += physics::collideMove(m_pos, moveSum, m_collisionBox);
+    if (m_cameraAttachedEntity == this) {
+        core::moveCamera(m_pos);
+    }
 }
 
 vec3d Entity::resetMovementDelta() {

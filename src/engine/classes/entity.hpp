@@ -6,7 +6,11 @@ namespace wmac {
 
 class Entity {
 
+private:
+
 protected:
+    static Entity* m_cameraAttachedEntity;
+    
     bool m_active = true;
     Range<vec3d> m_collisionBox;
 
