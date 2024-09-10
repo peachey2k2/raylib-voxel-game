@@ -168,6 +168,7 @@ void update() {
 
     vec3i newChunk = world::getChunkLoc(m_position);
     if (newChunk != m_chunk) {
+        // tools::say(m_chunk, newChunk);
         m_chunk = newChunk;
         // world::generateChunksAt(m_chunk, RENDER_DISTANCE);
         world::m_chunksToGenerateAt.push(m_chunk);

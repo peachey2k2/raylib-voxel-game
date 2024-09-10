@@ -171,15 +171,14 @@ void queueGenerationsAt(vec3i p_pos, u32 p_radius) {
     bm->end();
 }
 
-vec3i getChunkLoc(vec3i p_pos) {
-    return {
-        scast<i32>(floor(p_pos.x / 16.0)),
-        scast<i32>(floor(p_pos.y / 16.0)),
-        scast<i32>(floor(p_pos.z / 16.0)),
-    };
+Chunk* getChunk(vec3i p_pos) {
+    if (m_chunks.contains(p_pos)) {
+        return &m_chunks[p_pos];
+    }
+    return nullptr;
 }
 
-vec3i getChunkLoc(vec3 p_pos) {
+vec3i getChunkLoc(vec3i p_pos) {
     return {
         scast<i32>(floor(p_pos.x / 16.0)),
         scast<i32>(floor(p_pos.y / 16.0)),
@@ -290,12 +289,17 @@ Range<vec3d> findExtremes(Range<vec3i> p_range) {
 }
 
 f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest) {
+    Range<vec3i> range = {
+        vec3i(floor(p_range.min)),
+        vec3i(ceil(p_range.max)),
+    };
     f64 extreme = p_highest ? -INFINITY : +INFINITY;
-    for (i32 x = p_range.min.x; x <= p_range.max.x; x++) {
-        for (i32 y = p_range.min.y; y <= p_range.max.y; y++) {
-            for (i32 z = p_range.min.z; z <= p_range.max.z; z++) {
+    for (i32 x = range.min.x; x <= range.max.x; x++) {
+        for (i32 y = range.min.y; y <= range.max.y; y++) {
+            for (i32 z = range.min.z; z <= range.max.z; z++) {
                 vec3d pos = {x, y, z};
                 if (getBlock(pos) != 0) {
+                    tools::say(pos);
                     // extreme.min = max(extreme.min, pos[p_axis]);
                     // extreme.max = min(extreme.max, pos[p_axis]);
                     extreme = p_highest ? max(extreme, pos[p_axis]) : min(extreme, pos[p_axis]);
@@ -304,6 +308,47 @@ f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest) {
         }
     }
     return extreme;
+}
+
+RayTarget rayCast(vec3d p_start, vec3d p_end, ObjectType p_whitelist) {
+    // vec3d ray = (p_end - p_start);
+    // vec3d pos = p_start;
+
+    // vec3i step = {
+    //     ray.x > 0 ? 1 : -1,
+    //     ray.y > 0 ? 1 : -1,
+    //     ray.z > 0 ? 1 : -1,
+    // };
+    
+    // vec3d delta = {
+    //     step.x / ray.x,
+    //     step.y / ray.y,
+    //     step.z / ray.z,
+    // };
+
+    // vec3i chunkLoc = getChunkLoc(p_start);
+    // Chunk* chunk = getChunk(chunkLoc);
+    // if (chunk == nullptr) {
+    //     return { .pos = p_end, .face = FACE_NORTH, .type = OBJECT_NONE };
+    // }
+
+    // while (true) {
+    //     vec3i chunkPos = getChunkLoc(pos);
+    //     if (chunkPos != chunkLoc) {
+    //         chunkLoc = chunkPos;
+    //         chunk = getChunk(chunkLoc);
+    //         if (chunk == nullptr) {
+    //             return { .pos = pos, .face = FACE_NORTH, .type = OBJECT_NONE };
+    //         }
+    //     }
+
+    //     ChunkPos posInChunk = getPosInChunk(pos);
+    //     BlockID block = getBlock(pos);
+    //     if (block != 0) {
+    //         return { .pos = pos, .face = FACE_NORTH, .type = OBJECT_BLOCK, .id = block };
+    //     }
+
+
 }
 
 

@@ -30,15 +30,14 @@ Chunk constructChunk(ChunkLayout& p_layout);
 void removeChunk(vec3i p_pos);
 void queueGenerationsAt(vec3i p_pos, u32 p_radius);
 
+Chunk* getChunk(vec3i p_pos);
 vec3i getChunkLoc(vec3i p_pos);
-vec3i getChunkLoc(vec3 p_pos);
 ChunkPos getPosInChunk(vec3i p_pos);
 void changeBlock(vec3i p_pos, u64 p_id);
 BlockID getBlock(vec3i p_pos);
 
-Range<vec3d> findExtremes(Range<vec3d> p_range);
-Range<vec3d> findExtremes(Range<vec3i> p_range);
 f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest);
+RayTarget rayCast(vec3d p_start, vec3d p_end, ObjectType p_whitelist = OBJECT_ALL);
 
 
 

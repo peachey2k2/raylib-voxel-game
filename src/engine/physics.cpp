@@ -27,8 +27,8 @@ void move() {
         vec3d curPos = entity->getPos();
         Range<vec3d> collider = entity->getCollisionBox();
 
-        vec3d nextPos = collideMove(curPos, deltaMovement, collider);
-        entity->setPos(nextPos);
+        vec3d move = collideMove(curPos, deltaMovement, collider);
+        entity->setPos(curPos + move);
     }
 }
 
@@ -46,7 +46,7 @@ vec3d collideMove(const vec3d& p_curPos, const vec3d& p_deltaMovement, const Ran
     }
 
     tools::say(p_curPos + p_deltaMovement, nextPos);
-    return nextPos;
+    return nextPos - p_curPos;
 }
 
 }

@@ -4,6 +4,11 @@
 
 #define WMAC_API extern "C"
 
+#define MAX_8BIT 255
+#define MAX_16BIT 65535
+#define MAX_32BIT 4294967295
+#define MAX_64BIT 18446744073709551615
+
 #ifndef u8
 typedef __UINT8_TYPE__ u8;
 #endif
@@ -426,6 +431,29 @@ WMAC_API typedef enum ColorChannel {
     COLOR_B = 2,
     COLOR_A = 3,
 } ColorChannel;
+
+WMAC_API typedef enum BlockFace {
+    FACE_NORTH = 0,
+    FACE_EAST = 1,
+    FACE_TOP = 2,
+    FACE_SOUTH = 3,
+    FACE_WEST = 4,
+    FACE_BOTTOM = 5,
+} BlockFace;
+
+WMAC_API typedef enum ObjectType {
+    OBJECT_BLOCK = 1 << 0,
+    OBJECT_ENTITY = 1 << 1,
+    OBJECT_ALL = MAX_32BIT,
+    OBJECT_NONE = 0,
+} ObjectType;
+
+WMAC_API typedef struct RayTarget {
+    u64 id;
+    vec3d pos;
+    BlockFace face;
+    ObjectType type;
+} RayTarget;
 
 WMAC_API typedef struct MobStats {
     f64 health;

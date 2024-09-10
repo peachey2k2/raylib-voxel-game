@@ -51,11 +51,6 @@ namespace wmac {
 #define ccast const_cast
 #define rcast reinterpret_cast
 
-#define MAX_8BIT 255
-#define MAX_16BIT 65535
-#define MAX_32BIT 4294967295
-#define MAX_64BIT 18446744073709551615
-
 #define NOT_FOUND MAX_32BIT
 template<typename T>
 constexpr u32 findIn(std::vector<T>& vec, const T& val) {

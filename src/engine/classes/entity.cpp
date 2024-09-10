@@ -23,9 +23,10 @@ void Entity::updateRotation(const vec3 p_dir) {
 }
 
 void Entity::updateMovementDelta(const vec3d p_deltaMovement) {
+    if (p_deltaMovement == vec3d::zero) return;
     const std::lock_guard<std::mutex> lock(m_movementMutex1);
     vec3d moveSum = m_nextMovement[m_movementIndex] + p_deltaMovement;
-    m_nextMovement[m_movementIndex] += physics::collideMove(m_pos, moveSum, m_collisionBox);
+    m_nextMovement[m_movementIndex] = physics::collideMove(m_pos, moveSum, m_collisionBox);
     if (m_cameraAttachedEntity == this) {
         core::moveCamera(m_pos);
     }
