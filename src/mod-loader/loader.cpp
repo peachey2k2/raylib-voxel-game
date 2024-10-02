@@ -28,6 +28,11 @@ void loadMods() {
         loadMod(modsPath, id);
         printf("Loaded mod: %s\n", modsPath);
     }
+    
+    for (u32 i = 0; i < modsPaths.capacity; i++) {
+        free(modsPaths.paths[i]);
+    }
+    free(modsPaths.paths);
 }
 
 void loadMod(const char* p_modPath, ModID p_id) {

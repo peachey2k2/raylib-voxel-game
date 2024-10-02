@@ -16,12 +16,28 @@ executable := app
 target := $(buildDir)/$(executable)
 modsDir := $(buildDir)/mods
 
-sources := $(call rwildcard,src/,*.cpp)
-objects := $(patsubst src/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
+DEBUG ?= FALSE
+
+sources := $(call rwildcard,,*.cpp)
+objects := $(patsubst %, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
-compileFlags := -std=c++20 -I./include -I./src -fopenmp -g
+
+compileFlags := -std=c++20 -I./include -I./src -fopenmp
+
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
 linkFlags = -L ./lib/$(platform) -l raylib -l noise -l GLEW -fopenmp
+
+$(info $(objects))
+
+
+ifeq ($(DEBUG), TRUE)
+	compileFlags += -DDEBUG -g -O0
+	
+	# I LOVE SANITIZERS
+	linkFlags += -fsanitize=address -fsanitize=undefined -fsanitize=bounds -fsanitize=object-size -fsanitize=shift -fsanitize=unreachable -fsanitize=vla-bound -fsanitize=vptr
+else
+	compileFlags += -O3
+endif
 
 # Check for Windows
 ifeq ($(OS), Windows_NT)
@@ -104,7 +120,7 @@ $(target): $(objects)
 -include $(depends)
 
 # Compile objects to the build directory
-$(buildDir)/%.o: src/%.cpp Makefile
+$(buildDir)/%.o: %.cpp Makefile
 	$(MKDIR) $(call platformpth, $(@D))
 	$(CXX) -MMD -MP -c $(compileFlags) $(warnings) $< -o $@ $(CXXFLAGS)
 

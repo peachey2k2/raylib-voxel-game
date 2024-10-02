@@ -38,11 +38,19 @@ vec3d collideMove(const vec3d& p_curPos, const vec3d& p_deltaMovement, const Ran
 
     for (auto& axis : order) {
         bool sign = p_deltaMovement[axis] > 0;
+        f64 hitboxOffset = sign ? p_collider.min[axis] : p_collider.max[axis];
         vec3d testMove = p_curPos;
         testMove[axis] += p_deltaMovement[axis];
         Range<vec3d> col = p_collider + testMove;
         f64 extreme = world::findExtreme(col, axis, sign);
-        nextPos[axis] = sign ? std::max(testMove[axis], extreme) : std::min(testMove[axis], extreme);
+        nextPos[axis] = sign ? 
+            std::max(testMove[axis], extreme - hitboxOffset) :
+            std::min(testMove[axis], extreme - hitboxOffset);
+        nextPos[axis] = std::clamp(
+            nextPos[axis],
+            std::min(0.0, p_deltaMovement[axis]),
+            std::max(0.0, p_deltaMovement[axis])
+        );
     }
 
     tools::say(p_curPos + p_deltaMovement, nextPos);

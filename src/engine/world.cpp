@@ -252,40 +252,9 @@ BlockID getBlock(vec3i p_pos) {
         return m_chunks[chunk].large->data[pos.xyz];
     } else {
         auto& [data, blocks] = *m_chunks[chunk].small;
-        return blocks[data[pos.xyz]-1];
+        u8& idx = data[pos.xyz];
+        return idx == 0 ? 0 : blocks[idx-1];
     }
-}
-
-Range<vec3d> findExtremes(Range<vec3d> p_range) {
-    return findExtremes({
-        vec3i(floor(p_range.min)),
-        vec3i(ceil(p_range.max)),
-    });
-}
-
-Range<vec3d> findExtremes(Range<vec3i> p_range) {
-    Range<vec3d> extremes = {
-        .min = { INFINITY, INFINITY, INFINITY },
-        .max = { -INFINITY, -INFINITY, -INFINITY },
-    };
-    for (i32 x = p_range.min.x; x <= p_range.max.x; x++) {
-        for (i32 y = p_range.min.y; y <= p_range.max.y; y++) {
-            for (i32 z = p_range.min.z; z <= p_range.max.z; z++) {
-                vec3d pos = {x, y, z};
-
-                if (getBlock(pos) != 0) {
-                    extremes.min.x = min(extremes.min.x, pos.x);
-                    extremes.min.y = min(extremes.min.y, pos.y);
-                    extremes.min.z = min(extremes.min.z, pos.z);
-
-                    extremes.max.x = max(extremes.max.x, pos.x);
-                    extremes.max.y = max(extremes.max.y, pos.y);
-                    extremes.max.z = max(extremes.max.z, pos.z);
-                }
-            }
-        }
-    }
-    return extremes;
 }
 
 f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest) {
@@ -310,7 +279,7 @@ f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest) {
     return extreme;
 }
 
-RayTarget rayCast(vec3d p_start, vec3d p_end, ObjectType p_whitelist) {
+// RayTarget rayCast(vec3d p_start, vec3d p_end, ObjectType p_whitelist) {
     // vec3d ray = (p_end - p_start);
     // vec3d pos = p_start;
 
@@ -349,7 +318,7 @@ RayTarget rayCast(vec3d p_start, vec3d p_end, ObjectType p_whitelist) {
     //     }
 
 
-}
+// }
 
 
 };

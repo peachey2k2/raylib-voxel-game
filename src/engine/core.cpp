@@ -8,10 +8,8 @@
 #include "./render.hpp"
 #include "./ticks.hpp"
 #include "./world.hpp"
+#include "./ui.hpp"
 #include "classes/player.hpp"
-
-#include "gl/glad.h"
-#include <GL/gl.h>
 
 #include "mod-loader/loader.hpp"
 
@@ -60,15 +58,15 @@ void renderLoop() {
         frameCount++;
     }
     m_isRunning = false;
-    CloseWindow();
 }
 
 void init() {
     #ifdef __linux__
     setEnvVars();
     #endif
+
     initRaylib();
-    // m_window = glfwGetCurrentContext();
+
     loader::loadMods();
     loader::initFunctions();
 
@@ -121,6 +119,7 @@ void doChecks() {
 
 void initRenderer() {
     InitWindow(WIDTH, HEIGHT, TITLE);
+    m_window = glfwGetCurrentContext(); (void)m_window;
     
     m_font = LoadFont("res/fonts/Miracode.ttf");
     DisableCursor();
@@ -128,6 +127,7 @@ void initRenderer() {
     SetTargetFPS(FPS);
     #endif
     render::initMesh();
+    ui::init();
 }
 
 void loadCoreMod() {
@@ -166,7 +166,7 @@ void initEntities() {
 void update() {
     updatePlayer();
 
-    vec3i newChunk = world::getChunkLoc(m_position);
+    vec3i newChunk = world::getChunkLoc(vec3(m_position));
     if (newChunk != m_chunk) {
         // tools::say(m_chunk, newChunk);
         m_chunk = newChunk;
@@ -232,6 +232,8 @@ void drawUI() {
     DrawRectangle(0, 0, 140, 80, BLACK);
     DrawFPS(10, 10);
     DrawTextEx(m_font, TextFormat("x: %.3f (%d)\ny: %.3f (%d)\nz: %.3f (%d)", m_position.x, m_chunk.x, m_position.y, m_chunk.y, m_position.z, m_chunk.z), {10, 30}, 16, 0, WHITE);
+
+    ui::draw();
 }
 
 void deinit() {
@@ -240,6 +242,7 @@ void deinit() {
     m_ticksThread.join();
     m_renderThread.join();
     m_worldThread.join();
+    CloseWindow();
     world::deinit();
 }
 

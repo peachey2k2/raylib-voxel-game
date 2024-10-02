@@ -37,7 +37,7 @@ void changeBlock(vec3i p_pos, u64 p_id);
 BlockID getBlock(vec3i p_pos);
 
 f64 findExtreme(Range<vec3d> p_range, Axis p_axis, bool p_highest);
-RayTarget rayCast(vec3d p_start, vec3d p_end, ObjectType p_whitelist = OBJECT_ALL);
+// RayTarget rayCast(vec3d p_start, vec3d p_end, ObjectType p_whitelist = OBJECT_ALL);
 
 
 

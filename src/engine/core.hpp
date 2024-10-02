@@ -2,6 +2,10 @@
 
 #include "utils/tools.hpp"
 
+#include "gl/glad.h"
+#include <GLFW/glfw3.h>
+#include <GL/gl.h>
+
 namespace wmac::core {
 
 inline const char* TITLE = "Test";
@@ -13,14 +17,15 @@ inline const f32 SPEED = 5.0f;
 
 inline const u32 RENDER_DISTANCE = 16;
 
+inline GLFWwindow* m_window;
+
 #ifdef CORE_CPP
+
 
 bool m_isRunning = true;
 bool m_tickWorld = true;
 bool m_generateTerrain = true;
 
-// #include <GLFW/glfw3.h>
-// GLFWwindow* m_window;
 Camera3D m_camera {
     .position = { 10.0f, 1.0f, 10.0f },
     .target = { 0.0f, 0.0f, 0.0f },
