@@ -73,18 +73,19 @@ inline T max(const T& a, const T& b) {
     return a > b ? a : b;
 }
 
+// Basic event system
 template<typename... Args>
 class Signal {
 
 public:
-    using Slot = std::function<Args...>;
+    using Slot = std::function<void(Args...)>;
 
 private:
     std::vector<Slot> m_slots;
     static std::unordered_map<std::string, Signal<Args...>*> m_signals;
 
 public:
-
+    // Creates a signal with the given name if it doesn't exist
     static Signal* create(const std::string& name) {
         if (m_signals.find(name) != m_signals.end()) {
             return m_signals[name];
@@ -93,6 +94,7 @@ public:
         return m_signals[name];
     }
 
+    // Returns a signal with the given name if it exists
     static Signal* get(const std::string& name) {
         if (m_signals.find(name) == m_signals.end()) {
             return nullptr;
@@ -100,21 +102,72 @@ public:
         return m_signals[name];
     }
 
+    // Destroys the signal
+    void destroy() {
+        m_signals.erase(std::remove(m_signals.begin(), m_signals.end(), this), m_signals.end());
+        delete this;
+    }
+
+    // Connects a function to the signal
     void connect(Slot slot) {
         m_slots.push_back(slot);
     }
 
+    // Disconnects a function from the signal
     void disconnect(Slot slot) {
         m_slots.erase(std::remove(m_slots.begin(), m_slots.end(), slot), m_slots.end());
     }
 
+    // Emits the signal, calling all connected functions
     void emit(Args... args) {
         for (auto& slot : m_slots) {
             slot(args...);
         }
     }
-
 };
+
+// Like signals, but they always return const pointers and only freed at deinit.
+// Additionally, these signals can't be accesed by name, so keep a pointer.
+// Intended for in-engine use, only create these if you kmow what you're doing.
+template<typename... Args>
+class ConstSignal {
+
+public:
+    using Slot = std::function<void(Args...)>;
+
+private:
+    mutable std::vector<Slot> m_slots;
+
+public:
+    // Creates a signal with the given name if it doesn't exist
+    static const ConstSignal* create() {
+        return new ConstSignal();
+    }
+
+    // Connects a function to the signal
+    void connect(Slot slot) const {
+        m_slots.push_back(slot);
+    }
+
+    // Disconnects a function from the signal
+    void disconnect(Slot slot) const {
+        m_slots.erase(std::remove(m_slots.begin(), m_slots.end(), slot), m_slots.end());
+    }
+
+    // Emits the signal, calling all connected functions
+    void emit(Args... args) const {
+        for (auto& slot : m_slots) {
+            slot(args...);
+        }
+    }
+};
+
+namespace EngineSignals {
+    inline const ConstSignal<>* RenderUI = ConstSignal<>::create();
+
+    //TODO: Add more signals
+    //TODO: free signals at deinit
+}
     
 
 };

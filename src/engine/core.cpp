@@ -17,19 +17,23 @@ namespace wmac::core {
 
 #define FPS 0
 
+void setEnvVars() {
+
 #ifdef _WIN32
-extern "C" {
-    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
-}
+    extern "C" {
+        __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+        __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+    }
+
 #elif __linux__
-    void setEnvVars() {
         setenv("__NV_PRIME_RENDER_OFFLOAD", "1", 1);
         setenv("__GLX_VENDOR_LIBRARY_NAME", "nvidia", 1);
-    }
+
 #elif __APPLE__
-// UNLUCKY :D
+    // UNLUCKY :D
+
 #endif
+}
 
 void run() {
     init();
@@ -61,10 +65,7 @@ void renderLoop() {
 }
 
 void init() {
-    #ifdef __linux__
     setEnvVars();
-    #endif
-
     initRaylib();
 
     loader::loadMods();
@@ -102,19 +103,32 @@ void initRaylib() {
     0);
 }
 
-const std::string CHECK = "[✓]";
-const std::string CROSS = "[✗]";
 void doChecks() {
+    const std::string CHECKMARK = "[✓]";
+    const std::string CROSS = "[✗]";
+    
+    #define DONT_CHECK 107 // arbitrary number, don't use it for checks
+
+    #define CHECK(cond, min, max, name, msg) /************************************/ \
+        auto res =                                                                  \
+            ((min) != DONT_CHECK) ? ((cond) >= (min)) : 1 &&                        \
+            ((max) != DONT_CHECK) ? ((cond) <= (max)) : 1;                          \
+        std::cout << (res ? CHECKMARK : CROSS) << ' ' << (name) << ": " << (cond);  \
+        std::cout << " ( ";                                                          \
+        if ((min) != DONT_CHECK) std::cout << "min:" << (min) << ' ';               \
+        if ((max) != DONT_CHECK) std::cout << "max:" << (max) << ' ';               \
+        std::cout << ')' << '\n';                                                   \
+        if (not res) {                                                              \
+            tools::say((msg));                                                      \
+            exit(1);                                                                \
+        }
     i32 temp_i32;
-    bool res;
 
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &temp_i32);
-    res = temp_i32 >= 4096;
-    tools::say(res ? CHECK : CROSS, "Max texture size:", temp_i32, "(needs to be at least 4096)");
-    if (not res) {
-        tools::say("Please update your graphics drivers.");
-        exit(1);
-    }
+    CHECK(temp_i32, 4096, DONT_CHECK, "Max texture size", "Please update your graphics drivers.");
+
+    #undef CHECK
+    #undef DONT_CHECK
 }
 
 void initRenderer() {
@@ -242,6 +256,7 @@ void deinit() {
     m_ticksThread.join();
     m_renderThread.join();
     m_worldThread.join();
+    ui::deinit();
     CloseWindow();
     world::deinit();
 }

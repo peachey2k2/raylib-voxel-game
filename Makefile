@@ -18,7 +18,7 @@ modsDir := $(buildDir)/mods
 
 DEBUG ?= FALSE
 
-sources := $(call rwildcard,,*.cpp)
+sources := $(call rwildcard,src/,*.cpp) $(call rwildcard,include/,*.cpp)
 objects := $(patsubst %, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 
@@ -26,9 +26,6 @@ compileFlags := -std=c++20 -I./include -I./src -fopenmp
 
 warnings := -Wall -Wextra -Wpedantic -Werror -Wno-narrowing -Wno-missing-field-initializers
 linkFlags = -L ./lib/$(platform) -l raylib -l noise -l GLEW -fopenmp
-
-$(info $(objects))
-
 
 ifeq ($(DEBUG), TRUE)
 	compileFlags += -DDEBUG -g -O0

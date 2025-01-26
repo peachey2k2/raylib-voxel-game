@@ -6,6 +6,7 @@
 
 namespace wmac::blocks {
 
+
 void add(InitBlockInfo& p_block) {
     std::string texPath = loader::getModPath(loader::getCurrentMod()) + p_block.texture;
     m_blocks.push_back(
